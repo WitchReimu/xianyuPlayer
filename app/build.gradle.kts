@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -50,6 +51,8 @@ android {
 }
 
 dependencies {
+    val room_version = "2.6.1"
+    val lifecycle_version = "2.8.7"
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
@@ -58,4 +61,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+
+    //room数据库
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+
+    //lifecycle组件
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    ksp("androidx.lifecycle:lifecycle-compiler:$lifecycle_version")
 }
