@@ -6,8 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlin.concurrent.Volatile
 
-@Database(entities = [LocalPath::class], version = 1)
+@Database(entities = [LocalScanPath::class], version = 1)
 abstract class PlayerRoomDatabase : RoomDatabase() {
+
+    abstract fun getLocalScanPathDao(): LocalScanPathDao
 
     companion object {
         @Volatile

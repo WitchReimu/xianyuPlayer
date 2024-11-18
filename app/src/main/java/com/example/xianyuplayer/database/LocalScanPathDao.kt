@@ -7,13 +7,13 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface LocalPathDao {
+interface LocalScanPathDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPath(localPath: LocalPath)
+    suspend fun insertPath(localScanPath: LocalScanPath)
 
     @Query("select * from local_path")
-    fun getAllPath(): Flow<List<LocalPath>>
+    fun getAllPath(): Flow<List<LocalScanPath>>
 
     @Query("delete from local_path where uri=:uri")
     fun deletePath(uri: String)

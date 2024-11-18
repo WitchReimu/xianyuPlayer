@@ -10,6 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.adapter.LocalFileAdapter
 import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
@@ -17,6 +18,14 @@ import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
 class LocalFileFragment : Fragment() {
 
     private val TAG = "LocalFileFragment"
+
+    private val viewModel: LocalFileViewModel by lazy {
+        val playerApplication = requireActivity().application as PlayerApplication
+        ViewModelProvider(
+            this@LocalFileFragment,
+            LocalFileViewModelFactory(playerApplication.repository)
+        )[TAG, LocalFileViewModel::class]
+    }
 
     private lateinit var binding: FragmentLocalFileBinding
     private lateinit var launcher: ActivityResultLauncher<Intent>
@@ -38,6 +47,7 @@ class LocalFileFragment : Fragment() {
                     val documentFile = DocumentFile.fromTreeUri(requireContext(), treeUri)
 
                     if (documentFile != null) {
+                        viewModel.insertScanPath(treeUri)
                         recursionScanFile(documentFile)
                     }
                     adapter.setData(localFileList)
@@ -54,6 +64,7 @@ class LocalFileFragment : Fragment() {
                 val split = name.split(".")
                 val type = split[split.size - 1]
                 if (type == supportFileType[0]) {
+
                     localFileList.add(name)
                 }
             }
