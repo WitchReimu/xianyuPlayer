@@ -3,6 +3,9 @@ package com.example.xianyuplayer
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.provider.MediaStore
+import android.provider.MediaStore.Audio.Media
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,11 +16,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.adapter.LocalFileAdapter
+import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
 
 class LocalFileFragment : Fragment() {
 
     private val TAG = "LocalFileFragment"
+    private val prefixPath = "/sdcard/"
 
     private val viewModel: LocalFileViewModel by lazy {
         val playerApplication = requireActivity().application as PlayerApplication
@@ -29,7 +34,7 @@ class LocalFileFragment : Fragment() {
 
     private lateinit var binding: FragmentLocalFileBinding
     private lateinit var launcher: ActivityResultLauncher<Intent>
-    private val localFileList = ArrayList<String>(20)
+    private val localFileList = ArrayList<LocalFile>(20)
     private val adapter by lazy { LocalFileAdapter() }
     private val supportFileType = arrayOf("zip")
 
@@ -59,13 +64,20 @@ class LocalFileFragment : Fragment() {
 
         if (file.isFile) {
             val name = file.name
+            val path = file.uri.path
 
             if (name != null) {
                 val split = name.split(".")
                 val type = split[split.size - 1]
                 if (type == supportFileType[0]) {
-
-                    localFileList.add(name)
+                    var absolutePath = prefixPath + path!!.split(":")[2]
+                    absolutePath = absolutePath.substring(
+                        absolutePath.indexOf("/"),
+                        absolutePath.lastIndexOf("/")
+                    )
+                    // TODO: 能否拿到音乐元数据 
+//                    LocalFile(absolutePath,name)
+//                    localFileList.add(name)
                 }
             }
         } else if (file.isDirectory) {

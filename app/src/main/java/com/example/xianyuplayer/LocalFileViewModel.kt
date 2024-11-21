@@ -30,7 +30,7 @@ class LocalFileViewModel(private val repository: PlayerRepository) : ViewModel()
 class LocalFileViewModelFactory(private val repository: PlayerRepository) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LocalScanPath::class.java)) {
+        if (modelClass.isAssignableFrom(LocalFileViewModel::class.java)) {
             return LocalFileViewModel(repository) as T
         }
         throw IllegalArgumentException("unknown class argument")

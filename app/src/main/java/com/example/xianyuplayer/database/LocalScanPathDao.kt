@@ -9,12 +9,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LocalScanPathDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertPath(localScanPath: LocalScanPath)
 
-    @Query("select * from local_path")
+    @Query("select * from local_scan_path")
     fun getAllPath(): Flow<List<LocalScanPath>>
 
-    @Query("delete from local_path where uri=:uri")
+    @Query("delete from local_scan_path where uri=:uri")
     fun deletePath(uri: String)
 }

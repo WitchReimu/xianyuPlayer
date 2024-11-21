@@ -6,5 +6,10 @@ import com.example.xianyuplayer.database.PlayerRoomDatabase
 
 class PlayerApplication : Application() {
     private val database by lazy { PlayerRoomDatabase.getDataBase(this) }
-    val repository by lazy { PlayerRepository(database.getLocalScanPathDao()) }
+    val repository by lazy {
+        PlayerRepository(
+            database.getLocalScanPathDao(),
+            database.getLocalFileDao()
+        )
+    }
 }

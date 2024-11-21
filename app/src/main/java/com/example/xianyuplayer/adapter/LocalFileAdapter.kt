@@ -3,11 +3,12 @@ package com.example.xianyuplayer.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ItemLocalFileBinding
 
 class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
 
-    private val dataList = ArrayList<String>(20)
+    private val dataList = ArrayList<LocalFile>(20)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding =
@@ -20,10 +21,11 @@ class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.binding.txtFileName.text = dataList[position]
+        val localFile = dataList[position]
+        holder.binding.txtFileName.text = localFile.fileName
     }
 
-    fun setData(localFileList: ArrayList<String>) {
+    fun setData(localFileList: ArrayList<LocalFile>) {
         dataList.addAll(localFileList)
         notifyDataSetChanged()
     }

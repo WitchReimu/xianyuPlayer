@@ -15,9 +15,8 @@ link_libraries(${arm64_v8a})
 # build script scope).
 project("xianyuplayer")
 
-file(GLOB_RECURSE ffmpeg_part "third_part/ffmpeg/*.h")
 
-add_library(${CMAKE_PROJECT_NAME} SHARED native-lib.cpp "${ffmpeg_part}")
+add_library(${CMAKE_PROJECT_NAME} SHARED native-lib.cpp )
 
 include_directories(third_part/ffmpeg/include)
 # Specifies libraries CMake should link to your target library. You
