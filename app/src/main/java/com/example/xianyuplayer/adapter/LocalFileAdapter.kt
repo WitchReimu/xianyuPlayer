@@ -1,5 +1,6 @@
 package com.example.xianyuplayer.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -9,6 +10,7 @@ import com.example.xianyuplayer.databinding.ItemLocalFileBinding
 class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
 
     private val dataList = ArrayList<LocalFile>(20)
+    private val TAG = "LocalFileAdapter"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding =
@@ -22,10 +24,13 @@ class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val localFile = dataList[position]
-        holder.binding.txtFileName.text = localFile.fileName
+        val fileName = localFile.fileName
+        holder.binding.txtFileName.text = fileName.substring(0, fileName.lastIndexOf("."))
+        holder.binding.txtNumber.text = String.format("%s", position + 1)
+        holder.binding.txtFileInfo.text = localFile.singer
     }
 
-    fun setData(localFileList: ArrayList<LocalFile>) {
+    fun setData(localFileList: List<LocalFile>) {
         dataList.addAll(localFileList)
         notifyDataSetChanged()
     }

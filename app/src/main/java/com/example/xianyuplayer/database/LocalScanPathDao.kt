@@ -16,5 +16,5 @@ interface LocalScanPathDao {
     fun getAllPath(): Flow<List<LocalScanPath>>
 
     @Query("delete from local_scan_path where uri=:uri")
-    fun deletePath(uri: String)
+    suspend fun deletePath(uri: String)
 }

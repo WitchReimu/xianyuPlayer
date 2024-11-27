@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.database.LocalScanPath
 import com.example.xianyuplayer.database.PlayerRepository
 import kotlinx.coroutines.launch
@@ -13,6 +15,7 @@ import kotlinx.coroutines.launch
 class LocalFileViewModel(private val repository: PlayerRepository) : ViewModel() {
 
     val scanPathUriList: LiveData<List<LocalScanPath>> = repository.getScanLocalPath().asLiveData()
+    val allLocalFile = repository.getAllLocalFiles().asLiveData()
 
     fun insertScanPath(uri: Uri) {
         viewModelScope.launch {
@@ -22,7 +25,15 @@ class LocalFileViewModel(private val repository: PlayerRepository) : ViewModel()
     }
 
     fun deleteScanPath(uri: Uri) {
-        repository.deleteScanPathLocalPath(uri.toString())
+        viewModelScope.launch {
+            repository.deleteScanPathLocalPath(uri.toString())
+        }
+    }
+
+    fun insertLocalFile(localFile: LocalFile) {
+        viewModelScope.launch {
+            repository.insertLocalFile(localFile)
+        }
     }
 
 }

@@ -6,12 +6,12 @@ import androidx.room.Entity
 @Entity(tableName = "local_file", primaryKeys = ["file_path", "file_name"])
 data class LocalFile(
     @ColumnInfo(name = "file_path")
-    val filePath: String,
+    var filePath: String,
     @ColumnInfo(name = "file_name")
-    val fileName: String,
-    @ColumnInfo(name = "singer", defaultValue = "群星")
-    val singer: String,
-    @ColumnInfo(name = "albums_name", defaultValue = "群星")
-    val albumsName: String
+    var fileName: String,
+    @ColumnInfo(name = "singer")
+    var singer: String = "群星",
+    @ColumnInfo(name = "albums_name")
+    var albumsName: String = "群星"
 ) {
 }
