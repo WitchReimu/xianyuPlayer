@@ -5,7 +5,7 @@
 #ifndef FILEMETADATAINFO_H
 #define FILEMETADATAINFO_H
 
-#include "LogUtils.h"
+#include "../LogUtils.h"
 #include <memory>
 #include <string>
 #include <vector>

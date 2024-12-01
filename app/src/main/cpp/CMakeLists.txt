@@ -10,12 +10,18 @@ set(arm64_v8a "${arm64_v8a}/jniLibs/arm64-v8a")
 link_directories(${arm64_v8a})
 include_directories(third_part/ffmpeg/include)
 set(ffmpeg_lib "avdevice;avcodec;avfilter;avformat;avutil;postproc;swresample;swscale")
+
 project("xianyuplayer")
 file(GLOB root_source_file "*.cpp" "*.h")
 add_library(${CMAKE_PROJECT_NAME} SHARED ${root_source_file})
 
+find_package(oboe REQUIRED CONFIG)
+
+add_subdirectory(FFMpegmode)
+add_subdirectory(player)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
+        player_mode
         z
         ${ffmpeg_lib}
         mediandk

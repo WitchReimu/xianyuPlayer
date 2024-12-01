@@ -1,4 +1,4 @@
-package com.example.xianyuplayer
+package com.example.xianyuplayer.fragment
 
 import android.app.Activity
 import android.content.Intent
@@ -10,9 +10,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.LocalFileViewModel
+import com.example.xianyuplayer.LocalFileViewModelFactory
+import com.example.xianyuplayer.MusicNativeMethod
+import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.adapter.LocalFileAdapter
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
@@ -72,11 +75,11 @@ class LocalFileFragment : Fragment() {
                 if (Arrays.stream(supportFileType).anyMatch { it == type }) {
                     var absolutePath = prefixPath + path!!.split(":")[2]
                     absolutePath = absolutePath.substring(
-                        absolutePath.indexOf("/"), absolutePath.lastIndexOf("/")
+                        absolutePath.indexOf("/"), absolutePath.lastIndexOf("/") + 1
                     )
 
                     val metadataArray =
-                        MusicNativeMethod.getInstance().getMetadata("$absolutePath/$name")
+                        MusicNativeMethod.getInstance().getMetadata("$absolutePath$name")
                     val localFile = LocalFile(absolutePath, name)
 
                     for (musicMetadata in metadataArray) {

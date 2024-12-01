@@ -19,6 +19,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++11"
+                arguments("-DANDROID_STL=c++_shared")
             }
         }
     }
@@ -47,6 +48,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        prefab = true
     }
 }
 
@@ -70,4 +72,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
     ksp("androidx.lifecycle:lifecycle-compiler:$lifecycle_version")
+
+    //oboe
+    implementation("com.google.oboe:oboe:1.9.0")
 }

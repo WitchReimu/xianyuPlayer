@@ -1,4 +1,4 @@
-package com.example.xianyuplayer
+package com.example.xianyuplayer.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater

@@ -1,7 +1,10 @@
 #include <jni.h>
 #include <string>
 #include "fileMetaDataInfo.h"
+#include "decodeStream.h"
 #define TAG "native-lib"
+
+decodeStream *decoder_ptr = nullptr;
 
 extern "C"
 {
@@ -37,9 +40,25 @@ Java_com_example_xianyuplayer_MusicNativeMethod_getMetadata(JNIEnv *env, jobject
 	return dataArray;
 }
 
+JNIEXPORT void JNICALL
+Java_com_example_xianyuplayer_MusicNativeMethod_startPlay(JNIEnv *env, jobject thiz)
+{
+
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_xianyuplayer_MusicNativeMethod_initStream(JNIEnv *env, jobject thiz, jstring path)
+{
+	const char *filePath = env->GetStringUTFChars(path, nullptr);
+	if (decoder_ptr == nullptr)
+		decoder_ptr = new decodeStream(filePath);
+	env->ReleaseStringUTFChars(path, filePath);
+}
+
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
 //	JNIEnv *env = nullptr;
 	return JNI_VERSION_1_6;
 }
 }
+
