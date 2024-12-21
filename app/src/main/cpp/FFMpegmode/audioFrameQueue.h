@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "../LogUtils.h"
+#include <oboe/Oboe.h>
 
 extern "C"
 {
@@ -17,6 +18,11 @@ extern "C"
 class audioFrameQueue
 {
 public:
+	/**
+	 * buffer 数据缓冲区
+	 * dataLength 数据缓冲区有多少个byte数据
+	 * bufferLength 数据缓冲区可以缓冲多少个byte
+	 */
 	struct audioFrame_t
 	{
 		uint8_t *buffer;
@@ -29,14 +35,15 @@ public:
 			this->bufferLength = bufferLength;
 		}
 	};
+
+
 	int consumeIndex = 0;
 	int produceIndex = 0;
-	int capacity = 2;
-	int length = capacity + 1;
+	int capacity = 0;
+	int length = 0;
 	std::vector<audioFrame_t> frameQueue;
 
-	audioFrameQueue();
-	const audioFrame_t getFrame();
+	audioFrameQueue(int capacity=3);
 	bool isFull();
 	bool isEmpty();
 	void resetDataLength(int resetIndex,int dataLength);
@@ -49,9 +56,9 @@ public:
 		{
 			av_free(frame.buffer);
 		}
+		frameQueue.clear();
 	}
 private:
-
 };
 
 

@@ -27,20 +27,23 @@ public:
 	enum decodeState_enmu: int
 	{
 		Idle = -1,
-		Inited = 0,
+		Initing = 0,
 		Prepared = 1,
 		Running = 2,
 		Pause = 3,
 		Stop = 4
 	};
-	audioFrameQueue queue;
 
 	decodeStream(const char *path);
+	~decodeStream();
 	int getDecodeFileSampleRate();
 	int getDecodeFileChannelCount();
-	~decodeStream();
+	int getDecodeFileFormat();
 	void initStream();
 	void decodeFile();
+	void notifyCond();
+
+	audioFrameQueue queue;
 private:
 	char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;
@@ -48,13 +51,14 @@ private:
 	const AVCodec *audioDecode = nullptr;
 	std::thread *decodeThread = nullptr;
 	AVCodecContext *audioDecodeContext = nullptr;
-	int decodeState = Inited;
+	int decodeState = Initing;
 	std::condition_variable decodeCon;
 	std::mutex decodeMutex;
 	struct SwrContext *swrContext = nullptr;
+	AVSampleFormat targetFmt = AV_SAMPLE_FMT_S16;
 
 	static void doDecode(decodeStream *instance);
-	int covertData(uint8_t *bufferData, AVFrame *frame_ptr);
+	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
 };
 

@@ -2,6 +2,7 @@ package com.example.xianyuplayer.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.database.LocalFile
@@ -30,8 +31,9 @@ class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
         holder.binding.txtFileInfo.text = localFile.singer
 
         holder.binding.constraintItemContainer.setOnClickListener {
-            // TODO: 创建oboe音频播放器 使用ffmpeg解码音频文件
             MusicNativeMethod.getInstance().initStream(localFile.filePath + localFile.fileName)
+            MusicNativeMethod.getInstance().startDecodeStream()
+            MusicNativeMethod.getInstance().initPlay()
             MusicNativeMethod.getInstance().startPlay()
         }
     }

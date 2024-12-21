@@ -6,7 +6,9 @@ import com.example.xianyuplayer.database.MusicMetadata
 class MusicNativeMethod {
     external fun getMetadata(filePath: String): Array<MusicMetadata>
     external fun startPlay()
+    external fun initPlay()
     external fun initStream(path: String)
+    external fun startDecodeStream()
 
     companion object {
         private var instance: MusicNativeMethod? = null
@@ -15,7 +17,6 @@ class MusicNativeMethod {
 
             if (instance == null) {
                 synchronized(this) {
-
                     if (instance == null) {
                         val instance = MusicNativeMethod()
                         this.instance = instance

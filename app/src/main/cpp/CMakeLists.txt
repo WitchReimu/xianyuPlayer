@@ -22,6 +22,7 @@ add_subdirectory(player)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         player_mode
+        oboe::oboe
         z
         ${ffmpeg_lib}
         mediandk

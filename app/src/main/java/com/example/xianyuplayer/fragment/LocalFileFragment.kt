@@ -39,7 +39,7 @@ class LocalFileFragment : Fragment() {
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private val localFileList = ArrayList<LocalFile>(20)
     private val adapter by lazy { LocalFileAdapter() }
-    private val supportFileType = arrayOf("mp3", "mp4")
+    private val supportFileType = arrayOf("mp3", "mp4", "flac")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
