@@ -5,10 +5,6 @@
 #include "oboePlayer.h"
 #define TAG "native-lib"
 
-decodeStream *decoder_ptr = nullptr;
-
-oboePlayer *player_ptr = nullptr;
-
 extern "C"
 {
 
@@ -34,35 +30,59 @@ jobjectArray getMetadata(JNIEnv *env, jobject thiz, jstring file_path)
 	return dataArray;
 }
 
-void initStream(JNIEnv *env, jobject activity, jstring path)
+jlong openDecodeStream(JNIEnv *env, jobject activity, jstring path, jlong streamPtr)
 {
 	const char *filePath = env->GetStringUTFChars(path, nullptr);
-	if (decoder_ptr == nullptr)
+	decodeStream *decoder_ptr = nullptr;
+
+	if (streamPtr == 0)
+	{
 		decoder_ptr = new decodeStream(filePath);
+	}
+	else
+	{
+		decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
+		//todo:如果不为空改为修改filepath变量.
+	}
+
 	env->ReleaseStringUTFChars(path, filePath);
+	return reinterpret_cast<jlong>(decoder_ptr);
 }
 
-void startDecodeStream(JNIEnv *env, jobject activity)
+void startDecodeStream(JNIEnv *env, jobject activity, jlong streamPtr)
 {
-	if (decoder_ptr != nullptr)
+	if (streamPtr != 0)
 	{
+		decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
 		decoder_ptr->decodeFile();
 	}
 }
 
-void initPlay(JNIEnv *env, jobject activity)
+jlong initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
 {
-	if (player_ptr == nullptr && decoder_ptr != nullptr)
+	oboePlayer *player_ptr = nullptr;
+
+	if (playerPtr == 0 && streamPtr != 0)
 	{
+		decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
 		player_ptr = new oboePlayer();
 		player_ptr->initStream(decoder_ptr);
 	}
+	else if (playerPtr != 0 && streamPtr != 0)
+	{
+		decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
+		player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
+		//todo 重新设置音频流内的参数
+	}
+	return reinterpret_cast<jlong>(player_ptr);
 }
 
-void startPlay(JNIEnv *env, jobject activity)
+void startPlay(JNIEnv *env, jobject activity, jlong playerPtr)
 {
-	if (player_ptr != nullptr)
+	if (playerPtr != 0)
 	{
+		oboePlayer *player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
+
 		if (!player_ptr->startPlay())
 		{
 			ALOGE("[%s] start oboe player error ", __FUNCTION__);
@@ -89,11 +109,11 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		JNINativeMethod musicNativeMethod[] = {{"getMetadata",
 		                                        "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;",
 		                                        (void *)getMetadata},
-		                                       {"startPlay", "()V", (void *)startPlay},
-		                                       {"initPlay", "()V", (void *)initPlay},
-		                                       {"initStream", "(Ljava/lang/String;)V",
-		                                        (void *)initStream},
-		                                       {"startDecodeStream", "()V",
+		                                       {"startPlay", "(J)V", (void *)startPlay},
+		                                       {"initPlay", "(JJ)J", (void *)initPlay},
+		                                       {"openDecodeStream", "(Ljava/lang/String;J)J",
+		                                        (void *)openDecodeStream},
+		                                       {"startDecodeStream", "(J)V",
 		                                        (void *)startDecodeStream}
 
 		};

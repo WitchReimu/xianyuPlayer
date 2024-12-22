@@ -23,7 +23,7 @@ private:
 	oboe::AudioFormat outputFormat= oboe::AudioFormat::Invalid;
 	int dataOffset = 0;
 
-	void renderAudioData(void *audioData, int32_t numFrames);
+	int renderAudioData(void *audioData, int32_t numFrames);
 	virtual oboe::DataCallbackResult
 	onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
 	virtual void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error);

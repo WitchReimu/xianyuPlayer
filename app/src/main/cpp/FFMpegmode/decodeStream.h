@@ -34,6 +34,8 @@ public:
 		Stop = 4
 	};
 
+	audioFrameQueue queue;
+
 	decodeStream(const char *path);
 	~decodeStream();
 	int getDecodeFileSampleRate();
@@ -42,8 +44,9 @@ public:
 	void initStream();
 	void decodeFile();
 	void notifyCond();
+	int getDecodeState();
 
-	audioFrameQueue queue;
+
 private:
 	char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;

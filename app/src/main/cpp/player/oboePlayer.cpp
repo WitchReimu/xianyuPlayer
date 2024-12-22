@@ -44,8 +44,12 @@ void oboePlayer::initStream(decodeStream *stream)
 oboe::DataCallbackResult
 oboePlayer::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames)
 {
-	renderAudioData(audioData, numFrames);
-	return oboe::DataCallbackResult::Continue;
+	int state = renderAudioData(audioData, numFrames);
+
+	if (state == decodeStream::decodeState_enmu::Running)
+		return oboe::DataCallbackResult::Continue;
+	else
+		return oboe::DataCallbackResult::Stop;
 }
 
 void oboePlayer::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error)
@@ -53,7 +57,7 @@ void oboePlayer::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result e
 	AudioStreamErrorCallback::onErrorAfterClose(oboeStream, error);
 }
 
-void oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
+int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 {
 	int samplesCount = decoderStream->getDecodeFileChannelCount() * numFrames;
 	int byteCount = 0;
@@ -62,7 +66,7 @@ void oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	float *floatData = nullptr;
 
 	if (decoderStream->queue.isEmpty())
-		return;
+		return decoderStream->getDecodeState();
 	audioFrameQueue::audioFrame_t
 		&frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
@@ -84,7 +88,10 @@ void oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 		fillData(floatData, frame, byteCount);
 		break;
 	}
+
+	return decodeStream::decodeState_enmu::Running;
 }
+
 bool oboePlayer::startPlay()
 {
 	if (oboeAudioStream != nullptr)
@@ -123,7 +130,9 @@ int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int 
 			&nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
 		size_t bytePerSample = sizeof(audioData[0]);
-		memcpy(audioData + (leftDataLength / bytePerSample), nextFrame.buffer, byteCount - leftDataLength);
+		memcpy(audioData + (leftDataLength / bytePerSample),
+		       nextFrame.buffer,
+		       byteCount - leftDataLength);
 		dataOffset = dataOffset + byteCount - leftDataLength;
 	}
 	return 0;

@@ -12,6 +12,7 @@ decodeStream::decodeStream(const char *path)
 //	strcpy(this->path, "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4");
 	initStream();
 }
+
 decodeStream::~decodeStream()
 {
 	swr_free(&swrContext);
@@ -19,6 +20,7 @@ decodeStream::~decodeStream()
 	avformat_close_input(&formatContext);
 	avformat_free_context(formatContext);
 }
+
 //初始化解码流与数据缓冲区
 void decodeStream::initStream()
 {
@@ -60,6 +62,7 @@ void decodeStream::initStream()
 	}
 	decodeState = Prepared;
 }
+
 void decodeStream::decodeFile()
 {
 	if (decodeThread == nullptr)
@@ -78,8 +81,15 @@ void decodeStream::doDecode(decodeStream *instance)
 	{
 		int ret = av_read_frame(instance->formatContext, pPacket);
 
-		if (ret < 0)
+		if (ret == AVERROR_EOF)
 		{
+			ALOGW("[%s] 解码完成", __FUNCTION__);
+			instance->decodeState = Stop;
+			break;
+		}
+		else if (ret < 0)
+		{
+			ALOGE("[%s] 解码异常结束. 错误原因 %s", __FUNCTION__, av_err2str(ret));
 			instance->decodeState = Stop;
 			break;
 		}
@@ -98,13 +108,18 @@ void decodeStream::doDecode(decodeStream *instance)
 			}
 			ret = avcodec_receive_frame(instance->audioDecodeContext, pFrame);
 
-			if (ret < 0)
+			if (ret == AVERROR(EAGAIN))
 			{
 				av_packet_unref(pPacket);
 				ALOGW("[%s] receive frame failed ,failed information %s",
 				      __FUNCTION__,
 				      av_err2str(ret));
 				continue;
+			}
+			else if (ret < 0)
+			{
+				ALOGE("[%s] 接受音频帧失败, 错误原因 %s", __FUNCTION__, av_err2str(ret));
+				break;
 			}
 
 			if (!instance->initSwrContext())
@@ -183,6 +198,7 @@ void decodeStream::doDecode(decodeStream *instance)
 
 	av_frame_free(&pFrame);
 	av_packet_free(&pPacket);
+	ALOGI("[%s] 解码线程结束", __FUNCTION__);
 }
 
 int decodeStream::getDecodeFileSampleRate()
@@ -194,6 +210,7 @@ int decodeStream::getDecodeFileChannelCount()
 {
 	return audioDecodeContext->ch_layout.nb_channels;
 }
+
 bool decodeStream::initSwrContext()
 {
 	//如果swr为空就进行初始化
@@ -250,6 +267,7 @@ bool decodeStream::initSwrContext()
 	}
 	return true;
 }
+
 int decodeStream::covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength)
 {
 	int covert_length = swr_convert(swrContext,
@@ -268,4 +286,9 @@ int decodeStream::getDecodeFileFormat()
 void decodeStream::notifyCond()
 {
 	decodeCon.notify_one();
+}
+
+int decodeStream::getDecodeState()
+{
+	return decodeState;
 }
