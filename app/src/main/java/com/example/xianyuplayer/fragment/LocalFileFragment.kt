@@ -2,11 +2,13 @@ package com.example.xianyuplayer.fragment
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
@@ -17,12 +19,14 @@ import com.example.xianyuplayer.LocalFileViewModel
 import com.example.xianyuplayer.LocalFileViewModelFactory
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
+import com.example.xianyuplayer.R
+import com.example.xianyuplayer.ScanCustomActivity
 import com.example.xianyuplayer.adapter.LocalFileAdapter
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
 import java.util.Arrays
 
-class LocalFileFragment : Fragment() {
+class LocalFileFragment : Fragment(), View.OnClickListener {
 
     private val TAG = "LocalFileFragment"
     private val prefixPath = "/sdcard/"
@@ -53,12 +57,8 @@ class LocalFileFragment : Fragment() {
                         treeUri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
-                    val documentFile = DocumentFile.fromTreeUri(requireContext(), treeUri)
-
-                    if (documentFile != null) {
-                        viewModel.insertScanPath(treeUri)
-                        recursionScanFile(documentFile)
-                    }
+                    recursionScanFile(treeUri)
+                    viewModel.insertScanPath(treeUri)
                 }
             }
     }
@@ -67,6 +67,7 @@ class LocalFileFragment : Fragment() {
 
         if (file.isFile) {
             val name = file.name
+            //  uri path字段的字符格式/tree/primary:xxx/document/primary:去掉了/sdcard/的文件路径
             val path = file.uri.path
 
             if (name != null) {
@@ -127,15 +128,65 @@ class LocalFileFragment : Fragment() {
                 adapter.setData(list)
             }
         }
-        binding.btnScanFile.setOnClickListener {
 
-            if (::launcher.isInitialized) {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                launcher.launch(intent)
+        viewModel.scanPathUriList.observe(viewLifecycleOwner) { list ->
+            for (localScanPath in list) {
+                val uri = Uri.parse(localScanPath.uri)
+                recursionScanFile(uri)
             }
         }
+
+        binding.btnScanFile.setOnClickListener(this)
+        binding.imgBtnList.setOnClickListener(this)
+
         binding.recycLocalFileContainer.adapter = adapter
         binding.recycLocalFileContainer.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
     }
+
+    private fun recursionScanFile(uri: Uri) {
+        val documentFile = DocumentFile.fromTreeUri(requireContext(), uri)
+
+        if (documentFile != null) {
+            recursionScanFile(documentFile)
+        }
+    }
+
+    override fun onClick(v: View?) {
+        if (v == null) {
+            return
+        }
+
+        when (v.id) {
+            binding.btnScanFile.id -> {
+                if (::launcher.isInitialized) {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    launcher.launch(intent)
+                }
+            }
+
+            binding.imgBtnList.id -> {
+                val listPopupMenu = PopupMenu(requireContext(), binding.imgBtnList)
+                listPopupMenu.menuInflater.inflate(R.menu.list_pop_menu, listPopupMenu.menu)
+                listPopupMenu.show()
+                listPopupMenu.setOnMenuItemClickListener { item ->
+                    if (item == null) {
+                        return@setOnMenuItemClickListener false
+                    }
+
+                    when (item.itemId) {
+
+                        R.id.menu_custom_scan_path -> {
+                            val intent = Intent(requireContext(), ScanCustomActivity::class.java)
+                            startActivity(intent)
+                        }
+                    }
+
+                    return@setOnMenuItemClickListener true
+                }
+            }
+
+        }
+    }
+
 }

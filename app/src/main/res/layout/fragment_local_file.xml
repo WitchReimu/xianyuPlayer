@@ -8,19 +8,33 @@
         android:id="@+id/linear_top"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+
         <ImageButton
-            android:id="@+id/imgbtn_back"
+            android:id="@+id/imgBtn_back"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
             android:layout_marginStart="10dp"
-            android:background="@drawable/arrow_back_24" />
+            android:background="@drawable/arrow_back_24"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/imgBtn_list"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/sort_list_24" />
 
     </LinearLayout>
 
@@ -36,9 +50,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="一键扫描"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

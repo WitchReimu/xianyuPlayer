@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun addFragment(tag: String, fragment: Fragment) {
         supportFragmentManager.beginTransaction().add(
-            binding.frameLocalContainer.id,
+            binding.frameMainContainer.id,
             fragment,
             tag
         ).commit()
