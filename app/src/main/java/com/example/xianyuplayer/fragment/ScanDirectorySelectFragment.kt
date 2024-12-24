@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.adapter.DirectoryAdapter
 import com.example.xianyuplayer.databinding.FragmentScanDirectorySelectBinding
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
 
@@ -19,6 +21,7 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
         val path = Environment.getExternalStorageDirectory().path
         File(path)
     }
+    private val directoryAdapter by lazy { DirectoryAdapter(requireContext(), rootFile) }
     private lateinit var binding: FragmentScanDirectorySelectBinding
     private val TAG = "ScanDirectorySelectFrag"
 
@@ -45,7 +48,6 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
 
         binding.linearTopContainer.setOnClickListener(this)
         binding.linearManageSearch.setOnClickListener(this)
-        val directoryAdapter = DirectoryAdapter(requireContext(), rootFile)
         directoryAdapter.setCheckBoxSelectCallback(::checkBoxSelectCallback)
         directoryAdapter.setDirectorySelectCallback(::directorySelectCallback)
         binding.recycleDirectoryList.adapter = directoryAdapter
@@ -76,7 +78,7 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
         Log.i(TAG, "checkBoxSelectCallback: --> isChecked $isChecked")
     }
 
-    private fun directorySelectCallback(view: View) {
+    private fun directorySelectCallback(view: View, itemFile: File, position: Int) {
         Log.i(TAG, "directorySelectCallback: --> view $view")
     }
 }
