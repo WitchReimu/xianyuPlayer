@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">xianyuPlayer</string>
+
+    <string name="test_file_name">fileName</string>
 </resources>

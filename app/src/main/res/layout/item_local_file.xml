@@ -4,14 +4,14 @@
     android:id="@+id/constraint_item_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/ripple_local_file"
+    android:background="@drawable/ripple_common"
     android:paddingVertical="10dp">
 
     <TextView
         android:id="@+id/txt_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1"
+        android:text="@string/test_file_name"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/txt_file_info"
         app:layout_constraintStart_toStartOf="@+id/guideline2"

@@ -8,6 +8,7 @@
         android:id="@+id/linear_top_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/ripple_common"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="10dp"
@@ -28,13 +29,15 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycle_directory_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/linear_manage_search"
         app:layout_constraintTop_toBottomOf="@+id/linear_top_container" />
 
     <LinearLayout
         android:id="@+id/linear_manage_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/ripple_common"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="8dp"

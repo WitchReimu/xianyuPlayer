@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                     if (findFragmentByTag == null) {
                         addFragment(homeFragmentTag, homeFragment)
                     }
-                    showSpecialFragment(homeFragment)
+                    FragmentInstanceManager.showSpecialFragment(this, homeFragment)
                 }
 
                 R.id.menu_mine -> {
@@ -47,8 +47,7 @@ class MainActivity : AppCompatActivity() {
                     if (findFragmentByTag == null) {
                         addFragment(localFragmentTag, localFileFragment)
                     }
-                    showSpecialFragment(localFileFragment)
-
+                    FragmentInstanceManager.showSpecialFragment(this, localFileFragment)
                 }
             }
 
@@ -69,20 +68,6 @@ class MainActivity : AppCompatActivity() {
             fragment,
             tag
         ).commit()
-    }
-
-    private fun showSpecialFragment(showFragment: Fragment) {
-        val transaction = supportFragmentManager.beginTransaction()
-
-        for (fragment in supportFragmentManager.fragments) {
-
-            if (fragment != showFragment && fragment.isVisible) {
-                transaction.hide(fragment);
-            } else {
-                transaction.show(showFragment)
-            }
-        }
-        transaction.commit()
     }
 
     private fun requestPermissionList() {

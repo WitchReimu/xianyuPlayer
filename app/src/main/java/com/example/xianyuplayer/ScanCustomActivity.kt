@@ -1,13 +1,12 @@
 package com.example.xianyuplayer
 
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.xianyuplayer.databinding.ActivityScanCustomBinding
+import com.example.xianyuplayer.fragment.CustomScanFragment
 import com.example.xianyuplayer.fragment.ScanDirectorySelectFragment
 
-class ScanCustomActivity : AppCompatActivity(), View.OnClickListener {
+class ScanCustomActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityScanCustomBinding
 
@@ -15,33 +14,13 @@ class ScanCustomActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         binding = ActivityScanCustomBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        binding.imgBtnBack.setOnClickListener(this)
-        binding.btnCustomScan.setOnClickListener(this)
-        binding.btnScanSetting.setOnClickListener(this)
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.add(binding.frameCustomContainer.id, CustomScanFragment(), customScanTag)
+        transaction.commit()
     }
 
-    override fun onClick(v: View?) {
-        if (v == null) {
-            return
-        }
-
-        when (v.id) {
-
-            binding.imgBtnBack.id -> {
-                onBackPressed()
-            }
-
-            binding.btnCustomScan.id -> {
-                binding.frameCustomContainer.visibility = View.VISIBLE
-                val transaction = supportFragmentManager.beginTransaction()
-                transaction.add(ScanDirectorySelectFragment(), "DirectorySelect")
-                transaction.commit()
-            }
-
-            binding.btnScanSetting.id -> {
-
-            }
-        }
+    companion object {
+        const val directorySelectTag = "directory_select"
+        const val customScanTag = "custom_scan"
     }
 }

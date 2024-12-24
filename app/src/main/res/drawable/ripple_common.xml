@@ -3,6 +3,5 @@
     android:color="#2AAAAAAA">
 
     <item
-        android:id="@+id/test"
         android:drawable="@color/white" />
 </ripple>
