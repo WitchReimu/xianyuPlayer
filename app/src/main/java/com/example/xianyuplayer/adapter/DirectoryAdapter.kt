@@ -1,6 +1,7 @@
 package com.example.xianyuplayer.adapter
 
 import android.content.Context
+import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,12 +17,14 @@ import java.nio.file.Paths
 
 class DirectoryAdapter(
     private val context: Context,
-    private var currentFile: File,
-    private var checkedBoxCallback: ((button: CompoundButton, isChecked: Boolean) -> Unit)? = null,
+    private var currentDirectory: File,
+    private var checkedBoxCallback: ((view: View) -> Unit)? = null,
     private var directoryItemCallback: ((view: View, itemFile: File, position: Int) -> Unit)? = null
 ) : RecyclerView.Adapter<DirectoryAdapter.ViewHolder>() {
 
     private val TAG = "DirectoryAdapter"
+    private val selectedFileList = ArrayList<File>()
+    private lateinit var directoryUpdateCallback: (item: File) -> Unit
 
     private val listFiles by lazy {
         getListFile()
@@ -41,31 +44,38 @@ class DirectoryAdapter(
         val file = listFiles[position].toFile()
         holder.binding.txtFileName.text = file.name
 
-        if (checkedBoxCallback != null) {
-            holder.binding.checkSelect.setOnCheckedChangeListener(checkedBoxCallback)
+        holder.binding.checkSelect.isChecked =
+            selectedFileList.isNotEmpty() && selectedFileList.contains(file)
+
+        holder.binding.checkSelect.setOnClickListener { view ->
+            updateSelectedFileList(holder, file)
+
+            if (checkedBoxCallback != null) {
+                checkedBoxCallback!!(view)
+            }
         }
 
-        if (directoryItemCallback != null) {
-            holder.binding.linearDirectoryItemRoot.setOnClickListener {
-                Files.newDirectoryStream(Paths.get(file.path)).use { stream ->
+        holder.binding.linearDirectoryItemRoot.setOnClickListener {
+            Files.newDirectoryStream(Paths.get(file.path)).use { stream ->
+                for (path in stream) {
 
-                    for (path in stream) {
-
-                        if (Files.isDirectory(path)) {
-                            updateCurrentFile(path.toFile())
-                            break
-                        }
-
-                        holder.binding.checkSelect.isChecked = true
+                    if (Files.isDirectory(path)) {
+                        updateCurrentFile(file)
+                        return@use
                     }
                 }
+                holder.binding.checkSelect.isChecked = !holder.binding.checkSelect.isChecked
+                updateSelectedFileList(holder, file)
+            }
+
+            if (directoryItemCallback != null) {
                 directoryItemCallback!!(it, file, position)
             }
         }
     }
 
     private fun getListFile(): ArrayList<Path> {
-        val list = Files.newDirectoryStream(Paths.get(currentFile.path)).use {
+        val list = Files.newDirectoryStream(Paths.get(currentDirectory.path)).use {
             val pathList = ArrayList<Path>(10)
             for (path in it) {
                 if (Files.isDirectory(path)) {
@@ -78,7 +88,15 @@ class DirectoryAdapter(
         return list
     }
 
-    fun setCheckBoxSelectCallback(callback: (button: CompoundButton, isChecked: Boolean) -> Unit) {
+    private fun updateSelectedFileList(holder: ViewHolder, file: File) {
+        if (holder.binding.checkSelect.isChecked) {
+            selectedFileList.add(file)
+        } else {
+            selectedFileList.remove(file)
+        }
+    }
+
+    fun setCheckBoxSelectCallback(callback: (view: View) -> Unit) {
         checkedBoxCallback = callback
     }
 
@@ -86,10 +104,42 @@ class DirectoryAdapter(
         directoryItemCallback = callback
     }
 
+    fun setOnDirectoryUpdateCallback(callback: (itemFile: File) -> Unit) {
+        directoryUpdateCallback = callback
+    }
+
+    fun getSelectedFile(): ArrayList<File> {
+        val arrayList = ArrayList<File>()
+        arrayList.addAll(selectedFileList)
+        return arrayList
+    }
+
+    fun backParentDirectory() {
+        val parent = currentDirectory.parent
+
+        if (TextUtils.isEmpty(parent)) {
+            return
+        }
+        parent as String
+        updateCurrentFile(File(parent))
+    }
+
     private fun updateCurrentFile(file: File) {
-        currentFile = file
+
+        if (!file.exists()) {
+            Log.w(TAG, "updateCurrentFile: --> 目录不存在不进行更新")
+            return
+        }
+
+        if (!file.canRead() || !file.canExecute()) {
+            Log.w(TAG, "updateCurrentFile: --> 目录权限不足，不进行更新")
+            return
+        }
+        currentDirectory = file
         listFiles.clear()
         listFiles.addAll(getListFile())
+        directoryUpdateCallback(file)
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(val binding: ItemDirectoryBinding) :

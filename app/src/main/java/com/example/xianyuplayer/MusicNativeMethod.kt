@@ -6,6 +6,10 @@ import com.example.xianyuplayer.database.MusicMetadata
 class MusicNativeMethod {
     private var decodeStreamPtr: Long = 0
     private var playerPtr: Long = 0
+
+    /**
+     * @param filePath 文件路径应为绝对路径
+     */
     external fun getMetadata(filePath: String): Array<MusicMetadata>
     private external fun startPlay(playerPtr: Long)
     private external fun initPlay(streamPtr: Long, playerPtr: Long): Long

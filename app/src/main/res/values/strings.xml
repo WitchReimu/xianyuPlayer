@@ -2,4 +2,6 @@
     <string name="app_name">xianyuPlayer</string>
 
     <string name="test_file_name">fileName</string>
+    <string name="test_song_title">songTitle</string>
+    <string name="default_metadata">群星</string>
 </resources>

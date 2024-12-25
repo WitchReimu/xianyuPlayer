@@ -15,8 +15,8 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.xianyuplayer.LocalFileViewModel
-import com.example.xianyuplayer.LocalFileViewModelFactory
+import com.example.xianyuplayer.vm.LocalFileViewModel
+import com.example.xianyuplayer.vm.LocalFileViewModelFactory
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
@@ -32,6 +32,7 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
     private val prefixPath = "/sdcard/"
     private val key_album = "album"
     private val key_artist = "artist"
+    private val key_title = "title"
 
     private val viewModel: LocalFileViewModel by lazy {
         val playerApplication = requireActivity().application as PlayerApplication
@@ -43,7 +44,7 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
     private lateinit var binding: FragmentLocalFileBinding
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private val localFileList = ArrayList<LocalFile>(20)
-    private val adapter by lazy { LocalFileAdapter() }
+    private val adapter by lazy { LocalFileAdapter(requireContext()) }
     private val supportFileType = arrayOf("mp3", "mp4", "flac")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +78,8 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                 if (Arrays.stream(supportFileType).anyMatch { it == type }) {
                     var absolutePath = prefixPath + path!!.split(":")[2]
                     absolutePath = absolutePath.substring(
-                        absolutePath.indexOf("/"), absolutePath.lastIndexOf("/") + 1
+                        absolutePath.indexOf("/"),
+                        absolutePath.lastIndexOf("/") + 1
                     )
 
                     val metadataArray =
@@ -92,6 +94,10 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
 
                             key_album -> {
                                 localFile.albumsName = musicMetadata.value
+                            }
+
+                            key_title -> {
+                                localFile.songTitle = musicMetadata.value
                             }
                         }
                     }

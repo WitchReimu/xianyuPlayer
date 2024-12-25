@@ -1,5 +1,7 @@
 package com.example.xianyuplayer.adapter
 
+import android.content.Context
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -7,7 +9,8 @@ import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ItemLocalFileBinding
 
-class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
+class LocalFileAdapter(private val context: Context) :
+    RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
 
     private val dataList = ArrayList<LocalFile>(20)
     private val TAG = "LocalFileAdapter"
@@ -25,12 +28,19 @@ class LocalFileAdapter() : RecyclerView.Adapter<LocalFileAdapter.ViewHolder>() {
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val localFile = dataList[position]
         val fileName = localFile.fileName
-        holder.binding.txtFileName.text = fileName.substring(0, fileName.lastIndexOf("."))
+        val songTitle = localFile.songTitle
+
+        if (TextUtils.isEmpty(songTitle) || songTitle == "群星") {
+            holder.binding.txtFileName.text = fileName.substring(0, fileName.lastIndexOf("."))
+        } else {
+            holder.binding.txtFileName.text = songTitle
+        }
         holder.binding.txtNumber.text = String.format("%s", position + 1)
         holder.binding.txtFileInfo.text = localFile.singer
 
         holder.binding.constraintItemContainer.setOnClickListener {
-            MusicNativeMethod.getInstance().openDecodeStream(localFile.filePath + localFile.fileName)
+            MusicNativeMethod.getInstance()
+                .openDecodeStream(localFile.filePath + localFile.fileName)
             MusicNativeMethod.getInstance().startDecodeStream()
             MusicNativeMethod.getInstance().initPlay()
             MusicNativeMethod.getInstance().startPlay()

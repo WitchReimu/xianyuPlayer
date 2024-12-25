@@ -12,6 +12,8 @@ data class LocalFile(
     @ColumnInfo(name = "singer")
     var singer: String = "群星",
     @ColumnInfo(name = "albums_name")
-    var albumsName: String = "群星"
+    var albumsName: String = "群星",
+    @ColumnInfo(name = "song_title")
+    var songTitle: String = "群星"
 ) {
 }

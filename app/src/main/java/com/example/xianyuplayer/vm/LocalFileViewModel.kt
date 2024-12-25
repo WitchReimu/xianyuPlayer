@@ -1,4 +1,4 @@
-package com.example.xianyuplayer
+package com.example.xianyuplayer.vm
 
 import android.net.Uri
 import androidx.lifecycle.LiveData
@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.database.LocalScanPath
 import com.example.xianyuplayer.database.PlayerRepository
