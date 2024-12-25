@@ -15,6 +15,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.FragmentInstanceManager
 import com.example.xianyuplayer.vm.LocalFileViewModel
 import com.example.xianyuplayer.vm.LocalFileViewModelFactory
 import com.example.xianyuplayer.MusicNativeMethod
@@ -30,9 +31,6 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
 
     private val TAG = "LocalFileFragment"
     private val prefixPath = "/sdcard/"
-    private val key_album = "album"
-    private val key_artist = "artist"
-    private val key_title = "title"
 
     private val viewModel: LocalFileViewModel by lazy {
         val playerApplication = requireActivity().application as PlayerApplication
@@ -81,26 +79,8 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                         absolutePath.indexOf("/"),
                         absolutePath.lastIndexOf("/") + 1
                     )
-
-                    val metadataArray =
-                        MusicNativeMethod.getInstance().getMetadata("$absolutePath$name")
                     val localFile = LocalFile(absolutePath, name)
-
-                    for (musicMetadata in metadataArray) {
-                        when (musicMetadata.key) {
-                            key_artist -> {
-                                localFile.singer = musicMetadata.value
-                            }
-
-                            key_album -> {
-                                localFile.albumsName = musicMetadata.value
-                            }
-
-                            key_title -> {
-                                localFile.songTitle = musicMetadata.value
-                            }
-                        }
-                    }
+                    FragmentInstanceManager.getMetadata(localFile)
                     viewModel.insertLocalFile(localFile)
                     Log.i(TAG, "recursionScanFile: --> ${localFile.filePath}")
                     localFileList.add(localFile)

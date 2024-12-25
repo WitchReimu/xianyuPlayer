@@ -10,6 +10,7 @@ import android.widget.CompoundButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.FragmentInstanceManager
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.vm.ScanDirectorySelectViewModel
@@ -131,27 +132,7 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
                 //获取符合条件的音乐文件的metadata
                 for (path in localFileList) {
                     val localFile = LocalFile(path.parent.toString() + File.separator, path.name)
-
-                    val metadataArray =
-                        MusicNativeMethod.getInstance().getMetadata(path.absolutePathString())
-
-                    for (musicMetadata in metadataArray) {
-
-                        when (musicMetadata.key) {
-
-                            key_artist -> {
-                                localFile.singer = musicMetadata.value
-                            }
-
-                            key_album -> {
-                                localFile.albumsName = musicMetadata.value
-                            }
-
-                            key_title -> {
-                                localFile.songTitle = musicMetadata.value
-                            }
-                        }
-                    }
+                    FragmentInstanceManager.getMetadata(localFile)
                     viewModel.insertLocalFile(localFile)
                 }
             }
