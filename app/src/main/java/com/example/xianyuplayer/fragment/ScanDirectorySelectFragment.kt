@@ -1,31 +1,29 @@
 package com.example.xianyuplayer.fragment
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.FragmentInstanceManager
-import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
-import com.example.xianyuplayer.vm.ScanDirectorySelectViewModel
-import com.example.xianyuplayer.vm.ScanDirectorySelectViewModelFactory
 import com.example.xianyuplayer.adapter.DirectoryAdapter
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.FragmentScanDirectorySelectBinding
+import com.example.xianyuplayer.vm.ScanDirectorySelectViewModel
+import com.example.xianyuplayer.vm.ScanDirectorySelectViewModelFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
-import kotlin.io.path.pathString
 
 class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
 
@@ -41,13 +39,27 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
             ScanDirectorySelectViewModelFactory(playerApplication.repository)
         )[TAG, ScanDirectorySelectViewModel::class]
     }
+
+    private val searchAnimation by lazy {
+        val path = android.graphics.Path()
+        path.addCircle(
+            -(binding.imgSearch.width / 2).toFloat(),
+            0f,
+            40f,
+            android.graphics.Path.Direction.CCW
+        )
+
+        ObjectAnimator.ofFloat(
+            binding.imgSearch,
+            "translationX",
+            "translationY",
+            path
+        )
+    }
     private val directoryAdapter by lazy { DirectoryAdapter(requireContext(), rootFile) }
 
     private val TAG = "ScanDirectorySelectFrag"
     private lateinit var binding: FragmentScanDirectorySelectBinding
-    private val key_album = "album"
-    private val key_artist = "artist"
-    private val key_title = "title"
     private val supportFileType = arrayOf("mp3", "mp4", "flac")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +93,19 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
         binding.recycleDirectoryList.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
 
+        viewModel.insertNumber.observe(viewLifecycleOwner) {
+            if (it == null)
+                return@observe
+            val valueArray = it as LongArray
+
+            for (value in valueArray) {
+                if (value == -1L) {
+                    Log.w(TAG, "onViewCreated: --> 数据插入失败")
+                }
+            }
+            searchAnimation.cancel()
+            requireActivity().finish()
+        }
     }
 
     override fun onClick(v: View?) {
@@ -97,7 +122,17 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
 
             binding.linearManageSearch.id -> {
                 val selectedFile = directoryAdapter.getSelectedFile()
-                val localFileList = ArrayList<Path>()
+                val pathList = ArrayList<Path>()
+//                val localScanList = ArrayList<LocalScanPath>(selectedFile.size)
+                val localFileList = ArrayList<LocalFile>()
+
+                //开启扫描本地文件动画
+                if (selectedFile.isNotEmpty()) {
+                    searchAnimation.repeatCount = ValueAnimator.INFINITE
+                    searchAnimation.repeatMode = ValueAnimator.RESTART
+                    searchAnimation.duration = 1000
+                    searchAnimation.start()
+                }
                 //遍历扫描选择的文件目录
                 for (file in selectedFile) {
                     val walkStream = Files.walk(Paths.get(file.path))
@@ -120,20 +155,27 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
                                     if (type == suffix) {
                                         return@filter true
                                     }
-
                                 }
                                 false
                             }
                             .collect(Collectors.toList())
                     }
-                    localFileList.addAll(result)
+//                    val localScanPath = LocalScanPath(file.absolutePath)
+//                    localScanList.add(localScanPath)
+                    pathList.addAll(result)
                 }
 
-                //获取符合条件的音乐文件的metadata
-                for (path in localFileList) {
-                    val localFile = LocalFile(path.parent.toString() + File.separator, path.name)
-                    FragmentInstanceManager.getMetadata(localFile)
-                    viewModel.insertLocalFile(localFile)
+                if (pathList.isEmpty()) {
+                    searchAnimation.cancel()
+                } else {
+                    //获取符合条件的音乐文件的metadata
+                    for (path in pathList) {
+                        val localFile =
+                            LocalFile(path.parent.toString() + File.separator, path.name)
+                        FragmentInstanceManager.getMetadata(localFile)
+                        localFileList.add(localFile)
+                    }
+                    viewModel.insertLocalFile(localFileList)
                 }
             }
         }

@@ -10,11 +10,14 @@ import kotlinx.coroutines.flow.Flow
 interface LocalFileDao {
 
     @Insert(LocalFile::class, OnConflictStrategy.REPLACE)
-    suspend fun insertLocalFile(localFile: LocalFile)
+    suspend fun insertLocalFile(localFile: LocalFile): Long
+
+    @Insert(LocalFile::class, OnConflictStrategy.REPLACE)
+    suspend fun insertLocalFile(localFile: List<LocalFile>): LongArray
 
     @Query("select * from local_file")
-    fun getAllLocalFiles():Flow<List<LocalFile>>
+    fun getAllLocalFiles(): Flow<List<LocalFile>>
 
     @Query("delete from local_file where file_name=:fileName and file_path=:filePath")
-    suspend fun deleteSpecialLocalFile(fileName:String,filePath:String)
+    suspend fun deleteSpecialLocalFile(fileName: String, filePath: String)
 }

@@ -43,17 +43,27 @@ object FragmentInstanceManager {
         transaction.commit()
     }
 
-    fun showSpecialFragmentAndRemoveSpecialFragment(
+    fun showAndRemoveSpecialFragment(
         activity: FragmentActivity,
         showFragment: Fragment,
-        removeFragment: Fragment
+        removeFragment: Fragment?,
+        allFragment: Boolean = false
     ) {
         val manager = activity.supportFragmentManager
         val transaction = manager.beginTransaction()
 
         for (fragment in manager.fragments) {
-            if (fragment == removeFragment) {
-                transaction.remove(removeFragment)
+
+            if (allFragment) {
+
+                if (showFragment != fragment) {
+                    transaction.remove(fragment)
+                }
+            } else {
+
+                if (removeFragment != null && fragment == removeFragment) {
+                    transaction.remove(removeFragment)
+                }
             }
         }
         transaction.show(showFragment)

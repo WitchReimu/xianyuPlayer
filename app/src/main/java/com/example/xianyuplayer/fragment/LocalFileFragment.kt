@@ -16,15 +16,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.FragmentInstanceManager
-import com.example.xianyuplayer.vm.LocalFileViewModel
-import com.example.xianyuplayer.vm.LocalFileViewModelFactory
-import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.ScanCustomActivity
 import com.example.xianyuplayer.adapter.LocalFileAdapter
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.FragmentLocalFileBinding
+import com.example.xianyuplayer.vm.LocalFileViewModel
+import com.example.xianyuplayer.vm.LocalFileViewModelFactory
 import java.util.Arrays
 
 class LocalFileFragment : Fragment(), View.OnClickListener {

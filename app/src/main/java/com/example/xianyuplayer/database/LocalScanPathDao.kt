@@ -12,6 +12,9 @@ interface LocalScanPathDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertPath(localScanPath: LocalScanPath)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertPath(localScanPath: List<LocalScanPath>): LongArray
+
     @Query("select * from local_scan_path")
     fun getAllPath(): Flow<List<LocalScanPath>>
 

@@ -15,12 +15,20 @@ class PlayerRepository(
         localScanPathDao.insertPath(localScanPath)
     }
 
+    suspend fun insertScanLocalPaths(localScanPaths: List<LocalScanPath>): LongArray {
+        return localScanPathDao.insertPath(localScanPaths)
+    }
+
     suspend fun deleteScanPathLocalPath(uri: String) {
         localScanPathDao.deletePath(uri)
     }
 
-    suspend fun insertLocalFile(localFile: LocalFile) {
-        localFileDao.insertLocalFile(localFile)
+    suspend fun insertLocalFile(localFile: LocalFile): Long {
+        return localFileDao.insertLocalFile(localFile)
+    }
+
+    suspend fun insertLocalFile(localFile: List<LocalFile>): LongArray {
+        return localFileDao.insertLocalFile(localFile)
     }
 
     fun getAllLocalFiles(): Flow<List<LocalFile>> {
