@@ -22,5 +22,6 @@ class ScanCustomActivity : AppCompatActivity() {
     companion object {
         const val directorySelectTag = "directory_select"
         const val customScanTag = "custom_scan"
+        const val scanSettingTag = "scanSetting"
     }
 }

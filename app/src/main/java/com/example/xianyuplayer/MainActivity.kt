@@ -2,11 +2,16 @@ package com.example.xianyuplayer
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.xianyuplayer.Constant.playStatus
+import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ActivityMainBinding
 import com.example.xianyuplayer.fragment.HomeFragment
 import com.example.xianyuplayer.fragment.LocalFileFragment
@@ -53,7 +58,74 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
-        binding.sampleText.text = stringFromJNI()
+
+        binding.imgBtnPlayList.setOnClickListener {
+
+        }
+
+        binding.imgPlay.setOnClickListener {
+
+            if (playStatus == 3 || playStatus == 4) {
+                pausePlay()
+            } else {
+                startPlay()
+            }
+        }
+    }
+
+    fun starPlayCallBack(file: LocalFile) {
+        val absolutePath = file.filePath + file.fileName
+        val albumCoverByte =
+            MusicNativeMethod.getInstance().getAudioAlbum(absolutePath = absolutePath)
+
+        if (albumCoverByte.isNotEmpty()) {
+            val options = BitmapFactory.Options()
+            options.inPreferredConfig = Bitmap.Config.RGB_565
+            val bitmap =
+                BitmapFactory.decodeByteArray(albumCoverByte, 0, albumCoverByte.size, options)
+
+            if (bitmap != null) {
+                binding.imgAudioAlbum.setImageBitmap(bitmap)
+            }
+        }
+        binding.txtAudioName.text = file.songTitle
+    }
+
+    private fun pausePlay() {
+        MusicNativeMethod.getInstance().pausePlay()
+    }
+
+    private fun startPlay() {
+        MusicNativeMethod.getInstance().startPlay()
+    }
+
+    /**
+     * native 函数
+     * 播放状态发生变化后，c++会调用该函数将播放状态的值赋值给变量形参status
+     * @param status 播放状态发生改变后的值
+     */
+    fun playStatusChangeCallback(status: Int): Unit {
+        Constant.playStatus = status
+
+        when (status) {
+            3, 4 -> {
+                binding.imgPlay.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.pause_circle_24
+                    )
+                )
+            }
+
+            else -> {
+                binding.imgPlay.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.start_circle_24
+                    )
+                )
+            }
+        }
     }
 
     override fun onStart() {

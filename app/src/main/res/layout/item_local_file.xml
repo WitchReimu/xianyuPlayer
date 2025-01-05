@@ -39,7 +39,7 @@
         android:id="@+id/txt_file_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="file_info"
+        android:text="@string/default_metadata"
         android:textColor="@color/black"
         android:textSize="22sp"
         app:layout_constraintStart_toStartOf="@+id/txt_file_name"

@@ -4,7 +4,8 @@ import kotlinx.coroutines.flow.Flow
 
 class PlayerRepository(
     private val localScanPathDao: LocalScanPathDao,
-    private val localFileDao: LocalFileDao
+    private val localFileDao: LocalFileDao,
+    private val fileSystemPathDao: FileSystemPathDao
 ) {
 
     fun getScanLocalPath(): Flow<List<LocalScanPath>> {
@@ -17,6 +18,10 @@ class PlayerRepository(
 
     suspend fun insertScanLocalPaths(localScanPaths: List<LocalScanPath>): LongArray {
         return localScanPathDao.insertPath(localScanPaths)
+    }
+
+    suspend fun updateScanLocalPaths(localScanPaths: List<LocalScanPath>): Int {
+        return localScanPathDao.updatePaths(localScanPaths)
     }
 
     suspend fun deleteScanPathLocalPath(uri: String) {
@@ -41,5 +46,25 @@ class PlayerRepository(
 
     suspend fun deleteTargetLocalFile(fileName: String, filePath: String) {
         localFileDao.deleteSpecialLocalFile(fileName, filePath)
+    }
+
+    suspend fun insertAbsolutePath(fileSystemPath: FileSystemPath): Long {
+        return fileSystemPathDao.insertAbsolutePath(fileSystemPath)
+    }
+
+    suspend fun insertAbsolutePaths(fileSystemPath: List<FileSystemPath>): LongArray {
+        return fileSystemPathDao.insertAbsolutePaths(fileSystemPath)
+    }
+
+    fun getAllPath(): Flow<List<FileSystemPath>> {
+        return fileSystemPathDao.getAllPath()
+    }
+
+    suspend fun deletePath(fileSystemPath: FileSystemPath): Int {
+        return fileSystemPathDao.deletePath(fileSystemPath)
+    }
+
+    suspend fun deletePaths(fileSystemPaths: List<FileSystemPath>): Int {
+        return fileSystemPathDao.deletePaths(fileSystemPaths)
     }
 }

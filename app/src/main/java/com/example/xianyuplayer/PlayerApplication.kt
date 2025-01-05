@@ -9,7 +9,8 @@ class PlayerApplication : Application() {
     val repository by lazy {
         PlayerRepository(
             database.getLocalScanPathDao(),
-            database.getLocalFileDao()
+            database.getLocalFileDao(),
+            database.getFileSystemPathDao()
         )
     }
 }

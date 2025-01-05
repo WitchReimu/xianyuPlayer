@@ -45,10 +45,10 @@ public:
 	void decodeFile();
 	void notifyCond();
 	int getDecodeState();
-
+	void getAlbumPic();
+	char path[NAME_MAX] = {};
 
 private:
-	char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;
 	int streamIndex = -1;
 	const AVCodec *audioDecode = nullptr;

@@ -2,19 +2,24 @@ package com.example.xianyuplayer.fragment
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.Constant
 import com.example.xianyuplayer.FragmentInstanceManager
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.adapter.DirectoryAdapter
+import com.example.xianyuplayer.database.FileSystemPath
 import com.example.xianyuplayer.database.LocalFile
+import com.example.xianyuplayer.database.LocalScanPath
 import com.example.xianyuplayer.databinding.FragmentScanDirectorySelectBinding
 import com.example.xianyuplayer.vm.ScanDirectorySelectViewModel
 import com.example.xianyuplayer.vm.ScanDirectorySelectViewModelFactory
@@ -123,7 +128,7 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
             binding.linearManageSearch.id -> {
                 val selectedFile = directoryAdapter.getSelectedFile()
                 val pathList = ArrayList<Path>()
-//                val localScanList = ArrayList<LocalScanPath>(selectedFile.size)
+                val scanPaths = ArrayList<LocalScanPath>(selectedFile.size)
                 val localFileList = ArrayList<LocalFile>()
 
                 //开启扫描本地文件动画
@@ -160,8 +165,11 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
                             }
                             .collect(Collectors.toList())
                     }
-//                    val localScanPath = LocalScanPath(file.absolutePath)
-//                    localScanList.add(localScanPath)
+                    val scanPath = LocalScanPath(
+                        file.absolutePath + Constant.pathSuffix,
+                        Uri.fromFile(file).toString()
+                    )
+                    scanPaths.add(scanPath)
                     pathList.addAll(result)
                 }
 
@@ -175,7 +183,7 @@ class ScanDirectorySelectFragment : Fragment(), View.OnClickListener {
                         FragmentInstanceManager.getMetadata(localFile)
                         localFileList.add(localFile)
                     }
-                    viewModel.insertLocalFile(localFileList)
+                    viewModel.insertScanPathsAndLocalFiles(scanPaths, localFileList)
                 }
             }
         }

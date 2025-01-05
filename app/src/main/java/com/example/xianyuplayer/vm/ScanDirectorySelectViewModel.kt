@@ -4,6 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.xianyuplayer.database.FileSystemPath
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.database.LocalScanPath
 import com.example.xianyuplayer.database.PlayerRepository
@@ -25,23 +26,21 @@ class ScanDirectorySelectViewModel(private val repository: PlayerRepository) : V
         }
     }
 
-    fun insertScanPath(uri: String) {
+    fun insertScanPath(path: FileSystemPath) {
         viewModelScope.launch {
-            val localScanPath = LocalScanPath(uri)
-            repository.insertScanLocalPath(localScanPath)
+            repository.insertAbsolutePath(path)
         }
     }
 
-    fun insertScanPath(uriList: List<LocalScanPath>) {
+    fun insertScanPath(paths: List<FileSystemPath>) {
         viewModelScope.launch {
-
-            repository.insertScanLocalPaths(uriList)
+            repository.insertAbsolutePaths(paths)
         }
     }
 
-    fun insertScanPathsAndLocalFiles(uriList: List<LocalScanPath>, localFile: List<LocalFile>) {
+    fun insertScanPathsAndLocalFiles(paths: List<LocalScanPath>, localFile: List<LocalFile>) {
         viewModelScope.launch {
-            var resultArray = repository.insertScanLocalPaths(uriList)
+            var resultArray = repository.insertScanLocalPaths(paths)
             resultArray += repository.insertLocalFile(localFile)
             insertNumber.value = resultArray
         }

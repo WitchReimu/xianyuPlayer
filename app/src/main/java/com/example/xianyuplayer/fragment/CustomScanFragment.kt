@@ -5,14 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.xianyuplayer.FragmentInstanceManager
+import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.ScanCustomActivity
+import com.example.xianyuplayer.database.LocalScanPath
 import com.example.xianyuplayer.databinding.FragmentCustomScanBinding
+import com.example.xianyuplayer.vm.CustomScanViewModel
+import com.example.xianyuplayer.vm.CustomScanViewModelFactory
 
 class CustomScanFragment : Fragment(), View.OnClickListener {
 
+    private val TAG = "CustomScanFragment"
+
     private lateinit var binding: FragmentCustomScanBinding
+    private val viewModel by lazy {
+        val application = requireActivity().application as PlayerApplication
+        val factory = CustomScanViewModelFactory(application.repository)
+        ViewModelProvider(viewModelStore, factory)[TAG, CustomScanViewModel::class.java]
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,8 +66,24 @@ class CustomScanFragment : Fragment(), View.OnClickListener {
             }
 
             binding.btnScanSetting.id -> {
-
+                val manager = requireActivity().supportFragmentManager
+                val transaction = manager.beginTransaction()
+                val scanSettingFragment = ScanSettingFragment()
+                transaction.add(
+                    R.id.frame_custom_container,
+                    scanSettingFragment,
+                    ScanCustomActivity.scanSettingTag
+                )
+                FragmentInstanceManager.showSpecialFragment(
+                    transaction,
+                    manager,
+                    scanSettingFragment
+                )
             }
         }
+    }
+
+    fun updateScanPathList(scanPathList: List<LocalScanPath>) {
+        viewModel.updateScanPathList(scanPathList)
     }
 }

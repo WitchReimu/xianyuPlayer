@@ -9,19 +9,28 @@
 #include <memory>
 #include "../LogUtils.h"
 #include "decodeStream.h"
+#include <jni.h>
 
 class oboePlayer: public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCallback
 {
 public:
-	void initStream(decodeStream *stream);
+	void initStream(decodeStream *stream, JNIEnv *env, jobject activity);
 	bool startPlay();
+	bool pausePlay();
+	int getPlayerStatus();
+	int playStatusChange(oboe::StreamState state);
+	JNIEnv *getJNIEnv(bool *isAttach);
 	~oboePlayer();
+
 private:
 	oboe::AudioStreamBuilder audioBuilder;
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;
-	oboe::AudioFormat outputFormat= oboe::AudioFormat::Invalid;
+	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;
 	int dataOffset = 0;
+	int playerState = 0;
+	jobject activityObject = nullptr;
+	JavaVM *vm = nullptr;
 
 	int renderAudioData(void *audioData, int32_t numFrames);
 	virtual oboe::DataCallbackResult

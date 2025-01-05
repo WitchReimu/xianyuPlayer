@@ -16,9 +16,9 @@ class LocalFileViewModel(private val repository: PlayerRepository) : ViewModel()
     val scanPathUriList: LiveData<List<LocalScanPath>> = repository.getScanLocalPath().asLiveData()
     val allLocalFile = repository.getAllLocalFiles().asLiveData()
 
-    fun insertScanPath(uri: Uri) {
+    fun insertScanPath(uri: Uri, absolutePath: String) {
         viewModelScope.launch {
-            val localScanPath = LocalScanPath(uri.toString())
+            val localScanPath = LocalScanPath(absolutePath, uri.toString())
             repository.insertScanLocalPath(localScanPath)
         }
     }

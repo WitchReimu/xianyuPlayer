@@ -45,6 +45,7 @@ void audioFrameQueue::resetDataLength(int resetIndex, int dataLength)
 	frame.dataLength = dataLength;
 	produceIndex = (produceIndex + 1) % length;
 }
+
 audioFrameQueue::audioFrameQueue(int capacity)
 {
 	this->capacity = capacity;

@@ -3,6 +3,7 @@
 #include "fileMetaDataInfo.h"
 #include "decodeStream.h"
 #include "oboePlayer.h"
+#include "AudioAlbumCover.h"
 #define TAG "native-lib"
 
 extern "C"
@@ -58,7 +59,8 @@ void startDecodeStream(JNIEnv *env, jobject activity, jlong streamPtr)
 	}
 }
 
-jlong initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
+jlong
+initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jobject mainActivity, jlong playerPtr)
 {
 	oboePlayer *player_ptr = nullptr;
 
@@ -66,7 +68,7 @@ jlong initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
 	{
 		decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
 		player_ptr = new oboePlayer();
-		player_ptr->initStream(decoder_ptr);
+		player_ptr->initStream(decoder_ptr, env, mainActivity);
 	}
 	else if (playerPtr != 0 && streamPtr != 0)
 	{
@@ -90,6 +92,46 @@ void startPlay(JNIEnv *env, jobject activity, jlong playerPtr)
 	}
 }
 
+jbyteArray GetAudioAlbum(JNIEnv *env, jobject activity, jlong streamPtr, jstring path)
+{
+
+	decodeStream *stream_Ptr = reinterpret_cast<decodeStream *>(streamPtr);
+	const char *absolutePath = env->GetStringUTFChars(path, nullptr);
+	AudioAlbumCover cover = AudioAlbumCover(absolutePath, NAME_MAX);
+	const std::pair<int, char *> pair = cover.getAlbumCover();
+
+	if (pair.first > 0)
+	{
+		jbyteArray bufferArray = env->NewByteArray(pair.first);
+		env->SetByteArrayRegion(bufferArray, 0, pair.first, (const jbyte *)(pair.second));
+		delete[]pair.second;
+		return bufferArray;
+	}
+	env->ReleaseStringUTFChars(path, absolutePath);
+	jbyteArray array = env->NewByteArray(0);
+	return array;
+}
+
+jint GetPlayStatus(JNIEnv *env, jobject activity, jlong playerPtr)
+{
+	if (playerPtr != 0)
+	{
+		oboePlayer *player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
+		return player_ptr->getPlayerStatus();
+	}
+	return 1;
+}
+
+jboolean PausePlay(JNIEnv *env, jobject activity, jlong playerPtr)
+{
+	if (playerPtr != 0)
+	{
+		oboePlayer *player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
+		return player_ptr->pausePlay();
+	}
+	return 1;
+}
+
 JNIEXPORT jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
 	JNIEnv *env,
 	jobject /* this */)
@@ -110,11 +152,17 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		                                        "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;",
 		                                        (void *)getMetadata},
 		                                       {"startPlay", "(J)V", (void *)startPlay},
-		                                       {"initPlay", "(JJ)J", (void *)initPlay},
+		                                       {"initPlay",
+		                                        "(JLcom/example/xianyuplayer/MainActivity;J)J",
+		                                        (void *)initPlay},
 		                                       {"openDecodeStream", "(Ljava/lang/String;J)J",
 		                                        (void *)openDecodeStream},
 		                                       {"startDecodeStream", "(J)V",
-		                                        (void *)startDecodeStream}
+		                                        (void *)startDecodeStream},
+		                                       {"getAudioAlbum", "(JLjava/lang/String;)[B",
+		                                        (void *)GetAudioAlbum},
+		                                       {"getPlayStatus", "(J)I", (void *)GetPlayStatus},
+		                                       {"pausePlay", "(J)Z", (void *)PausePlay}
 
 		};
 		jint ret = env->RegisterNatives(musicNative,

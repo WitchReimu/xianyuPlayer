@@ -3,6 +3,7 @@
 //
 
 #include "oboePlayer.h"
+#include <aaudio/AAudio.h>
 #define TAG "oboePlayer"
 
 oboePlayer::~oboePlayer()
@@ -10,9 +11,8 @@ oboePlayer::~oboePlayer()
 
 }
 
-void oboePlayer::initStream(decodeStream *stream)
+void oboePlayer::initStream(decodeStream *stream, JNIEnv *env, jobject activity)
 {
-
 	decoderStream = stream;
 	audioBuilder.setDirection(oboe::Direction::Output);
 	audioBuilder.setAudioApi(oboe::AudioApi::AAudio);
@@ -39,6 +39,8 @@ void oboePlayer::initStream(decodeStream *stream)
 	audioBuilder.setDataCallback(this);
 	audioBuilder.setErrorCallback(this);
 	audioBuilder.openStream(&oboeAudioStream);
+	env->GetJavaVM(&vm);
+	activityObject = env->NewGlobalRef(activity);
 }
 
 oboe::DataCallbackResult
@@ -54,6 +56,7 @@ oboePlayer::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_
 
 void oboePlayer::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error)
 {
+	//todo:失败后的回调
 	AudioStreamErrorCallback::onErrorAfterClose(oboeStream, error);
 }
 
@@ -97,9 +100,140 @@ bool oboePlayer::startPlay()
 	if (oboeAudioStream != nullptr)
 	{
 		oboe::Result result = oboeAudioStream->requestStart();
+		playStatusChange(oboeAudioStream->getState());
 		return result == oboe::Result::OK;
 	}
 	return false;
+}
+
+bool oboePlayer::pausePlay()
+{
+	if (oboeAudioStream != nullptr)
+	{
+		//500毫秒
+		oboe::Result pauseResult = oboeAudioStream->pause(500000000);
+		playStatusChange(oboeAudioStream->getState());
+		if (oboe::Result::OK != pauseResult)
+		{
+			ALOGE("[%s] error name %s", __FUNCTION__, oboe::convertToText(pauseResult));
+			return false;
+		}
+		oboe::Result flushResult = oboeAudioStream->requestFlush();
+		playStatusChange(oboeAudioStream->getState());
+		if (flushResult != oboe::Result::OK)
+		{
+			ALOGE("[%s] error name %s", __FUNCTION__, oboe::convertToText(flushResult));
+			return false;
+		}
+		return true;
+	}
+	return false;
+}
+
+int oboePlayer::getPlayerStatus()
+{
+	if (oboeAudioStream != nullptr)
+	{
+		int state = static_cast<int>(oboeAudioStream->getState());
+		return state;
+	}
+	return static_cast<int>(oboe::StreamState::Uninitialized);
+}
+
+int oboePlayer::playStatusChange(oboe::StreamState streamState)
+{
+
+	switch (streamState)
+	{
+	case oboe::StreamState::Uninitialized:
+		playerState = 0;
+		break;
+	case oboe::StreamState::Unknown:
+		playerState = 1;
+		break;
+	case oboe::StreamState::Open:
+		playerState = 2;
+		break;
+	case oboe::StreamState::Starting:
+		playerState = 3;
+		break;
+	case oboe::StreamState::Started:
+		playerState = 4;
+		break;
+	case oboe::StreamState::Pausing:
+		playerState = 5;
+		break;
+	case oboe::StreamState::Paused:
+		playerState = 6;
+		break;
+	case oboe::StreamState::Flushing:
+		playerState = 7;
+		break;
+	case oboe::StreamState::Flushed:
+		playerState = 8;
+		break;
+	case oboe::StreamState::Stopping:
+		playerState = 9;
+		break;
+	case oboe::StreamState::Stopped:
+		playerState = 10;
+		break;
+	case oboe::StreamState::Closing:
+		playerState = 11;
+		break;
+	case oboe::StreamState::Closed:
+		playerState = 12;
+		break;
+	case oboe::StreamState::Disconnected:
+		playerState = 13;
+		break;
+	}
+	bool isAttach = false;
+	JNIEnv *env = getJNIEnv(&isAttach);
+
+	if (env != nullptr)
+	{
+		jmethodID callBackMethod = env->GetMethodID(env->GetObjectClass(activityObject),
+		                                            "playStatusChangeCallback",
+		                                            "(I)V");
+		env->CallVoidMethod(activityObject, callBackMethod, playerState);
+
+		if (isAttach)
+			vm->DetachCurrentThread();
+	}
+	return playerState;
+}
+
+JNIEnv *oboePlayer::getJNIEnv(bool *isAttach)
+{
+	JNIEnv *env = nullptr;
+	*isAttach = false;
+
+	if (vm != nullptr)
+	{
+		jint ret = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
+
+		if (ret != JNI_OK)
+		{
+
+			if (ret == JNI_EDETACHED)
+			{
+				ret = vm->AttachCurrentThread(&env, nullptr);
+
+				if (ret != JNI_OK)
+				{
+					ALOGE("[%s] get JNIEnv error by jvm ", __FUNCTION__);
+					return nullptr;
+				}
+				*isAttach = true;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+	}
+	return env;
 }
 
 template<typename T>

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +16,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.Constant
 import com.example.xianyuplayer.FragmentInstanceManager
+import com.example.xianyuplayer.MainActivity
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.ScanCustomActivity
@@ -41,7 +44,7 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
     private lateinit var binding: FragmentLocalFileBinding
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private val localFileList = ArrayList<LocalFile>(20)
-    private val adapter by lazy { LocalFileAdapter(requireContext()) }
+    private val adapter by lazy { LocalFileAdapter(requireActivity()) }
     private val supportFileType = arrayOf("mp3", "mp4", "flac")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +59,9 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                     recursionScanFile(treeUri)
-                    viewModel.insertScanPath(treeUri)
+                    val uriPath = Uri.decode(treeUri.toString())
+                    val absolutePath = Constant.prefixRootPath + uriPath!!.split(":")[2]
+                    viewModel.insertScanPath(treeUri, absolutePath)
                 }
             }
     }
@@ -65,7 +70,7 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
 
         if (file.isFile) {
             val name = file.name
-            //  uri path字段的字符格式/tree/primary:xxx/document/primary:去掉了/sdcard/的文件路径
+            //  uri path字段的字符格式-->/tree/primary:xxx/document/primary:filePath
             val path = file.uri.path
 
             if (name != null) {
@@ -73,7 +78,7 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                 val type = split[split.size - 1]
 
                 if (Arrays.stream(supportFileType).anyMatch { it == type }) {
-                    var absolutePath = prefixPath + path!!.split(":")[2]
+                    var absolutePath = Constant.prefixRootPath + path!!.split(":")[2]
                     absolutePath = absolutePath.substring(
                         absolutePath.indexOf("/"),
                         absolutePath.lastIndexOf("/") + 1
@@ -101,6 +106,10 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
         return binding.root
     }
 
+    fun starPlay(file: LocalFile) {
+
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.allLocalFile.observe(viewLifecycleOwner) { list ->
 
@@ -113,6 +122,9 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                 adapter.setData(list)
             }
         }
+
+        val activity = requireActivity() as MainActivity
+        adapter.setOnStartPlay(activity::starPlayCallBack)
 
         viewModel.scanPathUriList.observe(viewLifecycleOwner) { list ->
             for (localScanPath in list) {
@@ -130,10 +142,14 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
     }
 
     private fun recursionScanFile(uri: Uri) {
-        val documentFile = DocumentFile.fromTreeUri(requireContext(), uri)
+        if (DocumentsContract.isTreeUri(uri)) {
+            val documentFile = DocumentFile.fromTreeUri(requireContext(), uri)
 
-        if (documentFile != null) {
-            recursionScanFile(documentFile)
+            if (documentFile != null) {
+                recursionScanFile(documentFile)
+            } else {
+                //todo:如果不是treeuri使用绝对路径对文件目录进行扫描
+            }
         }
     }
 

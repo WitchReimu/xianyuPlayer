@@ -3,6 +3,7 @@
 //
 
 #include "decodeStream.h"
+#include <fstream>
 #define TAG "decodeStream"
 
 
@@ -61,6 +62,7 @@ void decodeStream::initStream()
 		return;
 	}
 	decodeState = Prepared;
+
 }
 
 void decodeStream::decodeFile()
@@ -239,7 +241,10 @@ bool decodeStream::initSwrContext()
 			targetFmt = AV_SAMPLE_FMT_S64;
 			break;
 		default:
-			targetFmt = audioDecodeContext->sample_fmt;
+			ALOGW("[%s] oboe undefine sample format %d",
+			      __FUNCTION__,
+			      audioDecodeContext->sample_fmt);
+			targetFmt = AV_SAMPLE_FMT_FLT;
 			break;
 		}
 		int ret = swr_alloc_set_opts2(&swrContext,
