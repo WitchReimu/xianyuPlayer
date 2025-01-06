@@ -78,10 +78,11 @@ bool oboePlayer::startPlay()
 	{
 		oboe::Result result = oboeAudioStream->requestStart();
 
-        if (result != oboe::Result::OK) {
-            ALOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
-            oboeAudioStream->close();
-        }
+		if (result != oboe::Result::OK)
+		{
+			ALOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
+			oboeAudioStream->close();
+		}
 		playStatusChange(oboeAudioStream->getState());
 		return result == oboe::Result::OK;
 	}
@@ -218,16 +219,20 @@ JNIEnv *oboePlayer::getJNIEnv(bool *isAttach)
 	return env;
 }
 
-bool oboePlayer::closePlay() {
-    oboe::Result result=oboe::Result::OK;
+bool oboePlayer::closePlay()
+{
+	oboe::Result result = oboe::Result::OK;
 
-    if (oboeAudioStream != nullptr) {
-        result = oboeAudioStream->stop(500 * MilliSecondBase);
-        oboeAudioStream->close();
-        delete oboeAudioStream;
-        oboeAudioStream = nullptr;
-    }
-    return result == oboe::Result::OK;
+	if (oboeAudioStream != nullptr)
+	{
+		result = oboeAudioStream->stop(500 * MilliSecondBase);
+		dataOffset = 0;
+		oboeAudioStream->close();
+		playStatusChange(oboeAudioStream->getState());
+		delete oboeAudioStream;
+		oboeAudioStream = nullptr;
+	}
+	return result == oboe::Result::OK;
 }
 
 void oboePlayer::openStream() {

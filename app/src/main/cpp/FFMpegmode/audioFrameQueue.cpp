@@ -62,7 +62,9 @@ void audioFrameQueue::reset()
 {
 	for (auto &frame : frameQueue)
 	{
-		av_freep(frame.buffer);
+		if (frame.buffer != nullptr)
+			av_free(frame.buffer);
+		frame.buffer = nullptr;
 		frame.bufferLength = 0;
 		frame.dataLength = 0;
 	}

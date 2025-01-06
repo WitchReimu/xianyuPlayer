@@ -266,6 +266,7 @@ void decodeStream::changeStream(const char *path) {
 
     if (decodeThread != nullptr)
     {
+		decodeCon.notify_one();
         decodeThread->join();
     }
     decodeThread = nullptr;
