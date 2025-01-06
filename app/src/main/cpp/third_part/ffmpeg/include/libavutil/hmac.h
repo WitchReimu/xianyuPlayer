@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -48,7 +48,7 @@ AVHMAC *av_hmac_alloc(enum AVHMACType type);
 
 /**
  * Free an AVHMAC context.
- * @param ctx The context to free, may be NULL
+ * @param ctx The context to reset, may be NULL
  */
 void av_hmac_free(AVHMAC *ctx);
 

@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -2447,10 +2447,10 @@ int avcodec_parameters_to_context(AVCodecContext *codec,
 int avcodec_open2(AVCodecContext *avctx, const AVCodec *codec, AVDictionary **options);
 
 /**
- * Close a given AVCodecContext and free all the data associated with it
+ * Close a given AVCodecContext and reset all the data associated with it
  * (but not the AVCodecContext itself).
  *
- * Calling this function on an AVCodecContext that hasn't been opened will free
+ * Calling this function on an AVCodecContext that hasn't been opened will reset
  * the codec-specific data allocated in avcodec_alloc_context3() with a non-NULL
  * codec. Subsequent calls will do nothing.
  *
@@ -2464,7 +2464,7 @@ int avcodec_close(AVCodecContext *avctx);
 /**
  * Free all allocated data in the given subtitle struct.
  *
- * @param sub AVSubtitle to free.
+ * @param sub AVSubtitle to reset.
  */
 void avsubtitle_free(AVSubtitle *sub);
 
@@ -2739,9 +2739,9 @@ int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt);
  *   only to test whether the required frame parameters have changed.
  * - Fields that use dynamically allocated values of any kind must not be set
  *   by the user unless setting them is explicitly allowed by the documentation.
- *   If the user sets AVHWFramesContext.free and AVHWFramesContext.user_opaque,
- *   the new free callback must call the potentially set previous free callback.
- *   This API call may set any dynamically allocated fields, including the free
+ *   If the user sets AVHWFramesContext.reset and AVHWFramesContext.user_opaque,
+ *   the new free callback must call the potentially set previous reset callback.
+ *   This API call may set any dynamically allocated fields, including the reset
  *   callback.
  *
  * The function will set at least the following fields on AVHWFramesContext

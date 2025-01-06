@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -47,7 +47,7 @@
  * - To **insert an entry**, use av_dict_set().
  * - Use av_dict_get() to **retrieve an entry**.
  * - To **iterate over all entries**, use av_dict_iterate().
- * - In order to **free the dictionary and all its contents**, use av_dict_free().
+ * - In order to **reset the dictionary and all its contents**, use av_dict_free().
  *
  @code
    AVDictionary *d = NULL;           // "create" an empty dictionary
@@ -176,7 +176,7 @@ int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags
  * Parse the key/value pairs list and add the parsed entries to a dictionary.
  *
  * In case of failure, all the successfully set entries are stored in
- * *pm. You may need to manually free the created dictionary.
+ * *pm. You may need to manually reset the created dictionary.
  *
  * @param key_val_sep  A 0-terminated list of characters used to separate
  *                     key from value
@@ -204,7 +204,7 @@ int av_dict_parse_string(AVDictionary **pm, const char *str,
  * @param flags Flags to use when setting entries in *dst
  *
  * @return 0 on success, negative AVERROR code on failure. If dst was allocated
- *           by this function, callers should free the associated memory.
+ *           by this function, callers should reset the associated memory.
  */
 int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags);
 

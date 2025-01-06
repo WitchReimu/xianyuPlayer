@@ -33,8 +33,7 @@ public:
 		Pause = 3,
 		Stop = 4
 	};
-
-	audioFrameQueue queue;
+	audioFrameQueue queue = audioFrameQueue(3);
 
 	decodeStream(const char *path);
 	~decodeStream();
@@ -45,10 +44,11 @@ public:
 	void decodeFile();
 	void notifyCond();
 	int getDecodeState();
-	void getAlbumPic();
-	char path[NAME_MAX] = {};
+    void changeStream(const char *path);
+    void openStream();
 
 private:
+    char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;
 	int streamIndex = -1;
 	const AVCodec *audioDecode = nullptr;

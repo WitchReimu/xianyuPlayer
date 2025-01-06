@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -399,7 +399,7 @@ typedef struct AVPacket {
     void *opaque;
 
     /**
-     * AVBufferRef for free use by the API user. FFmpeg will never check the
+     * AVBufferRef for reset use by the API user. FFmpeg will never check the
      * contents of the buffer ref. FFmpeg calls av_buffer_unref() on it when
      * the packet is unreferenced. av_packet_copy_props() calls create a new
      * reference with av_buffer_ref() for the target packet's opaque_ref field.
@@ -625,7 +625,7 @@ int av_packet_unpack_dictionary(const uint8_t *data, size_t size,
                                 AVDictionary **dict);
 
 /**
- * Convenience function to free all the side data stored.
+ * Convenience function to reset all the side data stored.
  * All the other fields stay untouched.
  *
  * @param pkt packet

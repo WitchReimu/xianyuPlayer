@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -88,7 +88,7 @@ typedef struct AVD3D11VADeviceContext {
      * If unset on init, the hwcontext implementation will set them to use an
      * internal mutex.
      *
-     * The underlying lock must be recursive. lock_ctx is for free use by the
+     * The underlying lock must be recursive. lock_ctx is for reset use by the
      * locking implementation.
      */
     void (*lock)(void *lock_ctx);

@@ -31,7 +31,8 @@ jobjectArray getMetadata(JNIEnv *env, jobject thiz, jstring file_path)
 	return dataArray;
 }
 
-jlong openDecodeStream(JNIEnv *env, jobject activity, jstring path, jlong streamPtr)
+jlong
+openDecodeStream(JNIEnv *env, jobject activity, jstring path, jlong streamPtr, jlong playerPtr)
 {
 	const char *filePath = env->GetStringUTFChars(path, nullptr);
 	decodeStream *decoder_ptr = nullptr;
@@ -40,12 +41,13 @@ jlong openDecodeStream(JNIEnv *env, jobject activity, jstring path, jlong stream
 	{
 		decoder_ptr = new decodeStream(filePath);
 	}
-	else
+	else if (playerPtr != 0)
 	{
+		oboePlayer *player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
+		player_ptr->closePlay();
 		decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
-		//todo:如果不为空改为修改filepath变量.
+		decoder_ptr->changeStream(filePath);
 	}
-
 	env->ReleaseStringUTFChars(path, filePath);
 	return reinterpret_cast<jlong>(decoder_ptr);
 }
@@ -72,14 +74,14 @@ initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jobject mainActivity, j
 	}
 	else if (playerPtr != 0 && streamPtr != 0)
 	{
-		decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
 		player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
-		//todo 重新设置音频流内的参数
+		player_ptr->closePlay();
+		player_ptr->openStream();
 	}
 	return reinterpret_cast<jlong>(player_ptr);
 }
 
-void startPlay(JNIEnv *env, jobject activity, jlong playerPtr)
+jboolean startPlay(JNIEnv *env, jobject activity, jlong playerPtr)
 {
 	if (playerPtr != 0)
 	{
@@ -88,8 +90,11 @@ void startPlay(JNIEnv *env, jobject activity, jlong playerPtr)
 		if (!player_ptr->startPlay())
 		{
 			ALOGE("[%s] start oboe player error ", __FUNCTION__);
+			return false;
 		}
+		return true;
 	}
+	return false;
 }
 
 jbyteArray GetAudioAlbum(JNIEnv *env, jobject activity, jlong streamPtr, jstring path)
@@ -148,21 +153,14 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 	if (env != nullptr)
 	{
 		jclass musicNative = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
-		JNINativeMethod musicNativeMethod[] = {{"getMetadata",
-		                                        "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;",
-		                                        (void *)getMetadata},
-		                                       {"startPlay", "(J)V", (void *)startPlay},
-		                                       {"initPlay",
-		                                        "(JLcom/example/xianyuplayer/MainActivity;J)J",
-		                                        (void *)initPlay},
-		                                       {"openDecodeStream", "(Ljava/lang/String;J)J",
-		                                        (void *)openDecodeStream},
-		                                       {"startDecodeStream", "(J)V",
-		                                        (void *)startDecodeStream},
-		                                       {"getAudioAlbum", "(JLjava/lang/String;)[B",
-		                                        (void *)GetAudioAlbum},
-		                                       {"getPlayStatus", "(J)I", (void *)GetPlayStatus},
-		                                       {"pausePlay", "(J)Z", (void *)PausePlay}
+        JNINativeMethod musicNativeMethod[] = {{"getMetadata",       "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;", (void *) getMetadata},
+                                               {"startPlay",         "(J)Z",                                                                   (void *) startPlay},
+                                               {"initPlay",          "(JLcom/example/xianyuplayer/MainActivity;J)J",                           (void *) initPlay},
+                                               {"openDecodeStream",  "(Ljava/lang/String;JJ)J",                                                (void *) openDecodeStream},
+                                               {"startDecodeStream", "(J)V",                                                                   (void *) startDecodeStream},
+                                               {"getAudioAlbum",     "(JLjava/lang/String;)[B",                                                (void *) GetAudioAlbum},
+                                               {"getPlayStatus",     "(J)I",                                                                   (void *) GetPlayStatus},
+                                               {"pausePlay",         "(J)Z",                                                                   (void *) PausePlay}
 
 		};
 		jint ret = env->RegisterNatives(musicNative,

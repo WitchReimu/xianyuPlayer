@@ -17,6 +17,7 @@ decodeStream::decodeStream(const char *path)
 decodeStream::~decodeStream()
 {
 	swr_free(&swrContext);
+    avcodec_close(audioDecodeContext);
 	avcodec_free_context(&audioDecodeContext);
 	avformat_close_input(&formatContext);
 	avformat_free_context(formatContext);
@@ -25,50 +26,16 @@ decodeStream::~decodeStream()
 //初始化解码流与数据缓冲区
 void decodeStream::initStream()
 {
-	queue = audioFrameQueue(3);
 	decodeState = Initing;
 	formatContext = avformat_alloc_context();
-	int ret = avformat_open_input(&formatContext,
-	                              path,
-	                              nullptr,
-	                              nullptr);
-
-	if (ret < 0)
-	{
-		ALOGE("[%s] open input error %d", __FUNCTION__, ret);
-		return;
-	}
-	ret = avformat_find_stream_info(formatContext, nullptr);
-
-	if (ret < 0)
-	{
-		ALOGE("[%s] find stream info error %d", __FUNCTION__, ret);
-	}
-	streamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-
-	if (streamIndex < 0)
-	{
-		ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
-	}
-	AVStream *audioStream = formatContext->streams[streamIndex];
-	audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
-	audioDecodeContext = avcodec_alloc_context3(audioDecode);
-	avcodec_parameters_to_context(audioDecodeContext, audioStream->codecpar);
-	ret = avcodec_open2(audioDecodeContext, audioDecode, NULL);
-
-	if (ret < 0)
-	{
-		ALOGE("[%s] audio decode open error %d", __FUNCTION__, ret);
-		return;
-	}
-	decodeState = Prepared;
-
+    openStream();
 }
 
 void decodeStream::decodeFile()
 {
 	if (decodeThread == nullptr)
 	{
+        decodeState=Running;
 		decodeThread = new std::thread(doDecode, this);
 	}
 }
@@ -112,7 +79,8 @@ void decodeStream::doDecode(decodeStream *instance)
 
 			if (ret == AVERROR(EAGAIN))
 			{
-				av_packet_unref(pPacket);
+                av_frame_unref(pFrame);
+                av_packet_unref(pPacket);
 				ALOGW("[%s] receive frame failed ,failed information %s",
 				      __FUNCTION__,
 				      av_err2str(ret));
@@ -138,10 +106,9 @@ void decodeStream::doDecode(decodeStream *instance)
 			audioFrameQueue &frameQueue = instance->queue;
 			audioFrameQueue::audioFrame_t
 				&produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
-
 			int bytePerSample = av_get_bytes_per_sample(instance->targetFmt);
 
-			//判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用。队列内的旧缓冲区进行释放，大于->对队列缓冲区内的内容进行覆盖。
+			//判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用;队列内的旧缓冲区进行释放. 大于->对队列缓冲区内的内容进行覆盖。
 			if (produceFrame.buffer == nullptr || produceFrame.bufferLength < buffer_length)
 			{
 				uint8_t *bufferData = static_cast<uint8_t *>(av_malloc(buffer_length));
@@ -155,15 +122,13 @@ void decodeStream::doDecode(decodeStream *instance)
 					break;
 				}
 
-				while (frameQueue.isFull())
+				while (frameQueue.isFull() && instance->decodeState == Running)
 				{
-					ALOGW("[%s] 队列缓冲区已满", __FUNCTION__);
 					std::unique_lock<std::mutex> lock(instance->decodeMutex);
 					instance->decodeCon.wait(lock);
 					lock.unlock();
 				}
-				struct audioFrameQueue::audioFrame_t
-					frame =
+				struct audioFrameQueue::audioFrame_t frame =
 					{bufferData, covert_length * nb_channels * bytePerSample, buffer_length};
 				//如果缓冲区队列内的buffer长度小于解码缓冲区内buffer的长度需要重新设置缓冲区队列的缓冲帧
 				frameQueue.resetAudioFrame(frameQueue.produceIndex, frame);
@@ -182,9 +147,8 @@ void decodeStream::doDecode(decodeStream *instance)
 					break;
 				}
 
-				while (frameQueue.isFull())
+				while (frameQueue.isFull() && instance->decodeState == Running)
 				{
-					ALOGW("[%s] 队列缓冲区已满", __FUNCTION__);
 					std::unique_lock<std::mutex> lock(instance->decodeMutex);
 					instance->decodeCon.wait(lock);
 					lock.unlock();
@@ -192,10 +156,8 @@ void decodeStream::doDecode(decodeStream *instance)
 				frameQueue.resetDataLength(frameQueue.produceIndex,
 				                           covert_length * nb_channels * bytePerSample);
 			}
-
 			av_packet_unref(pPacket);
 		}
-
 	}
 
 	av_frame_free(&pFrame);
@@ -296,4 +258,56 @@ void decodeStream::notifyCond()
 int decodeStream::getDecodeState()
 {
 	return decodeState;
+}
+
+void decodeStream::changeStream(const char *path) {
+    strcpy(this->path, path);
+    decodeState = Stop;
+
+    if (decodeThread != nullptr)
+    {
+        decodeThread->join();
+    }
+    decodeThread = nullptr;
+    avformat_close_input(&formatContext);
+    avcodec_close(audioDecodeContext);
+    avcodec_free_context(&audioDecodeContext);
+    queue.reset();
+    audioDecode = nullptr;
+    streamIndex = -1;
+    openStream();
+}
+
+void decodeStream::openStream() {
+	int ret = avformat_open_input(&formatContext, this->path, nullptr, nullptr);
+
+	if (ret < 0)
+	{
+		ALOGE("[%s] open input error %d", __FUNCTION__, ret);
+		return;
+	}
+	ret = avformat_find_stream_info(formatContext, nullptr);
+
+	if (ret < 0)
+	{
+		ALOGE("[%s] find stream info error %d", __FUNCTION__, ret);
+	}
+	streamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+
+	if (streamIndex < 0)
+	{
+		ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
+	}
+	AVStream *audioStream = formatContext->streams[streamIndex];
+	audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
+	audioDecodeContext = avcodec_alloc_context3(audioDecode);
+	avcodec_parameters_to_context(audioDecodeContext, audioStream->codecpar);
+	ret = avcodec_open2(audioDecodeContext, audioDecode, NULL);
+
+	if (ret < 0)
+	{
+		ALOGE("[%s] audio decode open error %d", __FUNCTION__, ret);
+		return;
+	}
+    decodeState = Prepared;
 }

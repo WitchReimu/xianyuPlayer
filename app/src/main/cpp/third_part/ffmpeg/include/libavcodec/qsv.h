@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -84,7 +84,7 @@ typedef struct AVQSVContext {
      * passed to other parts of the pipeline.
      *
      * The buffer reference exported here is owned and managed by libavcodec,
-     * the callers should make their own reference with av_buffer_ref() and free
+     * the callers should make their own reference with av_buffer_ref() and reset
      * it with av_buffer_unref() when it is no longer needed.
      *
      * The buffer data is an nb_opaque_surfaces-sized array of mfxFrameSurface1.

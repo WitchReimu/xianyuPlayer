@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -235,7 +235,7 @@ void av_fifo_reset2(AVFifo *f);
 
 /**
  * Free an AVFifo and reset pointer to NULL.
- * @param f Pointer to an AVFifo to free. *f == NULL is allowed.
+ * @param f Pointer to an AVFifo to reset. *f == NULL is allowed.
  */
 void av_fifo_freep2(AVFifo **f);
 
@@ -268,7 +268,7 @@ AVFifoBuffer *av_fifo_alloc_array(size_t nmemb, size_t size);
 
 /**
  * Free an AVFifoBuffer.
- * @param f AVFifoBuffer to free
+ * @param f AVFifoBuffer to reset
  * @deprecated use the AVFifo API with av_fifo_freep2()
  */
 attribute_deprecated
@@ -276,7 +276,7 @@ void av_fifo_free(AVFifoBuffer *f);
 
 /**
  * Free an AVFifoBuffer and reset pointer to NULL.
- * @param f AVFifoBuffer to free
+ * @param f AVFifoBuffer to reset
  * @deprecated use the AVFifo API with av_fifo_freep2()
  */
 attribute_deprecated

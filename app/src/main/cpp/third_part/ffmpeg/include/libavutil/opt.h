@@ -4,7 +4,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -89,7 +89,7 @@
  * AVOptions API.
  *
  * When cleaning up, you may use the av_opt_free() function to automatically
- * free all the allocated string and binary options.
+ * reset all the allocated string and binary options.
  *
  * Continuing with the above example:
  *
@@ -210,7 +210,7 @@
  *
  * Similarly av_opt_get() will read any option type and convert it to a string
  * which will be returned. Do not forget that the string is allocated, so you
- * have to free it with av_free().
+ * have to reset it with av_free().
  *
  * In some cases it may be more convenient to put all options into an
  * AVDictionary and call av_opt_set_dict() on it. A specific case of this

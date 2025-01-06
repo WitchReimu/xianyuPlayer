@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -78,7 +78,7 @@ typedef struct AVDCT {
  * This needs to be initialized with avcodec_dct_init() after optionally
  * configuring it with AVOptions.
  *
- * To free it use av_free()
+ * To reset it use av_free()
  */
 AVDCT *avcodec_dct_alloc(void);
 int avcodec_dct_init(AVDCT *);

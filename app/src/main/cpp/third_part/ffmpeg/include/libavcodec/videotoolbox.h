@@ -5,7 +5,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -132,7 +132,7 @@ attribute_deprecated
 int av_videotoolbox_default_init2(AVCodecContext *avctx, AVVideotoolboxContext *vtctx);
 
 /**
- * This function must be called to free the Videotoolbox context initialized with
+ * This function must be called to reset the Videotoolbox context initialized with
  * av_videotoolbox_default_init().
  *
  * @param avctx the corresponding codec context

@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -51,7 +51,7 @@
  * av_bsf_receive_packet() will then return trailing packets, if any are
  * produced by the filter.
  *
- * Finally, free the filter context with av_bsf_free().
+ * Finally, reset the filter context with av_bsf_free().
  * @{
  */
 

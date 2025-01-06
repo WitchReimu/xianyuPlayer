@@ -57,3 +57,13 @@ audioFrameQueue::audioFrameQueue(int capacity)
 		frameQueue.push_back(frame);
 	}
 }
+
+void audioFrameQueue::reset()
+{
+	for (auto &frame : frameQueue)
+	{
+		av_freep(frame.buffer);
+		frame.bufferLength = 0;
+		frame.dataLength = 0;
+	}
+}

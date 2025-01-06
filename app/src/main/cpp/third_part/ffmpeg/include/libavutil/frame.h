@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -307,7 +307,7 @@ typedef struct AVRegionOfInterest {
  *
  * AVFrame is typically allocated once and then reused multiple times to hold
  * different data (e.g. a single AVFrame to hold frames received from a
- * decoder). In such a case, av_frame_unref() will free any references held by
+ * decoder). In such a case, av_frame_unref() will reset any references held by
  * the frame and reset it to its original clean state before it
  * is reused again.
  *
@@ -678,7 +678,7 @@ typedef struct AVFrame {
     AVBufferRef *hw_frames_ctx;
 
     /**
-     * AVBufferRef for free use by the API user. FFmpeg will never check the
+     * AVBufferRef for reset use by the API user. FFmpeg will never check the
      * contents of the buffer ref. FFmpeg calls av_buffer_unref() on it when
      * the frame is unreferenced. av_frame_copy_props() calls create a new
      * reference with av_buffer_ref() for the target frame's opaque_ref field.
@@ -914,7 +914,7 @@ AVFrameSideData *av_frame_get_side_data(const AVFrame *frame,
                                         enum AVFrameSideDataType type);
 
 /**
- * Remove and free all side data instances of the given type.
+ * Remove and reset all side data instances of the given type.
  */
 void av_frame_remove_side_data(AVFrame *frame, enum AVFrameSideDataType type);
 

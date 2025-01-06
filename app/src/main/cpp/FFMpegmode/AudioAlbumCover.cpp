@@ -16,6 +16,7 @@ AudioAlbumCover::~AudioAlbumCover()
 	avformat_close_input(&formatContext);
 	avformat_free_context(formatContext);
 }
+
 std::pair<int, char *> AudioAlbumCover::getAlbumCover()
 {
 	formatContext = avformat_alloc_context();

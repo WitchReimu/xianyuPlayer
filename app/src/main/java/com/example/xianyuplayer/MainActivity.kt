@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * native 函数
+     * native 调用该函数
      * 播放状态发生变化后，c++会调用该函数将播放状态的值赋值给变量形参status
      * @param status 播放状态发生改变后的值
      */

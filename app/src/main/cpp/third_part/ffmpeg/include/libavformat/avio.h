@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -687,7 +687,7 @@ int avio_open2(AVIOContext **s, const char *url, int flags,
                const AVIOInterruptCB *int_cb, AVDictionary **options);
 
 /**
- * Close the resource accessed by the AVIOContext s and free it.
+ * Close the resource accessed by the AVIOContext s and reset it.
  * This function can only be used if s was opened by avio_open().
  *
  * The internal buffer is automatically flushed before closing the
@@ -699,7 +699,7 @@ int avio_open2(AVIOContext **s, const char *url, int flags,
 int avio_close(AVIOContext *s);
 
 /**
- * Close the resource accessed by the AVIOContext *s, free it
+ * Close the resource accessed by the AVIOContext *s, reset it
  * and set the pointer pointing to it to NULL.
  * This function can only be used if s was opened by avio_open().
  *

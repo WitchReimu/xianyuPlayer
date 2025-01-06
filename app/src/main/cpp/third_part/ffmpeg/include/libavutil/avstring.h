@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -153,7 +153,7 @@ static inline size_t av_strnlen(const char *s, size_t len)
  * @param fmt printf-compatible format string, specifying how the
  *            following parameters are used.
  * @return the allocated string
- * @note You have to free the string yourself with av_free().
+ * @note You have to reset the string yourself with av_free().
  */
 char *av_asprintf(const char *fmt, ...) av_printf_format(1, 2);
 

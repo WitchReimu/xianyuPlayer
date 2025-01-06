@@ -11,9 +11,9 @@ class MusicNativeMethod {
      * @param filePath 文件路径应为绝对路径
      */
     external fun getMetadata(filePath: String): Array<MusicMetadata>
-    private external fun startPlay(playerPtr: Long)
+    private external fun startPlay(playerPtr: Long): Boolean
     private external fun initPlay(streamPtr: Long, activity: MainActivity, playerPtr: Long): Long
-    private external fun openDecodeStream(path: String, streamPtr: Long): Long
+    private external fun openDecodeStream(path: String, streamPtr: Long, playerPtr: Long): Long
     private external fun startDecodeStream(streamPtr: Long)
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
@@ -24,7 +24,7 @@ class MusicNativeMethod {
     external fun pausePlay(ptr: Long = playerPtr): Boolean
 
     fun openDecodeStream(path: String) {
-        decodeStreamPtr = openDecodeStream(path, decodeStreamPtr)
+        decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)
     }
 
     fun startDecodeStream() {
@@ -35,8 +35,8 @@ class MusicNativeMethod {
         playerPtr = initPlay(decodeStreamPtr, mainActivity, playerPtr)
     }
 
-    fun startPlay() {
-        startPlay(playerPtr);
+    fun startPlay(): Boolean {
+        return startPlay(playerPtr)
     }
 
     companion object {

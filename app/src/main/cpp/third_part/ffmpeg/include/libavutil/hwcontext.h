@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -104,7 +104,7 @@ typedef struct AVHWDeviceContext {
     void (*free)(struct AVHWDeviceContext *ctx);
 
     /**
-     * Arbitrary user data, to be used e.g. by the free() callback.
+     * Arbitrary user data, to be used e.g. by the reset() callback.
      */
     void *user_opaque;
 } AVHWDeviceContext;
@@ -170,7 +170,7 @@ typedef struct AVHWFramesContext {
     void (*free)(struct AVHWFramesContext *ctx);
 
     /**
-     * Arbitrary user data, to be used e.g. by the free() callback.
+     * Arbitrary user data, to be used e.g. by the reset() callback.
      */
     void *user_opaque;
 
@@ -180,7 +180,7 @@ typedef struct AVHWFramesContext {
      * The buffers returned by calling av_buffer_pool_get() on this pool must
      * have the properties described in the documentation in the corresponding hw
      * type's header (hwcontext_*.h). The pool will be freed strictly before
-     * this struct's free() callback is invoked.
+     * this struct's reset() callback is invoked.
      *
      * This field may be NULL, then libavutil will attempt to allocate a pool
      * internally. Note that certain device types enforce pools allocated at
@@ -284,7 +284,7 @@ int av_hwdevice_ctx_init(AVBufferRef *ref);
  * av_hwdevice_ctx_alloc()/av_hwdevice_ctx_init().
  *
  * The returned context is already initialized and ready for use, the caller
- * should not call av_hwdevice_ctx_init() on it. The user_opaque/free fields of
+ * should not call av_hwdevice_ctx_init() on it. The user_opaque/reset fields of
  * the created AVHWDeviceContext are set by this function and should not be
  * touched by the caller.
  *
@@ -481,8 +481,8 @@ typedef struct AVHWFramesConstraints {
 
 /**
  * Allocate a HW-specific configuration structure for a given HW device.
- * After use, the user must free all members as required by the specific
- * hardware structure being used, then free the structure itself with
+ * After use, the user must reset all members as required by the specific
+ * hardware structure being used, then reset the structure itself with
  * av_free().
  *
  * @param device_ctx a reference to the associated AVHWDeviceContext.

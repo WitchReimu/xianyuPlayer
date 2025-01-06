@@ -43,21 +43,18 @@ public:
 	int length = 0;
 	std::vector<audioFrame_t> frameQueue;
 
-	audioFrameQueue(int capacity=3);
+	audioFrameQueue(int capacity);
 	bool isFull();
 	bool isEmpty();
 	void resetDataLength(int resetIndex,int dataLength);
 	void resetAudioFrame(int resetIndex, audioFrame_t frame);
+    void reset();
 
 	~audioFrameQueue()
-	{
-
-		for (const auto &frame : frameQueue)
-		{
-			av_free(frame.buffer);
-		}
-		frameQueue.clear();
-	}
+    {
+        reset();
+        frameQueue.clear();
+    }
 private:
 };
 

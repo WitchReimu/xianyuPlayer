@@ -5,6 +5,7 @@
 #include "oboePlayer.h"
 #include <aaudio/AAudio.h>
 #define TAG "oboePlayer"
+#define MilliSecondBase 1000000
 
 oboePlayer::~oboePlayer()
 {
@@ -14,31 +15,7 @@ oboePlayer::~oboePlayer()
 void oboePlayer::initStream(decodeStream *stream, JNIEnv *env, jobject activity)
 {
 	decoderStream = stream;
-	audioBuilder.setDirection(oboe::Direction::Output);
-	audioBuilder.setAudioApi(oboe::AudioApi::AAudio);
-	audioBuilder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
-	audioBuilder.setSampleRate(stream->getDecodeFileSampleRate());
-	audioBuilder.setChannelCount(stream->getDecodeFileChannelCount());
-
-	switch (stream->getDecodeFileFormat())
-	{
-	case AV_SAMPLE_FMT_S16P:
-	case AV_SAMPLE_FMT_S16:
-		outputFormat = oboe::AudioFormat::I16;
-		break;
-	case AV_SAMPLE_FMT_S32P:
-	case AV_SAMPLE_FMT_S32:
-		outputFormat = oboe::AudioFormat::I32;
-		break;
-	case AV_SAMPLE_FMT_FLTP:
-	case AV_SAMPLE_FMT_FLT:
-		outputFormat = oboe::AudioFormat::Float;
-		break;
-	}
-	audioBuilder.setFormat(outputFormat);
-	audioBuilder.setDataCallback(this);
-	audioBuilder.setErrorCallback(this);
-	audioBuilder.openStream(&oboeAudioStream);
+    openStream();
 	env->GetJavaVM(&vm);
 	activityObject = env->NewGlobalRef(activity);
 }
@@ -62,7 +39,7 @@ void oboePlayer::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result e
 
 int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 {
-	int samplesCount = decoderStream->getDecodeFileChannelCount() * numFrames;
+	int samplesCount = oboeAudioStream->getChannelCount() * numFrames;
 	int byteCount = 0;
 	int16_t *int16Data = nullptr;
 	int32_t *int32Data = nullptr;
@@ -100,6 +77,11 @@ bool oboePlayer::startPlay()
 	if (oboeAudioStream != nullptr)
 	{
 		oboe::Result result = oboeAudioStream->requestStart();
+
+        if (result != oboe::Result::OK) {
+            ALOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
+            oboeAudioStream->close();
+        }
 		playStatusChange(oboeAudioStream->getState());
 		return result == oboe::Result::OK;
 	}
@@ -111,7 +93,7 @@ bool oboePlayer::pausePlay()
 	if (oboeAudioStream != nullptr)
 	{
 		//500毫秒
-		oboe::Result pauseResult = oboeAudioStream->pause(500000000);
+        oboe::Result pauseResult = oboeAudioStream->pause(500 * MilliSecondBase);
 		playStatusChange(oboeAudioStream->getState());
 		if (oboe::Result::OK != pauseResult)
 		{
@@ -234,6 +216,47 @@ JNIEnv *oboePlayer::getJNIEnv(bool *isAttach)
 		}
 	}
 	return env;
+}
+
+bool oboePlayer::closePlay() {
+    oboe::Result result=oboe::Result::OK;
+
+    if (oboeAudioStream != nullptr) {
+        result = oboeAudioStream->stop(500 * MilliSecondBase);
+        oboeAudioStream->close();
+        delete oboeAudioStream;
+        oboeAudioStream = nullptr;
+    }
+    return result == oboe::Result::OK;
+}
+
+void oboePlayer::openStream() {
+    oboe::AudioStreamBuilder audioBuilder;
+    audioBuilder.setDirection(oboe::Direction::Output);
+    audioBuilder.setAudioApi(oboe::AudioApi::AAudio);
+    audioBuilder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+    audioBuilder.setSampleRate(decoderStream->getDecodeFileSampleRate());
+    audioBuilder.setChannelCount(decoderStream->getDecodeFileChannelCount());
+
+    switch (decoderStream->getDecodeFileFormat())
+    {
+        case AV_SAMPLE_FMT_S16P:
+        case AV_SAMPLE_FMT_S16:
+            outputFormat = oboe::AudioFormat::I16;
+            break;
+        case AV_SAMPLE_FMT_S32P:
+        case AV_SAMPLE_FMT_S32:
+            outputFormat = oboe::AudioFormat::I32;
+            break;
+        case AV_SAMPLE_FMT_FLTP:
+        case AV_SAMPLE_FMT_FLT:
+            outputFormat = oboe::AudioFormat::Float;
+            break;
+    }
+    audioBuilder.setFormat(outputFormat);
+    audioBuilder.setDataCallback(this);
+    audioBuilder.setErrorCallback(this);
+    audioBuilder.openStream(&oboeAudioStream);
 }
 
 template<typename T>

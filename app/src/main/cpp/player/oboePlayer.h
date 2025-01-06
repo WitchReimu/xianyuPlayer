@@ -15,15 +15,16 @@ class oboePlayer: public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCa
 {
 public:
 	void initStream(decodeStream *stream, JNIEnv *env, jobject activity);
+    void openStream();
 	bool startPlay();
 	bool pausePlay();
+    bool closePlay();
 	int getPlayerStatus();
 	int playStatusChange(oboe::StreamState state);
 	JNIEnv *getJNIEnv(bool *isAttach);
 	~oboePlayer();
 
 private:
-	oboe::AudioStreamBuilder audioBuilder;
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;
 	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;

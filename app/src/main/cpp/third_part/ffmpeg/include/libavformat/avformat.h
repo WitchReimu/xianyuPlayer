@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -154,7 +154,7 @@
  * @endcode
  *
  * After you have finished reading the file, you must close it with
- * avformat_close_input(). It will free everything associated with the file.
+ * avformat_close_input(). It will reset everything associated with the file.
  *
  * @section lavf_decoding_read Reading from an opened file
  * Reading data from an opened AVFormatContext is done by repeatedly calling
@@ -234,7 +234,7 @@
  *
  * Once all the data has been written, the caller must call av_write_trailer()
  * to flush any buffered packets and finalize the output file, then close the IO
- * context (if any) and finally free the muxing context with
+ * context (if any) and finally reset the muxing context with
  * avformat_free_context().
  * @}
  *
@@ -1798,14 +1798,14 @@ const AVInputFormat *av_demuxer_iterate(void **opaque);
 
 /**
  * Allocate an AVFormatContext.
- * avformat_free_context() can be used to free the context and everything
+ * avformat_free_context() can be used to reset the context and everything
  * allocated by the framework within it.
  */
 AVFormatContext *avformat_alloc_context(void);
 
 /**
  * Free an AVFormatContext and all its streams.
- * @param s context to free
+ * @param s context to reset
  */
 void avformat_free_context(AVFormatContext *s);
 
@@ -1893,7 +1893,7 @@ AVProgram *av_new_program(AVFormatContext *s, int id);
 
 /**
  * Allocate an AVFormatContext for an output format.
- * avformat_free_context() can be used to free the context and
+ * avformat_free_context() can be used to reset the context and
  * everything allocated by the framework within it.
  *
  * @param ctx           pointee is set to the created format context,
@@ -2382,7 +2382,7 @@ int av_interleaved_write_uncoded_frame(AVFormatContext *s, int stream_index,
 int av_write_uncoded_frame_query(AVFormatContext *s, int stream_index);
 
 /**
- * Write the stream trailer to an output media file and free the
+ * Write the stream trailer to an output media file and reset the
  * file private data.
  *
  * May only be called after a successful call to avformat_write_header.

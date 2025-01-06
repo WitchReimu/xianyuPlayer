@@ -3,7 +3,7 @@
  *
  * This file is part of libswresample
  *
- * libswresample is free software; you can redistribute it and/or
+ * libswresample is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -527,7 +527,7 @@ int swr_inject_silence(struct SwrContext *s, int count);
  *              @li if it's set to the output sample rate then the returned
  *                  delay is in output samples
  *              @li if it's the least common multiple of in_sample_rate and
- *                  out_sample_rate then an exact rounding-free delay will be
+ *                  out_sample_rate then an exact rounding-reset delay will be
  *                  returned
  * @returns     the delay in 1 / @c base units.
  */

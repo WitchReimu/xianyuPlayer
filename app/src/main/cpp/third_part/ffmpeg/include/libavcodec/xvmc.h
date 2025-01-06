@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -150,7 +150,7 @@ struct attribute_deprecated xvmc_pix_fmt {
     */
     int             filled_mv_blocks_num;
 
-    /** Number of the next free data block; one data block consists of
+    /** Number of the next reset data block; one data block consists of
         64 short values in the data_blocks array.
         All blocks before this one have already been claimed by placing their
         position into the corresponding block description structure field,

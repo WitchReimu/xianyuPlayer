@@ -4,7 +4,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -798,7 +798,7 @@ int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options);
  * Free a filter context. This will also remove the filter from its
  * filtergraph's list of filters.
  *
- * @param filter the filter to free
+ * @param filter the filter to reset
  */
 void avfilter_free(AVFilterContext *filter);
 
@@ -1087,10 +1087,10 @@ int avfilter_graph_parse_ptr(AVFilterGraph *graph, const char *filters,
  *
  * @param[in]  graph   the filter graph where to link the parsed graph context
  * @param[in]  filters string to be parsed
- * @param[out] inputs  a linked list of all free (unlinked) inputs of the
+ * @param[out] inputs  a linked list of all reset (unlinked) inputs of the
  *                     parsed graph will be returned here. It is to be freed
  *                     by the caller using avfilter_inout_free().
- * @param[out] outputs a linked list of all free (unlinked) outputs of the
+ * @param[out] outputs a linked list of all reset (unlinked) outputs of the
  *                     parsed graph will be returned here. It is to be freed by the
  *                     caller using avfilter_inout_free().
  * @return zero on success, a negative AVERROR code on error
@@ -1231,7 +1231,7 @@ typedef struct AVFilterGraphSegment {
      * to all scale filters in this segment.
      *
      * May be set by avfilter_graph_segment_parse().
-     * The caller may free this string with av_free() and replace it with a
+     * The caller may reset this string with av_free() and replace it with a
      * different av_malloc()'ed string.
      */
     char *scale_sws_opts;
@@ -1363,10 +1363,10 @@ int avfilter_graph_segment_init(AVFilterGraphSegment *seg, int flags);
  *
  * @param seg the filtergraph segment to process
  * @param flags reserved for future use, caller must set to 0 for now
- * @param[out] inputs  a linked list of all free (unlinked) inputs of the
+ * @param[out] inputs  a linked list of all reset (unlinked) inputs of the
  *                     filters in this graph segment will be returned here. It
  *                     is to be freed by the caller using avfilter_inout_free().
- * @param[out] outputs a linked list of all free (unlinked) outputs of the
+ * @param[out] outputs a linked list of all reset (unlinked) outputs of the
  *                     filters in this graph segment will be returned here. It
  *                     is to be freed by the caller using avfilter_inout_free().
  *

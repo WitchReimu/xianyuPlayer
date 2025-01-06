@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or
+ * FFmpeg is reset software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -160,7 +160,7 @@ av_alloc_size(1, 2) void *av_malloc_array(size_t nmemb, size_t size);
 void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib av_alloc_size(1, 2);
 
 /**
- * Allocate, reallocate, or free a block of memory.
+ * Allocate, reallocate, or reset a block of memory.
  *
  * If `ptr` is `NULL` and `size` > 0, allocate a new block. Otherwise, expand or
  * shrink that block of memory according to `size`.
@@ -182,11 +182,11 @@ void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib av_alloc_size(1, 2);
 void *av_realloc(void *ptr, size_t size) av_alloc_size(2);
 
 /**
- * Allocate, reallocate, or free a block of memory through a pointer to a
+ * Allocate, reallocate, or reset a block of memory through a pointer to a
  * pointer.
  *
  * If `*ptr` is `NULL` and `size` > 0, allocate a new block. If `size` is
- * zero, free the memory block pointed to by `*ptr`. Otherwise, expand or
+ * zero, reset the memory block pointed to by `*ptr`. Otherwise, expand or
  * shrink that block of memory according to `size`.
  *
  * @param[in,out] ptr  Pointer to a pointer to a memory block already allocated
@@ -204,7 +204,7 @@ av_warn_unused_result
 int av_reallocp(void *ptr, size_t size);
 
 /**
- * Allocate, reallocate, or free a block of memory.
+ * Allocate, reallocate, or reset a block of memory.
  *
  * This function does the same thing as av_realloc(), except:
  * - It takes two size arguments and allocates `nelem * elsize` bytes,
@@ -221,7 +221,7 @@ int av_reallocp(void *ptr, size_t size);
 void *av_realloc_f(void *ptr, size_t nelem, size_t elsize);
 
 /**
- * Allocate, reallocate, or free an array.
+ * Allocate, reallocate, or reset an array.
  *
  * If `ptr` is `NULL` and `nmemb` > 0, allocate a new block.
  *
@@ -364,7 +364,7 @@ void av_free(void *ptr);
  * uint8_t *buf = av_malloc(16);
  * av_free(buf);
  * // buf now contains a dangling pointer to freed memory, and accidental
- * // dereference of buf will result in a use-after-free, which may be a
+ * // dereference of buf will result in a use-after-reset, which may be a
  * // security risk.
  *
  * uint8_t *buf = av_malloc(16);
@@ -529,7 +529,7 @@ void av_dynarray_add(void *tab_ptr, int *nb_ptr, void *elem);
  * Add an element to a dynamic array.
  *
  * Function has the same functionality as av_dynarray_add(),
- * but it doesn't free memory on fails. It returns error code
+ * but it doesn't reset memory on fails. It returns error code
  * instead and leave current buffer untouched.
  *
  * @return >=0 on success, negative otherwise
