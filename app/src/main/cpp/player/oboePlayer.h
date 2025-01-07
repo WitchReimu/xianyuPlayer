@@ -11,20 +11,20 @@
 #include "decodeStream.h"
 #include <jni.h>
 
-class oboePlayer: public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCallback
+class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCallback
 {
-public:
+  public:
 	void initStream(decodeStream *stream, JNIEnv *env, jobject activity);
-    void openStream();
+	void openStream();
 	bool startPlay();
 	bool pausePlay();
-    bool closePlay();
+	bool closePlay();
 	int getPlayerStatus();
 	int playStatusChange(oboe::StreamState state);
 	JNIEnv *getJNIEnv(bool *isAttach);
 	~oboePlayer();
 
-private:
+  private:
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;
 	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;
@@ -48,6 +48,5 @@ private:
 	 */
 	int fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int byteCount);
 };
-
 
 #endif //OBOEPLAYER_H

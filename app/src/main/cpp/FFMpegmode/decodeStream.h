@@ -23,15 +23,15 @@ extern "C"
 
 class decodeStream
 {
-public:
-	enum decodeState_enmu: int
+  public:
+	enum decodeState_enmu : int
 	{
-		Idle = -1,
-		Initing = 0,
-		Prepared = 1,
-		Running = 2,
-		Pause = 3,
-		Stop = 4
+	  Idle = -1,
+	  Initing = 0,
+	  Prepared = 1,
+	  Running = 2,
+	  Pause = 3,
+	  Stop = 4
 	};
 	audioFrameQueue queue = audioFrameQueue(3);
 
@@ -44,11 +44,11 @@ public:
 	void decodeFile();
 	void notifyCond();
 	int getDecodeState();
-    void changeStream(const char *path);
-    void openStream();
+	void changeStream(const char *path);
+	void openStream();
 
-private:
-    char path[NAME_MAX] = {};
+  private:
+	char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;
 	int streamIndex = -1;
 	const AVCodec *audioDecode = nullptr;
@@ -64,6 +64,5 @@ private:
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
 };
-
 
 #endif //DECODESTREAM_H

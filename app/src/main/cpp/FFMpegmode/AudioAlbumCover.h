@@ -16,15 +16,14 @@ extern "C"
 
 class AudioAlbumCover
 {
-public:
+  public:
 	AudioAlbumCover(const char *absolutePath, int length);
 	~AudioAlbumCover();
 	std::pair<int, char *> getAlbumCover();
-private:
+  private:
 	char path[NAME_MAX];
 	AVFormatContext *formatContext = nullptr;
 
 };
-
 
 #endif //AUDIOALBUMCOVER_H

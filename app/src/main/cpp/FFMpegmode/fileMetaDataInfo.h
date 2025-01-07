@@ -17,18 +17,17 @@ extern "C"
 
 class fileMetaDataInfo
 {
-public:
+  public:
 	fileMetaDataInfo(const char *filePath = "");
 	~fileMetaDataInfo();
 	void setFilePath(const char *filePath);
 	std::vector<std::shared_ptr<const AVDictionaryEntry>> getMetaData();
-private:
+  private:
 	AVFormatContext *avFormatContext = nullptr;
 	bool isInit = false;
 	std::vector<std::shared_ptr<const AVDictionaryEntry>> dictionEntrys;
 
 	void initMetadataInfo(const char *filePath);
 };
-
 
 #endif //FILEMETADATAINFO_H

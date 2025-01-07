@@ -14,10 +14,9 @@ extern "C"
 #include "libavutil/mem.h"
 }
 
-
 class audioFrameQueue
 {
-public:
+  public:
 	/**
 	 * buffer 数据缓冲区
 	 * dataLength 数据缓冲区有多少个byte数据
@@ -25,17 +24,16 @@ public:
 	 */
 	struct audioFrame_t
 	{
-		uint8_t *buffer;
-		int dataLength;
-		int bufferLength;
-		audioFrame_t(uint8_t *data = nullptr, int dataLength = 0, int bufferLength = 0)
-		{
-			this->buffer = data;
-			this->dataLength = dataLength;
-			this->bufferLength = bufferLength;
-		}
+	  uint8_t *buffer;
+	  int dataLength;
+	  int bufferLength;
+	  audioFrame_t(uint8_t *data = nullptr, int dataLength = 0, int bufferLength = 0)
+	  {
+		this->buffer = data;
+		this->dataLength = dataLength;
+		this->bufferLength = bufferLength;
+	  }
 	};
-
 
 	int consumeIndex = 0;
 	int produceIndex = 0;
@@ -46,17 +44,16 @@ public:
 	audioFrameQueue(int capacity);
 	bool isFull();
 	bool isEmpty();
-	void resetDataLength(int resetIndex,int dataLength);
+	void resetDataLength(int resetIndex, int dataLength);
 	void resetAudioFrame(int resetIndex, audioFrame_t frame);
-    void reset();
+	void reset();
 
 	~audioFrameQueue()
-    {
-        reset();
-        frameQueue.clear();
-    }
-private:
+	{
+	  reset();
+	  frameQueue.clear();
+	}
+  private:
 };
-
 
 #endif //AUDIOFRAMEQUEUE_H
