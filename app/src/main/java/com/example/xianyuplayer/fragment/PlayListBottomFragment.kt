@@ -2,11 +2,13 @@ package com.example.xianyuplayer.fragment
 
 import android.app.Dialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.xianyuplayer.Constant
+import com.example.xianyuplayer.ItemTouchHelperCallback
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.adapter.PlayListAdapter
 import com.example.xianyuplayer.databinding.BottomFragmentPlayListBinding
@@ -36,9 +38,16 @@ class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
     ): View {
         binding = BottomFragmentPlayListBinding.inflate(inflater, container, false)
         playListAdapter = PlayListAdapter()
-        binding.recycleCurrentPlayList.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-        binding.recycleCurrentPlayList.adapter = playListAdapter
+
+        binding.recycleCurrentPlayList.apply {
+            layoutParams.height = (Constant.displayHeightExcludeSystem * 0.6).toInt()
+            layoutManager =
+                LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+            adapter = playListAdapter
+        }
+        val helperCallback = ItemTouchHelperCallback(playListAdapter)
+        val itemTouchHelper = ItemTouchHelper(helperCallback)
+        itemTouchHelper.attachToRecyclerView(binding.recycleCurrentPlayList)
         return binding.root
     }
 
@@ -50,8 +59,6 @@ class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
                 playListAdapter.addListData(it)
             }
         }
-
-        Log.i(TAG, "onViewCreated: --> ${binding.recycleCurrentPlayList.bottom}")
     }
 
     override fun onDestroy() {

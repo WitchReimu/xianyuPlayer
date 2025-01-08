@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.text.Spanned
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -151,7 +152,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
+        Constant.displayHeightExcludeSystem = binding.root.bottom
+        Constant.displayWidthExcludeSystem = binding.root.right
     }
 
     private fun addFragment(tag: String, fragment: Fragment) {
