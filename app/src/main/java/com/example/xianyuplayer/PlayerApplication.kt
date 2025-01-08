@@ -1,6 +1,7 @@
 package com.example.xianyuplayer
 
 import android.app.Application
+import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
 import com.example.xianyuplayer.database.PlayerRepository
 import com.example.xianyuplayer.database.PlayerRoomDatabase
 
@@ -12,5 +13,17 @@ class PlayerApplication : Application() {
             database.getLocalFileDao(),
             database.getFileSystemPathDao()
         )
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        applicationInstance = this
+    }
+
+    companion object {
+        lateinit var applicationInstance: PlayerApplication
+        fun getInstance(): PlayerApplication {
+            return applicationInstance
+        }
     }
 }

@@ -10,7 +10,7 @@
         android:id="@+id/frame_main_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintBottom_toTopOf="@+id/linear_player_status"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
@@ -20,7 +20,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingVertical="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/frame_main_container">
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/img_audio_album"

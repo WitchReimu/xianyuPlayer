@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="roundImageStyle">
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="playListBottomSheetDialogStyle" parent="Theme.Material3.Light.BottomSheetDialog">
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="playBottomSheetDialogWrapperStyle" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
 </resources>

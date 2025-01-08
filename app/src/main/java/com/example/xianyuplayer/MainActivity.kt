@@ -4,22 +4,30 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.xianyuplayer.Constant.playStatus
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ActivityMainBinding
 import com.example.xianyuplayer.fragment.HomeFragment
 import com.example.xianyuplayer.fragment.LocalFileFragment
+import com.example.xianyuplayer.fragment.PlayListBottomFragment
+import com.example.xianyuplayer.vm.MainViewModel
+import com.example.xianyuplayer.vm.MainViewModelFactory
 
 class MainActivity : AppCompatActivity() {
 
     private val TAG = "MainActivity"
     private val permissionList by lazy { arrayListOf(Manifest.permission.INTERNET) }
+    private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
     private val permissionRequestCode = 0
     private val localFileFragment by lazy { LocalFileFragment() }
@@ -27,9 +35,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        viewModel = ViewModelProvider(
+            this,
+            MainViewModelFactory(PlayerApplication.getInstance().repository)
+        )[TAG, MainViewModel::class.java]
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -55,16 +66,15 @@ class MainActivity : AppCompatActivity() {
                     FragmentInstanceManager.showSpecialFragment(this, localFileFragment)
                 }
             }
-
             true
         }
 
         binding.imgBtnPlayList.setOnClickListener {
-
+            val playListBottomFragment = PlayListBottomFragment(viewModel)
+            playListBottomFragment.show(supportFragmentManager, TAG)
         }
 
         binding.imgPlay.setOnClickListener {
-
             if (playStatus == 3 || playStatus == 4) {
                 pausePlay()
             } else {
@@ -74,6 +84,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun starPlayCallBack(file: LocalFile) {
+        val value = viewModel.playerListLiveData.value
         val absolutePath = file.filePath + file.fileName
         val albumCoverByte =
             MusicNativeMethod.getInstance().getAudioAlbum(absolutePath = absolutePath)
@@ -89,6 +100,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         binding.txtAudioName.text = file.songTitle
+
+        if (value!!.indexOf(file) != -1) {
+            value.remove(file)
+        }
+        value.addFirst(file)
     }
 
     private fun pausePlay() {
@@ -131,7 +147,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         requestPermissionList()
-        externalCacheDir?.exists()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
     }
 
     private fun addFragment(tag: String, fragment: Fragment) {
