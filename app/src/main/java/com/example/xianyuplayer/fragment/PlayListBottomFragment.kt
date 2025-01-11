@@ -1,6 +1,7 @@
 package com.example.xianyuplayer.fragment
 
 import android.app.Dialog
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -40,7 +41,6 @@ class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
         playListAdapter = PlayListAdapter()
 
         binding.recycleCurrentPlayList.apply {
-            layoutParams.height = (Constant.displayHeightExcludeSystem * 0.6).toInt()
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             adapter = playListAdapter
@@ -59,6 +59,9 @@ class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
                 playListAdapter.addListData(it)
             }
         }
+        //动态设置底部弹出框高度
+        val layoutParams = binding.root.layoutParams
+        layoutParams.height = (Constant.displayHeightExcludeSystem * 0.6).toInt()
     }
 
     override fun onDestroy() {

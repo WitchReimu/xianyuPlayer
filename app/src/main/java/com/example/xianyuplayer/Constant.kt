@@ -7,5 +7,5 @@ object Constant {
     const val defaultMetadataInfo = "群星"
     var displayHeightExcludeSystem = 0
     var displayWidthExcludeSystem = 0
-    var playStatus = 0;
+    var playStatus = 0
 }

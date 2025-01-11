@@ -25,13 +25,13 @@ class PlayListAdapter : RecyclerView.Adapter<PlayListAdapter.ViewHolder>(), Item
     }
 
     override fun onBindViewHolder(holder: PlayListAdapter.ViewHolder, position: Int) {
-        /*val localFile = list[position]
+        val localFile = list[position]
         var songTitle = localFile.songTitle
 
         if (songTitle == Constant.defaultMetadataInfo) {
             songTitle = localFile.fileName
         }
-        val spannableString = SpannableString(songTitle + localFile.singer)
+        val spannableString = SpannableString(songTitle + " · " + localFile.singer)
         val foregroundColorSpan = ForegroundColorSpan(Color.parseColor("#D3D3D3"))
         spannableString.setSpan(
             foregroundColorSpan,
@@ -45,11 +45,12 @@ class PlayListAdapter : RecyclerView.Adapter<PlayListAdapter.ViewHolder>(), Item
             spannableString.length,
             SpannableString.SPAN_EXCLUSIVE_INCLUSIVE
         )
-        holder.binding.txtAudioInfo.text = spannableString*/
+        holder.binding.txtAudioInfo.text = spannableString
     }
 
     override fun getItemCount(): Int {
-        return 10
+        return list.size
+//        return 20
     }
 
     fun addListData(data: List<LocalFile>) {
