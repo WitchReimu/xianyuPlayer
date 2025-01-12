@@ -1,31 +1,37 @@
 package com.example.xianyuplayer.fragment
 
 import android.app.Dialog
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.Constant
-import com.example.xianyuplayer.ItemTouchHelperCallback
+import com.example.xianyuplayer.adapter.helper.ItemTouchHelperCallback
+import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.adapter.PlayListAdapter
 import com.example.xianyuplayer.databinding.BottomFragmentPlayListBinding
-import com.example.xianyuplayer.vm.MainViewModel
+import com.example.xianyuplayer.vm.PlayListBottomVMFactory
+import com.example.xianyuplayer.vm.PlayListBottomViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
-    BottomSheetDialogFragment() {
+class PlayListBottomFragment() : BottomSheetDialogFragment() {
 
     private lateinit var binding: BottomFragmentPlayListBinding
     private lateinit var playListAdapter: PlayListAdapter
+    private lateinit var viewModel: PlayListBottomViewModel
     private val TAG = "PlayListBottomFragment"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.playListBottomSheetDialogStyle)
+        viewModel = ViewModelProvider(
+            viewModelStore,
+            PlayListBottomVMFactory(PlayerApplication.getInstance().repository)
+        )[TAG, PlayListBottomViewModel::class.java]
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -54,7 +60,7 @@ class PlayListBottomFragment(private val mainViewModel: MainViewModel) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mainViewModel.playerListLiveData.observe(viewLifecycleOwner) {
+        viewModel.playList.observe(viewLifecycleOwner) {
             if (it != null) {
                 playListAdapter.addListData(it)
             }

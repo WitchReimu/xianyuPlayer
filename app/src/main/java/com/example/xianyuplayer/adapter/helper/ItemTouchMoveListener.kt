@@ -1,4 +1,4 @@
-package com.example.xianyuplayer
+package com.example.xianyuplayer.adapter.helper
 
 interface ItemTouchMoveListener {
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean

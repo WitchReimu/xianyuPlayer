@@ -5,7 +5,8 @@ import kotlinx.coroutines.flow.Flow
 class PlayerRepository(
     private val localScanPathDao: LocalScanPathDao,
     private val localFileDao: LocalFileDao,
-    private val fileSystemPathDao: FileSystemPathDao
+    private val fileSystemPathDao: FileSystemPathDao,
+    private val playFileDao: PlayFileDao
 ) {
 
     fun getScanLocalPath(): Flow<List<LocalScanPath>> {
@@ -67,4 +68,21 @@ class PlayerRepository(
     suspend fun deletePaths(fileSystemPaths: List<FileSystemPath>): Int {
         return fileSystemPathDao.deletePaths(fileSystemPaths)
     }
+
+    suspend fun insertPlayFile(playFile: PlayFile): Long {
+        return playFileDao.insertPlayFile(playFile)
+    }
+
+    suspend fun insertPlayFiles(playFiles: List<PlayFile>): LongArray {
+        return playFileDao.insertPlayFiles(playFiles)
+    }
+
+    fun getPlayList(): Flow<List<PlayFile>> {
+        return playFileDao.getPlayList()
+    }
+
+    fun getLocalFileJoinPlayList(): Flow<List<LocalFile>> {
+        return playFileDao.getLocalFileJoinPlayList()
+    }
+
 }

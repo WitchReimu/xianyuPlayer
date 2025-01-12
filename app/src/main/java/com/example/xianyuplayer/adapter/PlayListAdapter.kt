@@ -2,14 +2,13 @@ package com.example.xianyuplayer.adapter
 
 import android.graphics.Color
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.xianyuplayer.Constant
-import com.example.xianyuplayer.ItemTouchMoveListener
+import com.example.xianyuplayer.adapter.helper.ItemTouchMoveListener
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ItemPlayListBinding
 import java.util.Collections
@@ -50,7 +49,6 @@ class PlayListAdapter : RecyclerView.Adapter<PlayListAdapter.ViewHolder>(), Item
 
     override fun getItemCount(): Int {
         return list.size
-//        return 20
     }
 
     fun addListData(data: List<LocalFile>) {

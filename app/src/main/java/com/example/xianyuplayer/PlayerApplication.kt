@@ -11,7 +11,8 @@ class PlayerApplication : Application() {
         PlayerRepository(
             database.getLocalScanPathDao(),
             database.getLocalFileDao(),
-            database.getFileSystemPathDao()
+            database.getFileSystemPathDao(),
+            database.getPlayListDao()
         )
     }
 
