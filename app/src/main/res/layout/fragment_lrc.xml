@@ -4,38 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycle_lrc"
+    <com.github.gzuliyujiang.wheelview.widget.WheelView
+        android:id="@+id/wheel_view_lrc"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#81BB86FC" />
-
-    <LinearLayout
-        android:id="@+id/linear_lrc_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="2dp"
-            android:layout_weight="1"
-            android:background="@color/white" />
-
-        <TextView
-            android:id="@+id/txt_lrc_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00:00::00" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="2dp"
-            android:layout_weight="1"
-            android:background="@color/white" />
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        app:wheel_indicatorColor="@color/teal_200"
+        app:wheel_indicatorEnabled="false"
+        app:wheel_visibleItemCount="16" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -89,6 +89,13 @@ void decodeStream::doDecode(decodeStream *instance)
 		break;
 	  }
 
+	  if (pFrame->pkt_dts != AV_NOPTS_VALUE)
+	  {
+		double dts = pFrame->pkt_dts *
+					 av_q2d(instance->formatContext->streams[instance->streamIndex]->time_base);
+		  ALOGI("[%s] dts %f", __FUNCTION__, dts);
+	  }
+
 	  if (!instance->initSwrContext())
 	  {
 		ALOGE("[%s] init swr context error", __FUNCTION__);
@@ -273,6 +280,7 @@ void decodeStream::changeStream(const char *path)
   queue.reset();
   audioDecode = nullptr;
   streamIndex = -1;
+  decodeState = Idle;
   openStream();
 }
 
@@ -309,4 +317,23 @@ void decodeStream::openStream()
 	return;
   }
   decodeState = Prepared;
+}
+
+bool decodeStream::seekPosition(float position)
+{
+  position = position * 1000;
+  int ret = avformat_seek_file(formatContext, -1, INT64_MIN, position, INT64_MAX, 0);
+  if (ret < 0)
+	return false;
+
+  if (decodeState == Prepared || decodeState == Running || decodeState == Pause)
+  {
+	avcodec_flush_buffers(audioDecodeContext);
+  }
+  return true;
+}
+
+int64_t decodeStream::getAudioDuration()
+{
+  return formatContext->duration;
 }

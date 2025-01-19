@@ -8,3 +8,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/WheelView/build/
+WheelView/README.md

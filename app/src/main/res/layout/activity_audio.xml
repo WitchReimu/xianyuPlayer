@@ -39,5 +39,12 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.7" />
 
+    <SeekBar
+        android:id="@+id/seek_audio_position"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="14dp"
+        android:min="0"
+        app:layout_constraintTop_toBottomOf="@+id/frame_audio_lrc" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

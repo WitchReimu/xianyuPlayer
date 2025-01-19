@@ -22,6 +22,8 @@ class MusicNativeMethod {
 
     external fun getPlayStatus(ptr: Long = playerPtr): Int
     external fun pausePlay(ptr: Long = playerPtr): Boolean
+    external fun seekPosition(position: Float, streamPtr: Long = decodeStreamPtr): Boolean
+    external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
 
     fun openDecodeStream(path: String) {
         decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)

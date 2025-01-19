@@ -37,7 +37,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	virtual oboe::DataCallbackResult
 	onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
 	virtual void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error);
-	template<typename T>
+
 	/**
 	 *
 	 * @tparam T
@@ -46,6 +46,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	 * @param byteCount 待填充缓冲区的长度
 	 * @return
 	 */
+	template<typename T>
 	int fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int byteCount);
 };
 

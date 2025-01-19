@@ -108,6 +108,7 @@ bool oboePlayer::pausePlay()
 	  ALOGE("[%s] error name %s", __FUNCTION__, oboe::convertToText(flushResult));
 	  return false;
 	}
+	decoderStream->decodeState = decodeStream::Pause;
 	return true;
   }
   return false;

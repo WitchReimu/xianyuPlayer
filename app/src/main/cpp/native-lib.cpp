@@ -135,6 +135,27 @@ jboolean PausePlay(JNIEnv *env, jobject activity, jlong playerPtr)
   return 1;
 }
 
+jboolean SeekPosition(JNIEnv *env, jobject activity, jfloat position, jlong decodeStreamPtr)
+{
+  if (decodeStreamPtr == 0)
+  {
+	return false;
+  }
+
+  decodeStream *stream = reinterpret_cast<decodeStream *>(decodeStreamPtr);
+  return stream->seekPosition(position);
+}
+
+jlong GetAudioDuration(JNIEnv *env, jobject activity, jlong streamPtr)
+{
+  if (streamPtr == 0)
+	return 0;
+
+  decodeStream *stream = reinterpret_cast<decodeStream *>(streamPtr);
+  int64_t duration = stream->getAudioDuration();
+  return static_cast<jlong>(duration);
+}
+
 JNIEXPORT jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
 	JNIEnv *env,
 	jobject /* this */)
@@ -159,7 +180,9 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"startDecodeStream", "(J)V",                                                                   (void *)startDecodeStream},
 		{"getAudioAlbum",     "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},
 		{"getPlayStatus",     "(J)I",                                                                   (void *)GetPlayStatus},
-		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay}
+		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay},
+		{"seekPosition",      "(FJ)Z",                                                                  (void *)SeekPosition},
+		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,

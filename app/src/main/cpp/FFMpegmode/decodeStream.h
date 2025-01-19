@@ -33,6 +33,7 @@ class decodeStream
 	  Pause = 3,
 	  Stop = 4
 	};
+	int decodeState = Idle;
 	audioFrameQueue queue = audioFrameQueue(3);
 
 	decodeStream(const char *path);
@@ -44,6 +45,8 @@ class decodeStream
 	void decodeFile();
 	void notifyCond();
 	int getDecodeState();
+	int64_t getAudioDuration();
+	bool seekPosition(float position);
 	void changeStream(const char *path);
 	void openStream();
 
@@ -53,13 +56,12 @@ class decodeStream
 	int streamIndex = -1;
 	const AVCodec *audioDecode = nullptr;
 	std::thread *decodeThread = nullptr;
+	long lastTimeStamp = 0;
 	AVCodecContext *audioDecodeContext = nullptr;
-	int decodeState = Initing;
 	std::condition_variable decodeCon;
 	std::mutex decodeMutex;
 	struct SwrContext *swrContext = nullptr;
 	AVSampleFormat targetFmt = AV_SAMPLE_FMT_S16;
-
 	static void doDecode(decodeStream *instance);
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
