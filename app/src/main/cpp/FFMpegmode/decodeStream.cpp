@@ -71,6 +71,25 @@ void decodeStream::doDecode(decodeStream *instance)
 
   while (instance->decodeState == Running || instance->decodeState == Prepared)
   {
+
+	if (instance->seekPosition >= 0 && instance->seekPosition < instance->getAudioDuration())
+	{
+	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
+	  int ret = avformat_seek_file(instance->formatContext,
+								   -1,
+								   INT64_MIN,
+								   instance->seekPosition,
+								   INT64_MAX,
+								   0);
+	  if (ret < 0)
+	  {
+
+	  } else
+	  {
+		avcodec_flush_buffers(instance->audioDecodeContext);
+	  }
+	  instance->seekPosition = -1;
+	}
 	int ret = av_read_frame(instance->formatContext, pPacket);
 
 	if (ret == AVERROR_EOF)
@@ -356,19 +375,10 @@ void decodeStream::openStream()
 
 bool decodeStream::seekToPosition(long position)
 {
-  position = position * 1000;
+  seekPosition = position * 1000;
 
   if (position > getAudioDuration())
 	return false;
-
-  int ret = avformat_seek_file(formatContext, -1, INT64_MIN, position, INT64_MAX, 0);
-  if (ret < 0)
-	return false;
-
-  if (decodeState == Prepared || decodeState == Running || decodeState == Pause)
-  {
-	avcodec_flush_buffers(audioDecodeContext);
-  }
   return true;
 }
 

@@ -280,36 +280,38 @@ int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int 
 	//待填充缓冲区的长度大于数据帧内的数据长度，将数据帧剩余的数据复制到待填充缓冲区内
 	int leftDataLength = (frame.dataLength - dataOffset);
 	memcpy(audioData, frame.buffer + dataOffset, leftDataLength);
-	decoderStream->queue.consumeIndex =
-		(decoderStream->queue.consumeIndex + 1) % decoderStream->queue.length;
-	decoderStream->notifyCond();
-	dataOffset = 0;
-
-	if (decoderStream->queue.isEmpty())
-	  return 1;
-	//取出缓冲区内的下一帧数据，将待填充区内的其他部分填充音频数据
-	//todo: 循环获得缓冲队列内的音频帧直到将填充区内的缓冲区填满，或者在填充区内未填满的情况下出现缓冲队列内的音频帧为空的情况。
-	audioFrameQueue::audioFrame_t
-		&nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
-
-	if (nextFrame.dataLength - dataOffset > byteCount - leftDataLength)
+	//循环获得缓冲队列内的音频帧直到将填充区内的缓冲区填满，或者在填充区内未填满的情况下出现缓冲队列内的音频帧为空的情况。
+	for (int i = 0; i < decoderStream->queue.length; ++i)
 	{
-	  size_t bytePerSample = sizeof(audioData[0]);
-	  memcpy(audioData + (leftDataLength / bytePerSample),
-			 nextFrame.buffer,
-			 byteCount - leftDataLength);
-	  dataOffset = dataOffset + byteCount - leftDataLength;
-	} else
-	{
-	  size_t bytePerSample = sizeof(audioData[0]);
-	  memcpy(audioData + (leftDataLength / bytePerSample),
-			 nextFrame.buffer,
-			 nextFrame.bufferLength);
 	  decoderStream->queue.consumeIndex =
 		  (decoderStream->queue.consumeIndex + 1) % decoderStream->queue.length;
 	  dataOffset = 0;
-	}
 
+	  if (decoderStream->queue.isEmpty())
+	  {
+		decoderStream->notifyCond();
+		return 1;
+	  }
+
+	  audioFrameQueue::audioFrame_t
+		  &nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
+	  if (nextFrame.dataLength - dataOffset > byteCount - leftDataLength)
+	  {
+		size_t bytePerSample = sizeof(audioData[0]);
+		memcpy(audioData + (leftDataLength / bytePerSample),
+			   nextFrame.buffer,
+			   byteCount - leftDataLength);
+		dataOffset = dataOffset + byteCount - leftDataLength;
+		break;
+	  } else
+	  {
+		size_t bytePerSample = sizeof(audioData[0]);
+		memcpy(audioData + (leftDataLength / bytePerSample),
+			   nextFrame.buffer,
+			   nextFrame.bufferLength);
+	  }
+	}
+	decoderStream->notifyCond();
   }
   return 0;
 }

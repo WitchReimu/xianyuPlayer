@@ -58,6 +58,7 @@ class decodeStream
 	const AVCodec *audioDecode = nullptr;
 	std::thread *decodeThread = nullptr;
 	long lastTimeStamp = 0;
+	long seekPosition = -1;
 	struct AVRational audioStreamTimeBase{};
 	jobject nativeBridge = nullptr;
 	AVCodecContext *audioDecodeContext = nullptr;
