@@ -3,18 +3,31 @@
 //
 
 #include "decodeStream.h"
-#include <fstream>
 #define TAG "decodeStream"
 
-decodeStream::decodeStream(const char *path)
+decodeStream::decodeStream(const char *path, JNIEnv *env, jobject *nativeBridgeClass)
 {
   strcpy(this->path, path);
 //	strcpy(this->path, "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4");
+  nativeBridge = env->NewGlobalRef(*nativeBridgeClass);
+  env->GetJavaVM(&vm);
   initStream();
 }
 
 decodeStream::~decodeStream()
 {
+  bool isAttach = false;
+  JNIEnv *env = getJniEnv(vm, isAttach);
+
+  if (env != nullptr && nativeBridge != nullptr)
+  {
+	env->DeleteGlobalRef(nativeBridge);
+
+	if (isAttach)
+	{
+	  vm->DetachCurrentThread();
+	}
+  }
   swr_free(&swrContext);
   avcodec_close(audioDecodeContext);
   avcodec_free_context(&audioDecodeContext);
@@ -44,6 +57,17 @@ void decodeStream::doDecode(decodeStream *instance)
 {
   AVPacket *pPacket = av_packet_alloc();
   AVFrame *pFrame = av_frame_alloc();
+  struct timeval curTimeStamp{};
+  bool isAttach = false;
+  JNIEnv *env = instance->getJniEnv(instance->vm, isAttach);
+  jclass bridgeClass = nullptr;
+  jmethodID methodId = nullptr;
+
+  if (env != nullptr)
+  {
+	bridgeClass = env->GetObjectClass(instance->nativeBridge);
+	methodId = env->GetStaticMethodID(bridgeClass, "notifyDtsChange", "(D)V");
+  }
 
   while (instance->decodeState == Running || instance->decodeState == Prepared)
   {
@@ -91,9 +115,17 @@ void decodeStream::doDecode(decodeStream *instance)
 
 	  if (pFrame->pkt_dts != AV_NOPTS_VALUE)
 	  {
-		double dts = pFrame->pkt_dts *
-					 av_q2d(instance->formatContext->streams[instance->streamIndex]->time_base);
-		  ALOGI("[%s] dts %f", __FUNCTION__, dts);
+		gettimeofday(&curTimeStamp, nullptr);
+		long msec = curTimeStamp.tv_sec * 1000 + curTimeStamp.tv_usec / 1000;
+		long intervalTimeS = msec - instance->lastTimeStamp;
+		if (intervalTimeS > 100)
+		{
+		  instance->lastTimeStamp = msec;
+		  double dts = pFrame->pkt_dts * av_q2d(instance->audioStreamTimeBase);
+
+		  if (methodId != nullptr)
+			env->CallStaticVoidMethod(bridgeClass, methodId, dts);
+		}
 	  }
 
 	  if (!instance->initSwrContext())
@@ -108,8 +140,7 @@ void decodeStream::doDecode(decodeStream *instance)
 													 instance->targetFmt,
 													 1);
 	  audioFrameQueue &frameQueue = instance->queue;
-	  audioFrameQueue::audioFrame_t
-		  &produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
+	  audioFrameQueue::audioFrame_t &produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
 	  int bytePerSample = av_get_bytes_per_sample(instance->targetFmt);
 
 	  //判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用;队列内的旧缓冲区进行释放. 大于->对队列缓冲区内的内容进行覆盖。
@@ -162,6 +193,9 @@ void decodeStream::doDecode(decodeStream *instance)
 	  av_packet_unref(pPacket);
 	}
   }
+
+  if (isAttach)
+	instance->vm->DetachCurrentThread();
 
   av_frame_free(&pFrame);
   av_packet_free(&pPacket);
@@ -305,6 +339,7 @@ void decodeStream::openStream()
   {
 	ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
   }
+  audioStreamTimeBase = formatContext->streams[streamIndex]->time_base;
   AVStream *audioStream = formatContext->streams[streamIndex];
   audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
   audioDecodeContext = avcodec_alloc_context3(audioDecode);
@@ -319,9 +354,13 @@ void decodeStream::openStream()
   decodeState = Prepared;
 }
 
-bool decodeStream::seekPosition(float position)
+bool decodeStream::seekToPosition(long position)
 {
   position = position * 1000;
+
+  if (position > getAudioDuration())
+	return false;
+
   int ret = avformat_seek_file(formatContext, -1, INT64_MIN, position, INT64_MAX, 0);
   if (ret < 0)
 	return false;
@@ -336,4 +375,36 @@ bool decodeStream::seekPosition(float position)
 int64_t decodeStream::getAudioDuration()
 {
   return formatContext->duration;
+}
+//todo 重复函数 修改为全局函数
+JNIEnv *decodeStream::getJniEnv(JavaVM *jvm, bool &isAttach)
+{
+  JNIEnv *env = nullptr;
+
+  if (jvm == nullptr)
+  {
+	return env;
+  }
+
+  jint ret = jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
+  if (ret != JNI_OK)
+  {
+
+	if (ret == JNI_EDETACHED)
+	{
+	  ret = jvm->AttachCurrentThread(&env, nullptr);
+	  if (ret == JNI_OK)
+	  {
+		ALOGI("[%s] JNIenv attach thread success", __FUNCTION__);
+		isAttach = true;
+		return env;
+	  }
+	}
+
+	ALOGW("[%s] get JNIEnv is NULL", __FUNCTION__);
+	return nullptr;
+  }
+  ALOGW("[%s] get JNIEnv is NULL", __FUNCTION__);
+  isAttach = false;
+  return env;
 }

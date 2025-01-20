@@ -10,6 +10,7 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <jni.h>
 
 #include "../LogUtils.h"
 #include "audioFrameQueue.h"
@@ -34,9 +35,9 @@ class decodeStream
 	  Stop = 4
 	};
 	int decodeState = Idle;
-	audioFrameQueue queue = audioFrameQueue(3);
+	audioFrameQueue queue = audioFrameQueue(10);
 
-	decodeStream(const char *path);
+	decodeStream(const char *path, JNIEnv *env, jobject *nativeBridgeClass);
 	~decodeStream();
 	int getDecodeFileSampleRate();
 	int getDecodeFileChannelCount();
@@ -46,7 +47,7 @@ class decodeStream
 	void notifyCond();
 	int getDecodeState();
 	int64_t getAudioDuration();
-	bool seekPosition(float position);
+	bool seekToPosition(long position);
 	void changeStream(const char *path);
 	void openStream();
 
@@ -57,6 +58,8 @@ class decodeStream
 	const AVCodec *audioDecode = nullptr;
 	std::thread *decodeThread = nullptr;
 	long lastTimeStamp = 0;
+	struct AVRational audioStreamTimeBase{};
+	jobject nativeBridge = nullptr;
 	AVCodecContext *audioDecodeContext = nullptr;
 	std::condition_variable decodeCon;
 	std::mutex decodeMutex;
@@ -65,6 +68,8 @@ class decodeStream
 	static void doDecode(decodeStream *instance);
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
+	JavaVM *vm = nullptr;
+	JNIEnv *getJniEnv(JavaVM *jvm, bool &isAttach);
 };
 
 #endif //DECODESTREAM_H

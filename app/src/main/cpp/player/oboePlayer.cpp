@@ -46,7 +46,7 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
   float *floatData = nullptr;
 
   if (decoderStream->queue.isEmpty())
-	return decoderStream->getDecodeState();
+	return decodeStream::decodeState_enmu::Running;
   audioFrameQueue::audioFrame_t
 	  &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
@@ -288,14 +288,28 @@ int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int 
 	if (decoderStream->queue.isEmpty())
 	  return 1;
 	//取出缓冲区内的下一帧数据，将待填充区内的其他部分填充音频数据
+	//todo: 循环获得缓冲队列内的音频帧直到将填充区内的缓冲区填满，或者在填充区内未填满的情况下出现缓冲队列内的音频帧为空的情况。
 	audioFrameQueue::audioFrame_t
 		&nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
-	size_t bytePerSample = sizeof(audioData[0]);
-	memcpy(audioData + (leftDataLength / bytePerSample),
-		   nextFrame.buffer,
-		   byteCount - leftDataLength);
-	dataOffset = dataOffset + byteCount - leftDataLength;
+	if (nextFrame.dataLength - dataOffset > byteCount - leftDataLength)
+	{
+	  size_t bytePerSample = sizeof(audioData[0]);
+	  memcpy(audioData + (leftDataLength / bytePerSample),
+			 nextFrame.buffer,
+			 byteCount - leftDataLength);
+	  dataOffset = dataOffset + byteCount - leftDataLength;
+	} else
+	{
+	  size_t bytePerSample = sizeof(audioData[0]);
+	  memcpy(audioData + (leftDataLength / bytePerSample),
+			 nextFrame.buffer,
+			 nextFrame.bufferLength);
+	  decoderStream->queue.consumeIndex =
+		  (decoderStream->queue.consumeIndex + 1) % decoderStream->queue.length;
+	  dataOffset = 0;
+	}
+
   }
   return 0;
 }

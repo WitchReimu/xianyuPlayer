@@ -2,8 +2,10 @@ package com.example.xianyuplayer
 
 import com.example.xianyuplayer.database.MusicMetadata
 
+private const val TAG = "MusicNativeMethod"
 
 class MusicNativeMethod {
+
     private var decodeStreamPtr: Long = 0
     private var playerPtr: Long = 0
 
@@ -22,7 +24,7 @@ class MusicNativeMethod {
 
     external fun getPlayStatus(ptr: Long = playerPtr): Int
     external fun pausePlay(ptr: Long = playerPtr): Boolean
-    external fun seekPosition(position: Float, streamPtr: Long = decodeStreamPtr): Boolean
+    external fun seekPosition(position: Long, streamPtr: Long = decodeStreamPtr): Boolean
     external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
 
     fun openDecodeStream(path: String) {
@@ -41,8 +43,17 @@ class MusicNativeMethod {
         return startPlay(playerPtr)
     }
 
+    fun addDtsListener(listener: DtsListener) {
+        dtsListeners.add(listener)
+    }
+
+    fun removeDtsListener(listener: DtsListener) {
+        dtsListeners.remove(listener)
+    }
+
     companion object {
         private var instance: MusicNativeMethod? = null
+        private val dtsListeners = mutableListOf<DtsListener>()
 
         fun getInstance(): MusicNativeMethod {
 
@@ -57,6 +68,17 @@ class MusicNativeMethod {
             }
             return instance!!
         }
+
+        @JvmStatic
+        fun notifyDtsChange(dts: Double) {
+            for (dtsListener in dtsListeners) {
+                dtsListener.dtsChange(dts)
+            }
+        }
+    }
+
+    interface DtsListener {
+        fun dtsChange(dts: Double)
     }
 
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.database.parseList
 import com.example.xianyuplayer.databinding.FragmentLrcBinding
 import com.github.gzuliyujiang.wheelview.LrcBean
@@ -45,7 +46,7 @@ class LrcFragment : Fragment() {
                     val item = binding.wheelViewLrc.data[binding.wheelViewLrc.currentPosition]
 
                     if (item is LrcBean) {
-
+                        MusicNativeMethod.getInstance().seekPosition(item.time)
                     }
                 }
             }

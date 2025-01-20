@@ -32,14 +32,14 @@ jobjectArray getMetadata(JNIEnv *env, jobject thiz, jstring file_path)
 }
 
 jlong
-openDecodeStream(JNIEnv *env, jobject activity, jstring path, jlong streamPtr, jlong playerPtr)
+openDecodeStream(JNIEnv *env, jobject natvieClass, jstring path, jlong streamPtr, jlong playerPtr)
 {
   const char *filePath = env->GetStringUTFChars(path, nullptr);
   decodeStream *decoder_ptr = nullptr;
 
   if (streamPtr == 0)
   {
-	decoder_ptr = new decodeStream(filePath);
+	decoder_ptr = new decodeStream(filePath, env, &natvieClass);
   } else if (playerPtr != 0)
   {
 	oboePlayer *player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
@@ -135,7 +135,7 @@ jboolean PausePlay(JNIEnv *env, jobject activity, jlong playerPtr)
   return 1;
 }
 
-jboolean SeekPosition(JNIEnv *env, jobject activity, jfloat position, jlong decodeStreamPtr)
+jboolean SeekPosition(JNIEnv *env, jobject activity, jlong position, jlong decodeStreamPtr)
 {
   if (decodeStreamPtr == 0)
   {
@@ -143,7 +143,7 @@ jboolean SeekPosition(JNIEnv *env, jobject activity, jfloat position, jlong deco
   }
 
   decodeStream *stream = reinterpret_cast<decodeStream *>(decodeStreamPtr);
-  return stream->seekPosition(position);
+  return stream->seekToPosition(position);
 }
 
 jlong GetAudioDuration(JNIEnv *env, jobject activity, jlong streamPtr)
@@ -181,7 +181,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"getAudioAlbum",     "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},
 		{"getPlayStatus",     "(J)I",                                                                   (void *)GetPlayStatus},
 		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay},
-		{"seekPosition",      "(FJ)Z",                                                                  (void *)SeekPosition},
+		{"seekPosition",      "(JJ)Z",                                                                  (void *)SeekPosition},
 		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration}
 	};
 	jint ret = env->RegisterNatives(musicNative,
