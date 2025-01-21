@@ -108,7 +108,6 @@ bool oboePlayer::pausePlay()
 	  ALOGE("[%s] error name %s", __FUNCTION__, oboe::convertToText(flushResult));
 	  return false;
 	}
-	decoderStream->decodeState = decodeStream::Pause;
 	return true;
   }
   return false;
@@ -173,7 +172,7 @@ int oboePlayer::playStatusChange(oboe::StreamState streamState)
 	  break;
   }
   bool isAttach = false;
-  JNIEnv *env = getJNIEnv(&isAttach);
+  JNIEnv *env = getJniEnv(vm, isAttach);
 
   if (env != nullptr)
   {
@@ -186,37 +185,6 @@ int oboePlayer::playStatusChange(oboe::StreamState streamState)
 	  vm->DetachCurrentThread();
   }
   return playerState;
-}
-
-JNIEnv *oboePlayer::getJNIEnv(bool *isAttach)
-{
-  JNIEnv *env = nullptr;
-  *isAttach = false;
-
-  if (vm != nullptr)
-  {
-	jint ret = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
-
-	if (ret != JNI_OK)
-	{
-
-	  if (ret == JNI_EDETACHED)
-	  {
-		ret = vm->AttachCurrentThread(&env, nullptr);
-
-		if (ret != JNI_OK)
-		{
-		  ALOGE("[%s] get JNIEnv error by jvm ", __FUNCTION__);
-		  return nullptr;
-		}
-		*isAttach = true;
-	  } else
-	  {
-		return nullptr;
-	  }
-	}
-  }
-  return env;
 }
 
 bool oboePlayer::closePlay()

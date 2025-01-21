@@ -12,7 +12,7 @@
 #include <condition_variable>
 #include <jni.h>
 
-#include "../LogUtils.h"
+#include "../CommonUtils.h"
 #include "audioFrameQueue.h"
 
 extern "C"
@@ -70,7 +70,6 @@ class decodeStream
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
 	JavaVM *vm = nullptr;
-	JNIEnv *getJniEnv(JavaVM *jvm, bool &isAttach);
 };
 
 #endif //DECODESTREAM_H

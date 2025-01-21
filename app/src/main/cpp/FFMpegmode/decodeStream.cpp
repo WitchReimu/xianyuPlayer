@@ -59,7 +59,7 @@ void decodeStream::doDecode(decodeStream *instance)
   AVFrame *pFrame = av_frame_alloc();
   struct timeval curTimeStamp{};
   bool isAttach = false;
-  JNIEnv *env = instance->getJniEnv(instance->vm, isAttach);
+  JNIEnv *env = getJniEnv(instance->vm, isAttach);
   jclass bridgeClass = nullptr;
   jmethodID methodId = nullptr;
 
@@ -81,10 +81,7 @@ void decodeStream::doDecode(decodeStream *instance)
 								   instance->seekPosition,
 								   INT64_MAX,
 								   0);
-	  if (ret < 0)
-	  {
-
-	  } else
+	  if (ret >= 0)
 	  {
 		avcodec_flush_buffers(instance->audioDecodeContext);
 	  }
@@ -385,36 +382,4 @@ bool decodeStream::seekToPosition(long position)
 int64_t decodeStream::getAudioDuration()
 {
   return formatContext->duration;
-}
-//todo 重复函数 修改为全局函数
-JNIEnv *decodeStream::getJniEnv(JavaVM *jvm, bool &isAttach)
-{
-  JNIEnv *env = nullptr;
-
-  if (jvm == nullptr)
-  {
-	return env;
-  }
-
-  jint ret = jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
-  if (ret != JNI_OK)
-  {
-
-	if (ret == JNI_EDETACHED)
-	{
-	  ret = jvm->AttachCurrentThread(&env, nullptr);
-	  if (ret == JNI_OK)
-	  {
-		ALOGI("[%s] JNIenv attach thread success", __FUNCTION__);
-		isAttach = true;
-		return env;
-	  }
-	}
-
-	ALOGW("[%s] get JNIEnv is NULL", __FUNCTION__);
-	return nullptr;
-  }
-  ALOGW("[%s] get JNIEnv is NULL", __FUNCTION__);
-  isAttach = false;
-  return env;
 }

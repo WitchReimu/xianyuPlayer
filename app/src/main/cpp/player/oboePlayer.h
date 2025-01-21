@@ -7,7 +7,7 @@
 
 #include <oboe/Oboe.h>
 #include <memory>
-#include "../LogUtils.h"
+#include "../CommonUtils.h"
 #include "decodeStream.h"
 #include <jni.h>
 
@@ -21,7 +21,6 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	bool closePlay();
 	int getPlayerStatus();
 	int playStatusChange(oboe::StreamState state);
-	JNIEnv *getJNIEnv(bool *isAttach);
 	~oboePlayer();
 
   private:
