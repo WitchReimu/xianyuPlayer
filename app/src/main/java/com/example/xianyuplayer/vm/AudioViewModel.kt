@@ -3,11 +3,17 @@ package com.example.xianyuplayer.vm
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import com.example.xianyuplayer.MusicNativeMethod
+import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.database.PlayerRepository
+import java.util.LinkedList
 
 class AudioViewModel(private val repository: PlayerRepository) : ViewModel() {
     val durationLiveData = MutableLiveData<Long>(0)
+    val playList = LinkedList<LocalFile>()
+    val playListLiveData = repository.getLocalFileJoinPlayList().asLiveData()
+    var playPosition = 0
 
     fun getAudioDuration(): Long {
         val duration = MusicNativeMethod.getInstance().getAudioDuration()
