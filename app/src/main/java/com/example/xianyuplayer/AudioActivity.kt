@@ -5,18 +5,23 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.example.xianyuplayer.database.PlayFile
 import com.example.xianyuplayer.databinding.ActivityAudioBinding
 import com.example.xianyuplayer.fragment.LrcFragment
 import com.example.xianyuplayer.vm.AudioViewModel
 import com.example.xianyuplayer.vm.AudioViewModelFactory
+import com.example.xianyuplayer.vm.GlobalViewModel
 
 // TODO: 完成播放列表的附加功能，1.播放列表的循环方式 2.上一首 3.下一首
-class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.OnClickListener {
+class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.OnClickListener,
+    MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "AudioActivity"
     private lateinit var binding: ActivityAudioBinding
     private lateinit var viewModel: AudioViewModel
+    private lateinit var globalViewModel: GlobalViewModel
     private var isTouch = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,11 +29,13 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
         binding = ActivityAudioBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val playerApplication = application as PlayerApplication
+        val repository = PlayerApplication.getInstance().repository
         viewModel = ViewModelProvider.create(
             this,
-            AudioViewModelFactory(playerApplication.repository)
+            AudioViewModelFactory(repository)
         )[TAG, AudioViewModel::class]
+
+        globalViewModel = FragmentInstanceManager.getGlobalViewModel(this, repository)
 
         binding.imgBack.setOnClickListener(this)
         binding.txtLoopType.setOnClickListener(this)
@@ -48,7 +55,7 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 MusicNativeMethod.getInstance()
                     .seekPosition(binding.seekAudioPosition.progress * 1000L)
-                isTouch = false;
+                isTouch = false
             }
         })
 
@@ -62,6 +69,7 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
         }
 
         MusicNativeMethod.getInstance().addDtsListener(this)
+        MusicNativeMethod.getInstance().addPlayStateChangeListener(this)
 
         val transaction = supportFragmentManager.beginTransaction()
         transaction.add(binding.frameAudioLrc.id, LrcFragment())
@@ -77,6 +85,7 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
 
     override fun onDestroy() {
         MusicNativeMethod.getInstance().removeDtsListener(this)
+        MusicNativeMethod.getInstance().removePlayStateChangeListener(this)
         super.onDestroy()
     }
 
@@ -99,6 +108,15 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
 
             binding.txtLoopType.id -> {
 
+                for (i in 0 until Constant.playListCircle.size) {
+                    val circleType = Constant.playListCircle[i]
+
+                    if (binding.txtLoopType.equals(circleType)) {
+                        val index = (i + 1) % Constant.playListCircle.size
+                        val nextType = Constant.playListCircle[index]
+                        binding.txtLoopType.text = nextType
+                    }
+                }
             }
 
             binding.imgPrevious.id -> {
@@ -106,22 +124,83 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
                     return
                 }
 
-                MusicNativeMethod.getInstance().openDecodeStream(absolutePath)
-                MusicNativeMethod.getInstance().startDecodeStream()
-                MusicNativeMethod.getInstance().initPlay(context as MainActivity)
-                val startResult = MusicNativeMethod.getInstance().startPlay()
+                val position = currentPlayAudioPosition()
+                val previousFile = viewModel.playList[position]
+                MusicNativeMethod.getInstance()
+                    .startPlay(previousFile.filePath + previousFile.fileName)
             }
 
             binding.imgPlay.id -> {
+                when (MusicNativeMethod.getInstance().getPlayStatus()) {
+                    Constant.playStatusStarting, Constant.playStatusStarted -> {
+                        MusicNativeMethod.getInstance().pausePlay()
+                    }
 
+                    else -> {
+                        MusicNativeMethod.getInstance().startPlay()
+                    }
+                }
             }
 
             binding.imgNext.id -> {
+                if (viewModel.playList.isEmpty()) {
+                    return
+                }
 
+                val position = currentPlayAudioPosition()
+                val previousFile = viewModel.playList[position]
+                MusicNativeMethod.getInstance()
+                    .startPlay(previousFile.filePath + previousFile.fileName)
             }
 
             binding.imgBtnPlayList.id -> {
 
+            }
+        }
+    }
+
+    private fun currentPlayAudioPosition(): Int {
+
+        globalViewModel.currentPlatFile?.apply {
+            return isCurrentPlayFile(this)
+        }
+
+        for (i in 0 until viewModel.playList.size) {
+            val playFile = viewModel.playList[i]
+            if (playFile.isContinuePlay) {
+                return isCurrentPlayFile(playFile)
+            }
+        }
+        return 0
+    }
+
+    private fun isCurrentPlayFile(playFile: PlayFile): Int {
+        val length = viewModel.playList.size
+        var index = viewModel.playList.indexOf(playFile)
+        index = (index % length + length) % length
+        return index
+    }
+
+    override fun playStatusChangeCallback(status: Int) {
+        Constant.playStatus = status
+
+        when (status) {
+            Constant.playStatusStarting, Constant.playStatusStarted -> {
+                binding.imgPlay.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.pause_circle_24
+                    )
+                )
+            }
+
+            else -> {
+                binding.imgPlay.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.start_circle_24
+                    )
+                )
             }
         }
     }

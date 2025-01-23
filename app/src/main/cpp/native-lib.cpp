@@ -61,7 +61,7 @@ void startDecodeStream(JNIEnv *env, jobject activity, jlong streamPtr)
 }
 
 jlong
-initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jobject mainActivity, jlong playerPtr)
+initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
 {
   oboePlayer *player_ptr = nullptr;
 
@@ -69,7 +69,7 @@ initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jobject mainActivity, j
   {
 	decodeStream *decoder_ptr = reinterpret_cast<decodeStream *>(streamPtr);
 	player_ptr = new oboePlayer();
-	player_ptr->initStream(decoder_ptr, env, mainActivity);
+	player_ptr->initStream(decoder_ptr, env);
   } else if (playerPtr != 0 && streamPtr != 0)
   {
 	player_ptr = reinterpret_cast<oboePlayer *>(playerPtr);
@@ -175,7 +175,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 	JNINativeMethod musicNativeMethod[] = {
 		{"getMetadata",       "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;", (void *)getMetadata},
 		{"startPlay",         "(J)Z",                                                                   (void *)startPlay},
-		{"initPlay",          "(JLcom/example/xianyuplayer/MainActivity;J)J",                           (void *)initPlay},
+		{"initPlay",          "(JJ)J",                                                                  (void *)initPlay},
 		{"openDecodeStream",  "(Ljava/lang/String;JJ)J",                                                (void *)openDecodeStream},
 		{"startDecodeStream", "(J)V",                                                                   (void *)startDecodeStream},
 		{"getAudioAlbum",     "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},

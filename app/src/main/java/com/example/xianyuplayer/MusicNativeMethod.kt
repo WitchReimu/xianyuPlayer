@@ -1,5 +1,6 @@
 package com.example.xianyuplayer
 
+import android.util.Log
 import com.example.xianyuplayer.database.MusicMetadata
 
 private const val TAG = "MusicNativeMethod"
@@ -14,7 +15,7 @@ class MusicNativeMethod {
      */
     external fun getMetadata(filePath: String): Array<MusicMetadata>
     private external fun startPlay(playerPtr: Long): Boolean
-    private external fun initPlay(streamPtr: Long, activity: MainActivity, playerPtr: Long): Long
+    private external fun initPlay(streamPtr: Long, playerPtr: Long): Long
     private external fun openDecodeStream(path: String, streamPtr: Long, playerPtr: Long): Long
     private external fun startDecodeStream(streamPtr: Long)
     external fun getAudioAlbum(
@@ -35,12 +36,19 @@ class MusicNativeMethod {
         startDecodeStream(decodeStreamPtr)
     }
 
-    fun initPlay(mainActivity: MainActivity) {
-        playerPtr = initPlay(decodeStreamPtr, mainActivity, playerPtr)
+    fun initPlay() {
+        playerPtr = initPlay(decodeStreamPtr, playerPtr)
     }
 
     fun startPlay(): Boolean {
         return startPlay(playerPtr)
+    }
+
+    fun startPlay(absolutePath: String):Boolean{
+        openDecodeStream(absolutePath)
+        startDecodeStream()
+        initPlay()
+        return startPlay()
     }
 
     fun addDtsListener(listener: DtsListener) {
@@ -51,9 +59,18 @@ class MusicNativeMethod {
         dtsListeners.remove(listener)
     }
 
+    fun addPlayStateChangeListener(listener: PlayStateChangeListener) {
+        playStateChangeListeners.add(listener)
+    }
+
+    fun removePlayStateChangeListener(listener: PlayStateChangeListener) {
+        playStateChangeListeners.remove(listener)
+    }
+
     companion object {
         private var instance: MusicNativeMethod? = null
         private val dtsListeners = mutableListOf<DtsListener>()
+        private val playStateChangeListeners = mutableListOf<PlayStateChangeListener>()
 
         fun getInstance(): MusicNativeMethod {
 
@@ -75,10 +92,29 @@ class MusicNativeMethod {
                 dtsListener.dtsChange(dts)
             }
         }
+
+        /**
+         * native 调用该函数
+         * 播放状态发生变化后，c++会调用该函数将播放状态的值赋值给变量形参status
+         * @param status 播放状态发生改变后的值
+         */
+        @JvmStatic
+        fun notifyPlayStatusChangeCallback(status: Int) {
+            for (playStateChangeListener in playStateChangeListeners) {
+                playStateChangeListener.playStatusChangeCallback(status)
+            }
+        }
     }
 
     interface DtsListener {
+        /**
+         * @param 返回解码时间戳dts 或者返回显示时间戳pts
+         */
         fun dtsChange(dts: Double)
+    }
+
+    interface PlayStateChangeListener {
+        fun playStatusChangeCallback(status: Int): Unit
     }
 
 }

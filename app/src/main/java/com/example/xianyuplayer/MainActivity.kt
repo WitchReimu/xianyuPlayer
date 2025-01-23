@@ -12,22 +12,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.xianyuplayer.Constant.playStatus
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.database.PlayFile
 import com.example.xianyuplayer.databinding.ActivityMainBinding
 import com.example.xianyuplayer.fragment.HomeFragment
 import com.example.xianyuplayer.fragment.LocalFileFragment
 import com.example.xianyuplayer.fragment.PlayListBottomFragment
+import com.example.xianyuplayer.vm.GlobalViewModel
+import com.example.xianyuplayer.vm.GlobalViewModelFactory
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
 // TODO: 歌词没做 这个很重要
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"
     private val permissionList by lazy { arrayListOf(Manifest.permission.INTERNET) }
     private lateinit var viewModel: MainViewModel
+    private lateinit var globalViewModel: GlobalViewModel
     private lateinit var binding: ActivityMainBinding
     private val permissionRequestCode = 0
     private val localFileFragment by lazy { LocalFileFragment() }
@@ -37,10 +39,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val repository = PlayerApplication.getInstance().repository
         viewModel = ViewModelProvider(
             this,
-            MainViewModelFactory(PlayerApplication.getInstance().repository)
+            MainViewModelFactory(repository)
         )[TAG, MainViewModel::class.java]
+
+        globalViewModel = FragmentInstanceManager.getGlobalViewModel(this, repository)
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -75,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.imgPlay.setOnClickListener {
-            if (playStatus == 3 || playStatus == 4) {
+            if (Constant.playStatus == Constant.playStatusStarting || Constant.playStatus == Constant.playStatusStarted) {
                 pausePlay()
             } else {
                 startPlay()
@@ -109,7 +114,21 @@ class MainActivity : AppCompatActivity() {
             value.remove(file)
         }
         value.addFirst(file)
-        viewModel.insertPlayFile(PlayFile(file.filePath, file.fileName))
+        val playFile = PlayFile(
+            file.filePath,
+            file.fileName,
+            0,
+            true,
+            file.singer,
+            file.albumsName,
+            file.songTitle
+        )
+        viewModel.insertPlayFile(playFile)
+
+        if (globalViewModel.currentPlatFile != null) {
+            viewModel.updatePlayFile(globalViewModel.currentPlatFile!!)
+        }
+        globalViewModel.currentPlatFile = playFile
     }
 
     private fun pausePlay() {
@@ -120,16 +139,11 @@ class MainActivity : AppCompatActivity() {
         MusicNativeMethod.getInstance().startPlay()
     }
 
-    /**
-     * native 调用该函数
-     * 播放状态发生变化后，c++会调用该函数将播放状态的值赋值给变量形参status
-     * @param status 播放状态发生改变后的值
-     */
-    fun playStatusChangeCallback(status: Int): Unit {
+    override fun playStatusChangeCallback(status: Int): Unit {
         Constant.playStatus = status
 
         when (status) {
-            3, 4 -> {
+            Constant.playStatusStarting, Constant.playStatusStarted -> {
                 binding.imgPlay.setImageDrawable(
                     ContextCompat.getDrawable(
                         this,
@@ -152,6 +166,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         requestPermissionList()
+        MusicNativeMethod.getInstance().addPlayStateChangeListener(this)
     }
 
     override fun onResume() {

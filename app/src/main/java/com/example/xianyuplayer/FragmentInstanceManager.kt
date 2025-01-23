@@ -5,7 +5,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import com.example.xianyuplayer.database.LocalFile
+import com.example.xianyuplayer.database.PlayerRepository
+import com.example.xianyuplayer.vm.GlobalViewModel
+import com.example.xianyuplayer.vm.GlobalViewModelFactory
 import java.io.File
 import kotlin.io.path.absolutePathString
 
@@ -95,5 +100,15 @@ object FragmentInstanceManager {
                 }
             }
         }
+    }
+
+    fun getGlobalViewModel(
+        storeOwner: ViewModelStoreOwner,
+        repository: PlayerRepository
+    ): GlobalViewModel {
+        return ViewModelProvider(
+            storeOwner,
+            GlobalViewModelFactory(repository)
+        )[Constant.globalViewModelKey, GlobalViewModel::class.java]
     }
 }

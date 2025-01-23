@@ -9,13 +9,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.xianyuplayer.Constant
 import com.example.xianyuplayer.adapter.helper.ItemTouchMoveListener
-import com.example.xianyuplayer.database.LocalFile
+import com.example.xianyuplayer.database.PlayFile
 import com.example.xianyuplayer.databinding.ItemPlayListBinding
 import java.util.Collections
 
 class PlayListAdapter : RecyclerView.Adapter<PlayListAdapter.ViewHolder>(), ItemTouchMoveListener {
 
-    private val list = ArrayList<LocalFile>()
+    private val list = ArrayList<PlayFile>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayListAdapter.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -51,7 +51,7 @@ class PlayListAdapter : RecyclerView.Adapter<PlayListAdapter.ViewHolder>(), Item
         return list.size
     }
 
-    fun addListData(data: List<LocalFile>) {
+    fun addListData(data: List<PlayFile>) {
         list.clear()
         list.addAll(data)
         notifyDataSetChanged()

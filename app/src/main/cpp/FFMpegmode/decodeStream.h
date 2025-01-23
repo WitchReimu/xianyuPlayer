@@ -25,7 +25,7 @@ extern "C"
 class decodeStream
 {
   public:
-	enum decodeState_enmu : int
+	enum decodeState_enum : int
 	{
 	  Idle = -1,
 	  Initing = 0,

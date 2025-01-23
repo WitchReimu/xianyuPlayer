@@ -24,6 +24,12 @@ class MainViewModel(private val repository: PlayerRepository) : ViewModel() {
             repository.insertPlayFiles(playFiles)
         }
     }
+
+    fun updatePlayFile(playFile: PlayFile) {
+        viewModelScope.launch {
+            repository.updatePlayFile(playFile)
+        }
+    }
 }
 
 class MainViewModelFactory(private val repository: PlayerRepository) : ViewModelProvider.Factory {

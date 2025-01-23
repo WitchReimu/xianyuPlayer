@@ -12,12 +12,11 @@ oboePlayer::~oboePlayer()
 
 }
 
-void oboePlayer::initStream(decodeStream *stream, JNIEnv *env, jobject activity)
+void oboePlayer::initStream(decodeStream *stream, JNIEnv *env)
 {
   decoderStream = stream;
   openStream();
   env->GetJavaVM(&vm);
-  activityObject = env->NewGlobalRef(activity);
 }
 
 oboe::DataCallbackResult
@@ -25,7 +24,7 @@ oboePlayer::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_
 {
   int state = renderAudioData(audioData, numFrames);
 
-  if (state == decodeStream::decodeState_enmu::Running)
+  if (state == decodeStream::decodeState_enum::Running)
 	return oboe::DataCallbackResult::Continue;
   else
 	return oboe::DataCallbackResult::Stop;
@@ -45,8 +44,15 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
   int32_t *int32Data = nullptr;
   float *floatData = nullptr;
 
-  if (decoderStream->queue.isEmpty())
-	return decodeStream::decodeState_enmu::Running;
+  if (decoderStream->queue.isEmpty()){
+	int state = decoderStream->getDecodeState();
+
+	if (state == decodeStream::decodeState_enum::Stop)
+	{
+	  return state;
+	}
+	return decodeStream::decodeState_enum::Running;
+  }
   audioFrameQueue::audioFrame_t
 	  &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
@@ -69,7 +75,7 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	  break;
   }
 
-  return decodeStream::decodeState_enmu::Running;
+  return decodeStream::decodeState_enum::Running;
 }
 
 bool oboePlayer::startPlay()
@@ -176,10 +182,11 @@ int oboePlayer::playStatusChange(oboe::StreamState streamState)
 
   if (env != nullptr)
   {
-	jmethodID callBackMethod = env->GetMethodID(env->GetObjectClass(activityObject),
-												"playStatusChangeCallback",
-												"(I)V");
-	env->CallVoidMethod(activityObject, callBackMethod, playerState);
+	jclass nativeMethodClass = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
+	jmethodID callBackMethod = env->GetStaticMethodID(nativeMethodClass,
+													  "notifyPlayStatusChangeCallback",
+													  "(I)V");
+	env->CallStaticVoidMethod(nativeMethodClass, callBackMethod, playerState);
 
 	if (isAttach)
 	  vm->DetachCurrentThread();

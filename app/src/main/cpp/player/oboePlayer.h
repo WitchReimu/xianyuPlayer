@@ -14,13 +14,14 @@
 class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCallback
 {
   public:
-	void initStream(decodeStream *stream, JNIEnv *env, jobject activity);
+	void initStream(decodeStream *stream, JNIEnv *env);
 	void openStream();
 	bool startPlay();
 	bool pausePlay();
 	bool closePlay();
 	int getPlayerStatus();
 	int playStatusChange(oboe::StreamState state);
+	int playCircleType = playListCircle_enum::listCircle;
 	~oboePlayer();
 
   private:

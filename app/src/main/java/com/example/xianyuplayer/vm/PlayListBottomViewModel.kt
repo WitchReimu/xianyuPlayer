@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 class PlayListBottomViewModel(private val repository: PlayerRepository) : ViewModel() {
 
-    val playList = repository.getLocalFileJoinPlayList().asLiveData()
+    val playList = repository.getPlayList().asLiveData()
 
 }
 

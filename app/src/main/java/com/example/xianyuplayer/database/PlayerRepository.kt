@@ -77,12 +77,12 @@ class PlayerRepository(
         return playFileDao.insertPlayFiles(playFiles)
     }
 
-    fun getPlayList(): Flow<List<PlayFile>> {
-        return playFileDao.getPlayList()
+    suspend fun updatePlayFile(playFile: PlayFile):Int{
+        return playFileDao.updatePlayFile(playFile)
     }
 
-    fun getLocalFileJoinPlayList(): Flow<List<LocalFile>> {
-        return playFileDao.getLocalFileJoinPlayList()
+    fun getPlayList(): Flow<List<PlayFile>> {
+        return playFileDao.getPlayList()
     }
 
 }

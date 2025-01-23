@@ -5,7 +5,6 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.xianyuplayer.MainActivity
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.database.LocalFile
 import com.example.xianyuplayer.databinding.ItemLocalFileBinding
@@ -49,10 +48,7 @@ class LocalFileAdapter(private val context: Context) :
                 if (onStart != null) {
                     onStart!!(localFile)
                 }
-                MusicNativeMethod.getInstance().openDecodeStream(absolutePath)
-                MusicNativeMethod.getInstance().startDecodeStream()
-                MusicNativeMethod.getInstance().initPlay(context as MainActivity)
-                val startResult = MusicNativeMethod.getInstance().startPlay()
+                val startResult = MusicNativeMethod.getInstance().startPlay(absolutePath)
 
                 if (startResult)
                     currentAbsolutePath = absolutePath

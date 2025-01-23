@@ -92,12 +92,10 @@ void decodeStream::doDecode(decodeStream *instance)
 	if (ret == AVERROR_EOF)
 	{
 	  ALOGW("[%s] 解码完成", __FUNCTION__);
-	  instance->decodeState = Stop;
 	  break;
 	} else if (ret < 0)
 	{
 	  ALOGE("[%s] 解码异常结束. 错误原因 %s", __FUNCTION__, av_err2str(ret));
-	  instance->decodeState = Stop;
 	  break;
 	}
 
@@ -215,6 +213,7 @@ void decodeStream::doDecode(decodeStream *instance)
 
   av_frame_free(&pFrame);
   av_packet_free(&pPacket);
+  instance->decodeState = Stop;
   ALOGI("[%s] 解码线程结束", __FUNCTION__);
 }
 
