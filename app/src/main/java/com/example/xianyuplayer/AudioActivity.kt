@@ -126,8 +126,12 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
 
                 val position = currentPlayAudioPosition()
                 val previousFile = viewModel.playList[position]
-                MusicNativeMethod.getInstance()
+                val startPlay = MusicNativeMethod.getInstance()
                     .startPlay(previousFile.filePath + previousFile.fileName)
+
+                if (startPlay) {
+                    globalViewModel.updateCurrentPlayFile(previousFile)
+                }
             }
 
             binding.imgPlay.id -> {
@@ -148,9 +152,13 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
                 }
 
                 val position = currentPlayAudioPosition()
-                val previousFile = viewModel.playList[position]
-                MusicNativeMethod.getInstance()
-                    .startPlay(previousFile.filePath + previousFile.fileName)
+                val nextFile = viewModel.playList[position]
+                val startPlay = MusicNativeMethod.getInstance()
+                    .startPlay(nextFile.filePath + nextFile.fileName)
+
+                if (startPlay) {
+                    globalViewModel.updateCurrentPlayFile(nextFile)
+                }
             }
 
             binding.imgBtnPlayList.id -> {
@@ -161,7 +169,7 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
 
     private fun currentPlayAudioPosition(): Int {
 
-        globalViewModel.currentPlatFile?.apply {
+        globalViewModel.currentPlayFile?.apply {
             return isCurrentPlayFile(this)
         }
 

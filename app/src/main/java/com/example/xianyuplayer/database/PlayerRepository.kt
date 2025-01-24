@@ -77,8 +77,12 @@ class PlayerRepository(
         return playFileDao.insertPlayFiles(playFiles)
     }
 
-    suspend fun updatePlayFile(playFile: PlayFile):Int{
+    suspend fun updatePlayFile(playFile: PlayFile): Int {
         return playFileDao.updatePlayFile(playFile)
+    }
+
+    suspend fun updatePlayFiles(playFiles: List<PlayFile>): Int {
+        return playFileDao.updatePlayFiles(playFiles)
     }
 
     fun getPlayList(): Flow<List<PlayFile>> {

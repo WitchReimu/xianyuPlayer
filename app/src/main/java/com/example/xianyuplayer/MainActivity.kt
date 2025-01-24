@@ -19,11 +19,9 @@ import com.example.xianyuplayer.fragment.HomeFragment
 import com.example.xianyuplayer.fragment.LocalFileFragment
 import com.example.xianyuplayer.fragment.PlayListBottomFragment
 import com.example.xianyuplayer.vm.GlobalViewModel
-import com.example.xianyuplayer.vm.GlobalViewModelFactory
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 歌词没做 这个很重要
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"
@@ -46,6 +44,11 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
         )[TAG, MainViewModel::class.java]
 
         globalViewModel = FragmentInstanceManager.getGlobalViewModel(this, repository)
+
+        globalViewModel.playListLiveData.observe(this) {
+            globalViewModel.playList.clear()
+            globalViewModel.playList.addAll(it)
+        }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -124,11 +127,7 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
             file.songTitle
         )
         viewModel.insertPlayFile(playFile)
-
-        if (globalViewModel.currentPlatFile != null) {
-            viewModel.updatePlayFile(globalViewModel.currentPlatFile!!)
-        }
-        globalViewModel.currentPlatFile = playFile
+        globalViewModel.updateCurrentPlayFile(playFile)
     }
 
     private fun pausePlay() {

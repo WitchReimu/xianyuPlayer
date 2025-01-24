@@ -44,7 +44,7 @@ class LrcFragment : Fragment() {
                 if (state == ScrollState.IDLE) {
                     binding.wheelViewLrc.setIndicatorEnabled(false)
                     val item = binding.wheelViewLrc.data[binding.wheelViewLrc.currentPosition]
-
+                    // TODO: 歌词跳转未完成 很重要
                     if (item is LrcBean) {
                         MusicNativeMethod.getInstance().seekPosition(item.time)
                     }

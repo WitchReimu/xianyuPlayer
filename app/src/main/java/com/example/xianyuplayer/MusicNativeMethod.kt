@@ -1,7 +1,11 @@
 package com.example.xianyuplayer
 
 import android.util.Log
+import androidx.lifecycle.asLiveData
 import com.example.xianyuplayer.database.MusicMetadata
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 
 private const val TAG = "MusicNativeMethod"
 
@@ -44,7 +48,7 @@ class MusicNativeMethod {
         return startPlay(playerPtr)
     }
 
-    fun startPlay(absolutePath: String):Boolean{
+    fun startPlay(absolutePath: String): Boolean {
         openDecodeStream(absolutePath)
         startDecodeStream()
         initPlay()
@@ -103,6 +107,15 @@ class MusicNativeMethod {
             for (playStateChangeListener in playStateChangeListeners) {
                 playStateChangeListener.playStatusChangeCallback(status)
             }
+        }
+
+        /**
+         * c语言调用该函数，执行下一首歌词的功能
+         */
+        @JvmStatic
+        fun nextAudio() {
+            // TODO:
+            
         }
     }
 

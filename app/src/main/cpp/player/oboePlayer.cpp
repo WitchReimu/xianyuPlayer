@@ -24,10 +24,12 @@ oboePlayer::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_
 {
   int state = renderAudioData(audioData, numFrames);
 
-  if (state == decodeStream::decodeState_enum::Running)
-	return oboe::DataCallbackResult::Continue;
-  else
+  if (state == decodeStream::decodeState_enum::Stop)
+  {
+	decoderStream->requestNextAudioFile();
 	return oboe::DataCallbackResult::Stop;
+  }
+  return oboe::DataCallbackResult::Continue;
 }
 
 void oboePlayer::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error)
@@ -44,14 +46,10 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
   int32_t *int32Data = nullptr;
   float *floatData = nullptr;
 
-  if (decoderStream->queue.isEmpty()){
+  if (decoderStream->queue.isEmpty())
+  {
 	int state = decoderStream->getDecodeState();
-
-	if (state == decodeStream::decodeState_enum::Stop)
-	{
-	  return state;
-	}
-	return decodeStream::decodeState_enum::Running;
+	return state;
   }
   audioFrameQueue::audioFrame_t
 	  &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];

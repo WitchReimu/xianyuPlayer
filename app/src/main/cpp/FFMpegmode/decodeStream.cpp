@@ -382,3 +382,19 @@ int64_t decodeStream::getAudioDuration()
 {
   return formatContext->duration;
 }
+
+void decodeStream::requestNextAudioFile()
+{
+  bool attach = false;
+  JNIEnv *env = getJniEnv(vm, attach);
+
+  if (env != nullptr)
+  {
+	jclass nativeMethod = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
+	jmethodID javaMethod = env->GetStaticMethodID(nativeMethod, "nextAudio", "()V");
+	env->CallStaticVoidMethod(nativeMethod,javaMethod);
+	
+	if (attach)
+	  vm->DetachCurrentThread();
+  }
+}

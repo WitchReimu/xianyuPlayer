@@ -4,9 +4,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.database.PlayFile
 import com.example.xianyuplayer.database.PlayerRepository
+import kotlinx.coroutines.launch
 import java.util.LinkedList
 
 class AudioViewModel(private val repository: PlayerRepository) : ViewModel() {
@@ -19,6 +21,12 @@ class AudioViewModel(private val repository: PlayerRepository) : ViewModel() {
         val duration = MusicNativeMethod.getInstance().getAudioDuration()
         durationLiveData.value = duration
         return duration
+    }
+
+    fun updatePlayFiles(playFiles: List<PlayFile>) {
+        viewModelScope.launch {
+            repository.updatePlayFiles(playFiles)
+        }
     }
 }
 

@@ -50,6 +50,7 @@ class decodeStream
 	bool seekToPosition(long position);
 	void changeStream(const char *path);
 	void openStream();
+	void requestNextAudioFile();
 
   private:
 	char path[NAME_MAX] = {};
