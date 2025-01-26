@@ -385,16 +385,25 @@ int64_t decodeStream::getAudioDuration()
 
 void decodeStream::requestNextAudioFile()
 {
-  bool attach = false;
-  JNIEnv *env = getJniEnv(vm, attach);
-
-  if (env != nullptr)
+  if (nativeBridge != nullptr)
   {
-	jclass nativeMethod = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
-	jmethodID javaMethod = env->GetStaticMethodID(nativeMethod, "nextAudio", "()V");
-	env->CallStaticVoidMethod(nativeMethod,javaMethod);
-	
-	if (attach)
-	  vm->DetachCurrentThread();
+	bool attach = false;
+	JNIEnv *env = getJniEnv(vm, attach);
+
+	if (env != nullptr)
+	{
+	  //子线程内的env无法直接获得非系统类的class，这里使用实例对象进行替代
+	  jclass nativeClass = env->GetObjectClass(nativeBridge);
+	  jmethodID javaMethod = env->GetStaticMethodID(nativeClass, "nextAudio", "()V");
+	  if (javaMethod == nullptr)
+	  {
+		ALOGE("[%s] javaMethod is null ", __FUNCTION__);
+		return;
+	  }
+	  env->CallStaticVoidMethod(nativeClass, javaMethod);
+
+	  if (attach)
+		vm->DetachCurrentThread();
+	}
   }
 }

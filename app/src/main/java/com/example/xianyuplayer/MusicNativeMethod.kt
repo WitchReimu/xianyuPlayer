@@ -1,11 +1,9 @@
 package com.example.xianyuplayer
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import androidx.lifecycle.asLiveData
 import com.example.xianyuplayer.database.MusicMetadata
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
 
 private const val TAG = "MusicNativeMethod"
 
@@ -13,6 +11,7 @@ class MusicNativeMethod {
 
     private var decodeStreamPtr: Long = 0
     private var playerPtr: Long = 0
+    private val handler = Handler(Looper.getMainLooper())
 
     /**
      * @param filePath 文件路径应为绝对路径
@@ -71,8 +70,17 @@ class MusicNativeMethod {
         playStateChangeListeners.remove(listener)
     }
 
+    fun setMainActivity(mainActivity: MainActivity) {
+        mainActivityInstance = mainActivity
+    }
+
+    fun destroyRes() {
+        mainActivityInstance = null
+    }
+
     companion object {
         private var instance: MusicNativeMethod? = null
+        private var mainActivityInstance: MainActivity? = null
         private val dtsListeners = mutableListOf<DtsListener>()
         private val playStateChangeListeners = mutableListOf<PlayStateChangeListener>()
 
@@ -114,8 +122,61 @@ class MusicNativeMethod {
          */
         @JvmStatic
         fun nextAudio() {
-            // TODO:
-            
+            if (mainActivityInstance != null) {
+                mainActivityInstance!!.runOnUiThread {
+                    val globalViewModel = mainActivityInstance!!.globalViewModel
+
+                    if (globalViewModel.playList.isEmpty()) {
+                        return@runOnUiThread
+                    }
+                    var position = globalViewModel.getCurrentPlayFilePosition()
+
+                    if (position == -1) {
+                        Log.w(TAG, "nextAudio: playlist is null ")
+                        return@runOnUiThread
+                    }
+                    position = (position + 1) % globalViewModel.playList.size
+                    val nextFile = globalViewModel.playList[position]
+                    val startPlay =
+                        getInstance().startPlay(nextFile.filePath + nextFile.fileName)
+
+                    if (startPlay) {
+                        globalViewModel.updateCurrentPlayFile(nextFile)
+                    }
+                }
+            } else {
+                Log.w(TAG, "nextAudio: --> main activity is null can't do next audio")
+            }
+        }
+
+        @JvmStatic
+        fun previousAudio() {
+            if (mainActivityInstance != null) {
+                mainActivityInstance!!.runOnUiThread {
+                    val globalViewModel = mainActivityInstance!!.globalViewModel
+
+                    if (globalViewModel.playList.isEmpty()) {
+                        return@runOnUiThread
+                    }
+                    var position = globalViewModel.getCurrentPlayFilePosition()
+
+                    if (position == -1) {
+                        Log.w(TAG, "nextAudio: playlist is null ")
+                        return@runOnUiThread
+                    }
+                    val length = globalViewModel.playList.size
+                    position = (position - 1 + length) % length
+                    val previousFile = globalViewModel.playList[position]
+                    val startPlay =
+                        getInstance().startPlay(previousFile.filePath + previousFile.fileName)
+
+                    if (startPlay) {
+                        globalViewModel.updateCurrentPlayFile(previousFile)
+                    }
+                }
+            } else {
+                Log.w(TAG, "previousAudio: --> main activity is null can't do next audio")
+            }
         }
     }
 

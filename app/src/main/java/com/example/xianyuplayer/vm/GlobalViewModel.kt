@@ -1,5 +1,6 @@
 package com.example.xianyuplayer.vm
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
@@ -10,6 +11,7 @@ import kotlinx.coroutines.launch
 import java.util.LinkedList
 
 class GlobalViewModel(private val repository: PlayerRepository) : ViewModel() {
+    private val TAG = "GlobalViewModel"
     var currentPlayFile: PlayFile? = null
     val playList = LinkedList<PlayFile>()
     val playListLiveData = repository.getPlayList().asLiveData()
@@ -27,6 +29,7 @@ class GlobalViewModel(private val repository: PlayerRepository) : ViewModel() {
                 arrayListOf<PlayFile>(newPlayFile)
             }
             repository.updatePlayFiles(updatePlayList)
+            currentPlayFile = newPlayFile
         }
     }
 
@@ -41,13 +44,15 @@ class GlobalViewModel(private val repository: PlayerRepository) : ViewModel() {
                 return isCurrentPlayFile(playFile)
             }
         }
-        return 0
+        return -1
     }
 
     private fun isCurrentPlayFile(playFile: PlayFile): Int {
-        val length = playList.size
-        var index = playList.indexOf(playFile)
-        index = (index % length + length) % length
+        val index = playList.indexOf(playFile)
+        val playFile1 = playList[0]
+        if (playFile1 == playFile) {
+            Log.i(TAG, "isCurrentPlayFile: --> equal")
+        }
         return index
     }
 }
@@ -55,7 +60,7 @@ class GlobalViewModel(private val repository: PlayerRepository) : ViewModel() {
 class GlobalViewModelFactory(private val repository: PlayerRepository) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LocalFileViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(GlobalViewModel::class.java)) {
             return GlobalViewModel(repository) as T
         }
         throw IllegalArgumentException("unknown class argument")

@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
     private val TAG = "MainActivity"
     private val permissionList by lazy { arrayListOf(Manifest.permission.INTERNET) }
     private lateinit var viewModel: MainViewModel
-    private lateinit var globalViewModel: GlobalViewModel
     private lateinit var binding: ActivityMainBinding
+    lateinit var globalViewModel: GlobalViewModel
     private val permissionRequestCode = 0
     private val localFileFragment by lazy { LocalFileFragment() }
     private val homeFragment by lazy { HomeFragment() }
@@ -170,8 +170,14 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
 
     override fun onResume() {
         super.onResume()
+        MusicNativeMethod.getInstance().setMainActivity(this)
         Constant.displayHeightExcludeSystem = binding.root.bottom
         Constant.displayWidthExcludeSystem = binding.root.right
+    }
+
+    override fun onDestroy() {
+        MusicNativeMethod.getInstance().destroyRes()
+        super.onDestroy()
     }
 
     private fun addFragment(tag: String, fragment: Fragment) {

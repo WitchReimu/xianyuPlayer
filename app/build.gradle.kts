@@ -55,7 +55,6 @@ android {
 dependencies {
     val room_version = "2.6.1"
     val lifecycle_version = "2.8.7"
-    val picker_version = "4.1.13"
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")

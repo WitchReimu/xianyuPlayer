@@ -25,6 +25,7 @@ interface PlayFileDao {
 
     @Update(PlayFile::class)
     suspend fun updatePlayFile(playFile: PlayFile): Int
+    @Update
     suspend fun updatePlayFiles(playFiles: List<PlayFile>): Int
 
     @Query("select * from play_file")
