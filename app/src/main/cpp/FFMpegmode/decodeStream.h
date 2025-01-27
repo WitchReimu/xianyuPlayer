@@ -51,6 +51,7 @@ class decodeStream
 	void changeStream(const char *path);
 	void openStream();
 	void requestNextAudioFile();
+	void requestRestartAudioFile();
 
   private:
 	char path[NAME_MAX] = {};

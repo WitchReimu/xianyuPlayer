@@ -30,6 +30,7 @@ class MusicNativeMethod {
     external fun pausePlay(ptr: Long = playerPtr): Boolean
     external fun seekPosition(position: Long, streamPtr: Long = decodeStreamPtr): Boolean
     external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
+    external fun setPlayCircleType(playType: String, ptr: Long = playerPtr)
 
     fun openDecodeStream(path: String) {
         decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)
@@ -43,10 +44,16 @@ class MusicNativeMethod {
         playerPtr = initPlay(decodeStreamPtr, playerPtr)
     }
 
+    /**
+     * 播放当前缓冲区内的音乐文件
+     */
     fun startPlay(): Boolean {
         return startPlay(playerPtr)
     }
 
+    /**
+     * 播放指定路径的音乐文件
+     */
     fun startPlay(absolutePath: String): Boolean {
         openDecodeStream(absolutePath)
         startDecodeStream()
@@ -76,6 +83,19 @@ class MusicNativeMethod {
 
     fun destroyRes() {
         mainActivityInstance = null
+    }
+
+    fun requestRestartAudioFile() {
+        if (mainActivityInstance != null) {
+            mainActivityInstance!!.runOnUiThread {
+                val currentPlayFile = mainActivityInstance!!.globalViewModel.currentPlayFile
+                if (currentPlayFile != null) {
+                    startPlay(currentPlayFile.filePath + currentPlayFile.fileName)
+                } else {
+                    Log.w(TAG, "requestRestartAudioFile: --> current play file is null ")
+                }
+            }
+        }
     }
 
     companion object {
@@ -178,6 +198,7 @@ class MusicNativeMethod {
                 Log.w(TAG, "previousAudio: --> main activity is null can't do next audio")
             }
         }
+
     }
 
     interface DtsListener {

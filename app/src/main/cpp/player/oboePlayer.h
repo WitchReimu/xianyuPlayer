@@ -14,6 +14,7 @@
 class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorCallback
 {
   public:
+	int playCircleType = playListCircle_enum::listCircle;
 	void initStream(decodeStream *stream, JNIEnv *env);
 	void openStream();
 	bool startPlay();
@@ -21,7 +22,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	bool closePlay();
 	int getPlayerStatus();
 	int playStatusChange(oboe::StreamState state);
-	int playCircleType = playListCircle_enum::listCircle;
+	void setPlayCircleType(const char *type);
 	~oboePlayer();
 
   private:

@@ -156,6 +156,16 @@ jlong GetAudioDuration(JNIEnv *env, jobject activity, jlong streamPtr)
   return static_cast<jlong>(duration);
 }
 
+void SetPlayCircleType(JNIEnv *env, jobject activity, jstring playType, jlong playerPtr)
+{
+  if (playerPtr == 0)
+	return;
+  oboePlayer *player = reinterpret_cast<oboePlayer *>(playerPtr);
+  const char *type = env->GetStringUTFChars(playType, nullptr);
+  player->setPlayCircleType(type);
+  env->ReleaseStringUTFChars(playType, type);
+}
+
 JNIEXPORT jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
 	JNIEnv *env,
 	jobject /* this */)
@@ -182,7 +192,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"getPlayStatus",     "(J)I",                                                                   (void *)GetPlayStatus},
 		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay},
 		{"seekPosition",      "(JJ)Z",                                                                  (void *)SeekPosition},
-		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration}
+		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration},
+		{"setPlayCircleType", "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,

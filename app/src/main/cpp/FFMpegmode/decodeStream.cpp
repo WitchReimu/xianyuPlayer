@@ -392,7 +392,6 @@ void decodeStream::requestNextAudioFile()
 
 	if (env != nullptr)
 	{
-	  //子线程内的env无法直接获得非系统类的class，这里使用实例对象进行替代
 	  jclass nativeClass = env->GetObjectClass(nativeBridge);
 	  jmethodID javaMethod = env->GetStaticMethodID(nativeClass, "nextAudio", "()V");
 	  if (javaMethod == nullptr)
@@ -401,6 +400,30 @@ void decodeStream::requestNextAudioFile()
 		return;
 	  }
 	  env->CallStaticVoidMethod(nativeClass, javaMethod);
+
+	  if (attach)
+		vm->DetachCurrentThread();
+	}
+  }
+}
+
+void decodeStream::requestRestartAudioFile()
+{
+  if (nativeBridge != nullptr)
+  {
+	bool attach = false;
+	JNIEnv *env = getJniEnv(vm, attach);
+
+	if (env != nullptr)
+	{
+	  jclass nativeClass = env->GetObjectClass(nativeBridge);
+	  jmethodID javaMethod = env->GetMethodID(nativeClass, "requestRestartAudioFile", "()V");
+	  if (javaMethod == nullptr)
+	  {
+		ALOGE("[%s] javaMethod is null ", __FUNCTION__);
+		return;
+	  }
+	  env->CallVoidMethod(nativeBridge, javaMethod);
 
 	  if (attach)
 		vm->DetachCurrentThread();

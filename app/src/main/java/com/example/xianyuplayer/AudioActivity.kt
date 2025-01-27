@@ -14,7 +14,6 @@ import com.example.xianyuplayer.vm.AudioViewModel
 import com.example.xianyuplayer.vm.AudioViewModelFactory
 import com.example.xianyuplayer.vm.GlobalViewModel
 
-// TODO: 完成播放列表的附加功能，1.播放列表的循环方式 2.上一首 3.下一首
 class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.OnClickListener,
     MusicNativeMethod.PlayStateChangeListener {
 
@@ -111,10 +110,12 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
                 for (i in 0 until Constant.playListCircle.size) {
                     val circleType = Constant.playListCircle[i]
 
-                    if (binding.txtLoopType.equals(circleType)) {
+                    if (binding.txtLoopType.text.equals(circleType)) {
                         val index = (i + 1) % Constant.playListCircle.size
                         val nextType = Constant.playListCircle[index]
                         binding.txtLoopType.text = nextType
+                        MusicNativeMethod.getInstance().setPlayCircleType(nextType)
+                        break
                     }
                 }
             }

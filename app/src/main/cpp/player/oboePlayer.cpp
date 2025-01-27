@@ -26,7 +26,13 @@ oboePlayer::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_
 
   if (state == decodeStream::decodeState_enum::Stop)
   {
-	decoderStream->requestNextAudioFile();
+	if (playCircleType == listCircle)
+	{
+	  decoderStream->requestNextAudioFile();
+	} else if (playCircleType == singleCircle)
+	{
+	  decoderStream->requestRestartAudioFile();
+	}
 	return oboe::DataCallbackResult::Stop;
   }
   return oboe::DataCallbackResult::Continue;
@@ -236,6 +242,17 @@ void oboePlayer::openStream()
   audioBuilder.setDataCallback(this);
   audioBuilder.setErrorCallback(this);
   audioBuilder.openStream(&oboeAudioStream);
+}
+
+void oboePlayer::setPlayCircleType(const char *type)
+{
+  if (strcmp(type, "单曲循环") == 0)
+  {
+	playCircleType = singleCircle;
+  } else if (strcmp(type, "列表循环") == 0)
+  {
+	playCircleType = listCircle;
+  }
 }
 
 template<typename T>
