@@ -13,6 +13,8 @@ import com.example.xianyuplayer.fragment.LrcFragment
 import com.example.xianyuplayer.vm.AudioViewModel
 import com.example.xianyuplayer.vm.AudioViewModelFactory
 import com.example.xianyuplayer.vm.GlobalViewModel
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.OnClickListener,
     MusicNativeMethod.PlayStateChangeListener {
@@ -45,6 +47,19 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
 
         binding.seekAudioPosition.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val max = binding.seekAudioPosition.max
+                val progressLong = progress.toLong()
+                val leftProgress = (max - progress).toLong()
+                val currentMinutes = TimeUnit.SECONDS.toMinutes(progressLong)
+                val currentSecond = progressLong - TimeUnit.MINUTES.toSeconds(currentMinutes)
+                val leftMinutes = TimeUnit.SECONDS.toMinutes(leftProgress)
+                val leftSecond = leftProgress - TimeUnit.MINUTES.toSeconds(leftMinutes)
+                val currentTime =
+                    String.format(Locale.getDefault(), "%02d:%02d", currentMinutes, currentSecond)
+                val leftTime =
+                    String.format(Locale.getDefault(), "%02d:%02d", leftMinutes, leftSecond)
+                binding.txtCurrentTime.text = currentTime
+                binding.txtLeftTime.text = leftTime
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -91,8 +106,9 @@ class AudioActivity : AppCompatActivity(), MusicNativeMethod.DtsListener, View.O
     override fun dtsChange(dts: Double) {
         runOnUiThread {
 
-            if (!isTouch)
+            if (!isTouch) {
                 binding.seekAudioPosition.progress = dts.toInt()
+            }
         }
     }
 

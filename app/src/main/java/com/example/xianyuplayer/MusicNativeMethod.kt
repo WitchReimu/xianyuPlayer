@@ -118,6 +118,9 @@ class MusicNativeMethod {
             return instance!!
         }
 
+        /**
+         * @param dts 返回解码时间戳dts 或者返回显示时间戳pts
+         */
         @JvmStatic
         fun notifyDtsChange(dts: Double) {
             for (dtsListener in dtsListeners) {
@@ -202,9 +205,6 @@ class MusicNativeMethod {
     }
 
     interface DtsListener {
-        /**
-         * @param 返回解码时间戳dts 或者返回显示时间戳pts
-         */
         fun dtsChange(dts: Double)
     }
 
