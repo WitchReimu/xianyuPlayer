@@ -4,6 +4,7 @@
 #include "decodeStream.h"
 #include "oboePlayer.h"
 #include "AudioAlbumCover.h"
+#include "NativeWindowRender.h"
 #define TAG "native-lib"
 
 extern "C"
@@ -166,7 +167,28 @@ void SetPlayCircleType(JNIEnv *env, jobject activity, jstring playType, jlong pl
   env->ReleaseStringUTFChars(playType, type);
 }
 
-JNIEXPORT jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
+jlong InitVideo(JNIEnv *env, jobject nativeMethod, jstring absolutePath, jobject surface)
+{
+  const char *path = env->GetStringUTFChars(absolutePath, nullptr);
+  const NativeWindowRender *render = new NativeWindowRender(path, surface, env);
+  env->ReleaseStringUTFChars(absolutePath, path);
+  return reinterpret_cast<jlong>(render);
+}
+
+void PlayVideo(JNIEnv *env, jobject nativeMethod, jlong windowPtr)
+{
+  if (windowPtr == 0)
+  {
+	ALOGW("[%s] NativeWindow uninit", __FUNCTION__);
+	return;
+  }
+
+  NativeWindowRender *render = reinterpret_cast<NativeWindowRender *>(windowPtr);
+  render->play();
+}
+
+JNIEXPORT
+jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
 	JNIEnv *env,
 	jobject /* this */)
 {
@@ -193,7 +215,9 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay},
 		{"seekPosition",      "(JJ)Z",                                                                  (void *)SeekPosition},
 		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration},
-		{"setPlayCircleType", "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType}
+		{"setPlayCircleType", "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType},
+		{"initVideo",         "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)InitVideo},
+		{"playVideo",         "(J)V",                                                                   (void *)PlayVideo}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,

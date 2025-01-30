@@ -43,6 +43,11 @@
         <activity
             android:name=".AudioActivity"
             android:exported="true" />
+
+        <activity
+            android:name=".VideoActivity"
+            android:exported="false"
+            android:screenOrientation="sensor" />
     </application>
 
 </manifest>

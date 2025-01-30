@@ -3,6 +3,7 @@ package com.example.xianyuplayer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Surface
 import com.example.xianyuplayer.database.MusicMetadata
 
 private const val TAG = "MusicNativeMethod"
@@ -11,6 +12,7 @@ class MusicNativeMethod {
 
     private var decodeStreamPtr: Long = 0
     private var playerPtr: Long = 0
+    private var nativeWindowPtr: Long = 0
     private val handler = Handler(Looper.getMainLooper())
 
     /**
@@ -21,6 +23,7 @@ class MusicNativeMethod {
     private external fun initPlay(streamPtr: Long, playerPtr: Long): Long
     private external fun openDecodeStream(path: String, streamPtr: Long, playerPtr: Long): Long
     private external fun startDecodeStream(streamPtr: Long)
+    private external fun initVideo(absolutePath: String, surface: Surface): Long
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
         absolutePath: String
@@ -31,6 +34,7 @@ class MusicNativeMethod {
     external fun seekPosition(position: Long, streamPtr: Long = decodeStreamPtr): Boolean
     external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
     external fun setPlayCircleType(playType: String, ptr: Long = playerPtr)
+    external fun playVideo(windowPtr: Long = nativeWindowPtr)
 
     fun openDecodeStream(path: String) {
         decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)
@@ -42,6 +46,10 @@ class MusicNativeMethod {
 
     fun initPlay() {
         playerPtr = initPlay(decodeStreamPtr, playerPtr)
+    }
+
+    fun initNativeWindow(path: String, surface: Surface) {
+        nativeWindowPtr = initVideo(path, surface)
     }
 
     /**
@@ -85,6 +93,9 @@ class MusicNativeMethod {
         mainActivityInstance = null
     }
 
+    /**
+     * c++语言调用该此方法，在音乐播放结束后请求重复播放当前音乐文件
+     */
     fun requestRestartAudioFile() {
         if (mainActivityInstance != null) {
             mainActivityInstance!!.runOnUiThread {
@@ -119,7 +130,8 @@ class MusicNativeMethod {
         }
 
         /**
-         * @param dts 返回解码时间戳dts 或者返回显示时间戳pts
+         * @param dts
+         * 返回解码时间戳dts 或者返回显示时间戳pts
          */
         @JvmStatic
         fun notifyDtsChange(dts: Double) {
@@ -129,15 +141,22 @@ class MusicNativeMethod {
         }
 
         /**
+         * @param status 播放状态发生改变后的值
          * native 调用该函数
          * 播放状态发生变化后，c++会调用该函数将播放状态的值赋值给变量形参status
-         * @param status 播放状态发生改变后的值
          */
         @JvmStatic
         fun notifyPlayStatusChangeCallback(status: Int) {
             for (playStateChangeListener in playStateChangeListeners) {
                 playStateChangeListener.playStatusChangeCallback(status)
             }
+        }
+
+        /**
+         * 通知当前播放的音乐文件发生改变
+         */
+        fun notifyPlayFileChange() {
+
         }
 
         /**

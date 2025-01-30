@@ -1,0 +1,193 @@
+//
+// Created by wwwsh on 2025/1/28.
+//
+
+#include "NativeWindowRender.h"
+#include "../CommonUtils.h"
+#define TAG "NativeWindowRender"
+
+NativeWindowRender::NativeWindowRender(const char *url, jobject surface, JNIEnv *env)
+{
+//  strcpy(filePath, url);
+  strcpy(filePath, "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4");
+  nativeWindow = ANativeWindow_fromSurface(env, surface);
+}
+
+NativeWindowRender::~NativeWindowRender()
+{
+  ANativeWindow_release(nativeWindow);
+}
+
+void NativeWindowRender::play()
+{
+  initVideoCodec();
+  setWindowBuffer();
+  renderFrame = av_frame_alloc();
+  int bufferLength = av_image_get_buffer_size(AV_PIX_FMT_RGBA, dstWidth, dstHeight, 1);
+  uint8_t *renderFrameBuffer = static_cast<uint8_t *>(av_mallocz(bufferLength));
+  av_image_fill_arrays(renderFrame->data,
+					   renderFrame->linesize,
+					   renderFrameBuffer,
+					   AV_PIX_FMT_RGBA,
+					   dstWidth,
+					   dstHeight,
+					   1);
+  swsContext = sws_getContext(videoCodecContext->width,
+							  videoCodecContext->height,
+							  videoCodecContext->pix_fmt,
+							  dstWidth,
+							  dstHeight,
+							  AV_PIX_FMT_RGBA,
+							  SWS_FAST_BILINEAR,
+							  nullptr,
+							  nullptr,
+							  nullptr);
+
+  if (decodeThread == nullptr)
+  {
+	decodeThread = new std::thread(doDecode, this);
+  } else
+  {
+	ALOGW("[%s] decodeThread is inited", __FUNCTION__);
+  }
+}
+
+bool NativeWindowRender::initVideoCodec()
+{
+  videoContext = avformat_alloc_context();
+  int ret = avformat_open_input(&videoContext, filePath, nullptr, nullptr);
+
+  if (ret != 0)
+  {
+	ALOGE("[%s] avformat open failed ", __FUNCTION__);
+	return false;
+  }
+  ret = avformat_find_stream_info(videoContext, nullptr);
+
+  if (ret < 0)
+  {
+	ALOGE("[%s]", __FUNCTION__);
+	return false;
+  }
+
+  for (int i = 0; i < videoContext->max_streams; ++i)
+  {
+	AVStream *stream = videoContext->streams[i];
+
+	if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+	{
+	  streamIndex = i;
+	  break;
+	}
+  }
+  AVCodecParameters *codecParameters = videoContext->streams[streamIndex]->codecpar;
+  videoDecode = avcodec_find_decoder(codecParameters->codec_id);
+  videoCodecContext = avcodec_alloc_context3(videoDecode);
+  avcodec_parameters_to_context(videoCodecContext, codecParameters);
+  videoCodecContext->thread_count = 4;
+  ret = avcodec_open2(videoCodecContext, videoDecode, nullptr);
+
+  if (ret != 0)
+  {
+	ALOGE("[%s] avcodec_open failed ", __FUNCTION__);
+	return false;
+  }
+  return true;
+}
+
+void NativeWindowRender::setWindowBuffer()
+{
+  int videoWidth = videoCodecContext->width;
+  int videoHeight = videoCodecContext->height;
+  int32_t windowWidth = ANativeWindow_getWidth(nativeWindow);
+  int32_t windowHeight = ANativeWindow_getHeight(nativeWindow);
+
+  if (videoWidth > videoHeight)
+  {
+	dstWidth = windowWidth;
+	dstHeight = videoHeight * windowWidth / videoWidth;
+  } else
+  {
+	dstHeight = windowHeight;
+	dstWidth = videoWidth / videoHeight * windowHeight;
+  }
+  ANativeWindow_setBuffersGeometry(nativeWindow, dstWidth, dstHeight, WINDOW_FORMAT_RGBA_8888);
+}
+
+void NativeWindowRender::doDecode(NativeWindowRender *instance)
+{
+  int ret = 0;
+  AVPacket *packet_p = av_packet_alloc();
+  AVFrame *frame_p = av_frame_alloc();
+
+  while (true)
+  {
+	ret = av_read_frame(instance->videoContext, packet_p);
+
+	if (ret < 0)
+	{
+	  ALOGE("[%s] read frame error info -> %s", __FUNCTION__, av_err2str(ret));
+	  break;
+	}
+
+	if (packet_p->stream_index != instance->streamIndex)
+	{
+	  continue;
+	}
+	ret = avcodec_send_packet(instance->videoCodecContext, packet_p);
+
+	if (ret < 0)
+	{
+	  av_packet_unref(packet_p);
+	  ALOGE("[%s] send packet error info -> %s", __FUNCTION__, av_err2str(ret));
+	  break;
+	}
+	ret = avcodec_receive_frame(instance->videoCodecContext, frame_p);
+
+	if (ret == AVERROR(EAGAIN))
+	{
+	  av_packet_unref(packet_p);
+	  av_frame_unref(frame_p);
+	  continue;
+	}
+
+	if (ret < 0)
+	{
+	  ALOGE("[%s] receive frame error info -> %s", __FUNCTION__, av_err2str(ret));
+	  break;
+	}
+	ret = sws_scale(instance->swsContext,
+					frame_p->data,
+					frame_p->linesize,
+					0,
+					instance->videoCodecContext->height,
+					instance->renderFrame->data,
+					instance->renderFrame->linesize);
+
+	if (ret < 0)
+	{
+	  av_packet_unref(packet_p);
+	  av_frame_unref(frame_p);
+	  ALOGE("[%s] sws failed info-> %s", __FUNCTION__, av_err2str(ret));
+	  break;
+	}
+
+	ANativeWindow_lock(instance->nativeWindow, &instance->nativeWindowBuffer, nullptr);
+	uint8_t *dstBuffer = static_cast<uint8_t *>(instance->nativeWindowBuffer.bits);
+	int srcLineSize = instance->dstWidth * 4;
+	int dstLineSize = instance->nativeWindowBuffer.stride * 4;
+
+	for (int i = 0; i < instance->dstHeight; ++i)
+	{
+	  memcpy(dstBuffer + i * dstLineSize,
+			 instance->renderFrame->data[0] + i * srcLineSize,
+			 srcLineSize);
+	}
+	ANativeWindow_unlockAndPost(instance->nativeWindow);
+	av_packet_unref(packet_p);
+	av_frame_unref(frame_p);
+  }
+  av_packet_free(&packet_p);
+  av_frame_free(&frame_p);
+  ALOGI("[%s] decode thread end ", __FUNCTION__);
+}
