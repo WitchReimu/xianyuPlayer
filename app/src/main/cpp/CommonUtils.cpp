@@ -7,6 +7,7 @@ JNIEnv *getJniEnv(JavaVM *jvm, bool &isAttach)
 {
   const char *TAG = "CommonUtils getJniEnv";
   JNIEnv *env = nullptr;
+  isAttach = false;
 
   if (jvm == nullptr)
   {

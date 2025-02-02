@@ -10,6 +10,7 @@ object Constant {
     const val listCircle = "列表循环"
     const val playStatusStarting = 3
     const val playStatusStarted = 4
+    const val playStatusOrientation = 5;
     val playListCircle = arrayListOf<String>(listCircle, singleCircle)
     var displayHeightExcludeSystem = 0
     var displayWidthExcludeSystem = 0

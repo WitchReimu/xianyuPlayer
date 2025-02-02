@@ -170,7 +170,8 @@ void SetPlayCircleType(JNIEnv *env, jobject activity, jstring playType, jlong pl
 jlong InitVideo(JNIEnv *env, jobject nativeMethod, jstring absolutePath, jobject surface)
 {
   const char *path = env->GetStringUTFChars(absolutePath, nullptr);
-  const NativeWindowRender *render = new NativeWindowRender(path, surface, env);
+  NativeWindowRender *render = new NativeWindowRender(nativeMethod, path, surface, env);
+  render->init();
   env->ReleaseStringUTFChars(absolutePath, path);
   return reinterpret_cast<jlong>(render);
 }
@@ -185,6 +186,30 @@ void PlayVideo(JNIEnv *env, jobject nativeMethod, jlong windowPtr)
 
   NativeWindowRender *render = reinterpret_cast<NativeWindowRender *>(windowPtr);
   render->play();
+}
+
+void SetVideoState(JNIEnv *env, jobject nativeMethod, jint state, jlong windowPtr)
+{
+  if (windowPtr == 0)
+  {
+	ALOGW("[%s] NativeWindow uninit", __FUNCTION__);
+	return;
+  }
+
+  NativeWindowRender *render = reinterpret_cast<NativeWindowRender *>(windowPtr);
+  render->setDecodeState(state);
+}
+
+void ScreenOrientationChange(JNIEnv *env, jobject nativeMethod, jobject surface, jlong windowPtr)
+{
+  if (windowPtr == 0)
+  {
+	ALOGW("[%s] NativeWindow uninit", __FUNCTION__);
+	return;
+  }
+
+  NativeWindowRender *render = reinterpret_cast<NativeWindowRender *>(windowPtr);
+  render->changeNativeWindow(surface, env);
 }
 
 JNIEXPORT
@@ -205,19 +230,21 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
   {
 	jclass musicNative = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
 	JNINativeMethod musicNativeMethod[] = {
-		{"getMetadata",       "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;", (void *)getMetadata},
-		{"startPlay",         "(J)Z",                                                                   (void *)startPlay},
-		{"initPlay",          "(JJ)J",                                                                  (void *)initPlay},
-		{"openDecodeStream",  "(Ljava/lang/String;JJ)J",                                                (void *)openDecodeStream},
-		{"startDecodeStream", "(J)V",                                                                   (void *)startDecodeStream},
-		{"getAudioAlbum",     "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},
-		{"getPlayStatus",     "(J)I",                                                                   (void *)GetPlayStatus},
-		{"pausePlay",         "(J)Z",                                                                   (void *)PausePlay},
-		{"seekPosition",      "(JJ)Z",                                                                  (void *)SeekPosition},
-		{"getAudioDuration",  "(J)J",                                                                   (void *)GetAudioDuration},
-		{"setPlayCircleType", "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType},
-		{"initVideo",         "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)InitVideo},
-		{"playVideo",         "(J)V",                                                                   (void *)PlayVideo}
+		{"getMetadata",             "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;", (void *)getMetadata},
+		{"startPlay",               "(J)Z",                                                                   (void *)startPlay},
+		{"initPlay",                "(JJ)J",                                                                  (void *)initPlay},
+		{"openDecodeStream",        "(Ljava/lang/String;JJ)J",                                                (void *)openDecodeStream},
+		{"startDecodeStream",       "(J)V",                                                                   (void *)startDecodeStream},
+		{"getAudioAlbum",           "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},
+		{"getPlayStatus",           "(J)I",                                                                   (void *)GetPlayStatus},
+		{"pausePlay",               "(J)Z",                                                                   (void *)PausePlay},
+		{"seekPosition",            "(JJ)Z",                                                                  (void *)SeekPosition},
+		{"getAudioDuration",        "(J)J",                                                                   (void *)GetAudioDuration},
+		{"setPlayCircleType",       "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType},
+		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)InitVideo},
+		{"playVideo",               "(J)V",                                                                   (void *)PlayVideo},
+		{"setVideoState",           "(IJ)V",                                                                  (void *)SetVideoState},
+		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,

@@ -91,7 +91,8 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
         }
 
         binding.linearPlayerStatus.setOnClickListener {
-            startActivity(Intent(this, AudioActivity::class.java))
+//            startActivity(Intent(this, AudioActivity::class.java))
+            startActivity(Intent(this, VideoActivity::class.java))
         }
     }
 

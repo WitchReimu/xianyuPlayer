@@ -10,6 +10,7 @@
 #include <jni.h>
 #include <iostream>
 #include <thread>
+#include <semaphore>
 
 extern "C"
 {
@@ -22,9 +23,15 @@ extern "C"
 class NativeWindowRender
 {
   public:
-	NativeWindowRender(const char *url, jobject surface, JNIEnv *env);
+	NativeWindowRender(jobject nativeObject,
+					   const char *url,
+					   jobject surface,
+					   JNIEnv *env);
 	~NativeWindowRender();
+	void init();
 	void play();
+	void setDecodeState(int state);
+	void changeNativeWindow(jobject surface, JNIEnv *env);
   private:
 	ANativeWindow *nativeWindow = nullptr;
 	AVFormatContext *videoContext = nullptr;
@@ -33,13 +40,22 @@ class NativeWindowRender
 	int dstWidth = 0;
 	int dstHeight = 0;
 	int streamIndex = 0;
+	int decodeState = 0;
+	std::binary_semaphore bSemaphore;
 	char filePath[NAME_MAX] = {};
 	SwsContext *swsContext = nullptr;
 	std::thread *decodeThread = nullptr;
 	AVFrame *renderFrame = nullptr;
+	bool isAttach = false;
 	ANativeWindow_Buffer nativeWindowBuffer;
+	jobject callbackObject = nullptr;
+	JavaVM *vm = nullptr;
+	std::condition_variable conditionVar;
+	std::mutex mutexDecodeLock;
 	bool initVideoCodec();
 	void setWindowBuffer();
+	void allocRenderFrame();
+	void initSwsContext();
 	static void doDecode(NativeWindowRender *instance);
 };
 

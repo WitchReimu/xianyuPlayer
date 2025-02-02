@@ -35,6 +35,8 @@ class MusicNativeMethod {
     external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
     external fun setPlayCircleType(playType: String, ptr: Long = playerPtr)
     external fun playVideo(windowPtr: Long = nativeWindowPtr)
+    external fun setVideoState(state: Int, windowPtr: Long = nativeWindowPtr)
+    external fun screenOrientationChange(surface: Surface, windowPtr: Long = nativeWindowPtr)
 
     fun openDecodeStream(path: String) {
         decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)
@@ -94,6 +96,26 @@ class MusicNativeMethod {
     }
 
     /**
+     * native 回调函数
+     * @param width 视频渲染宽度 单位像素
+     * @param height 视频渲染高度 单位像素
+     */
+    fun notifyVideoResolution(width: Int, height: Int) {
+        for (videoResolutionListener in videoResolutionListeners) {
+            videoResolutionListener.renderVideoResolution(width, height)
+        }
+    }
+
+    // TODO: 回调需要感知生命周期 ,生命周期与viewmodel相同
+    fun addVideoResolutionListener(listener: VideoResolutionListener) {
+        videoResolutionListeners.add(listener)
+    }
+
+    fun removeVideoResolutionListener(listener: VideoResolutionListener){
+        videoResolutionListeners.remove(listener)
+    }
+
+    /**
      * c++语言调用该此方法，在音乐播放结束后请求重复播放当前音乐文件
      */
     fun requestRestartAudioFile() {
@@ -114,6 +136,7 @@ class MusicNativeMethod {
         private var mainActivityInstance: MainActivity? = null
         private val dtsListeners = mutableListOf<DtsListener>()
         private val playStateChangeListeners = mutableListOf<PlayStateChangeListener>()
+        private val videoResolutionListeners = mutableListOf<VideoResolutionListener>()
 
         fun getInstance(): MusicNativeMethod {
 
@@ -156,7 +179,7 @@ class MusicNativeMethod {
          * 通知当前播放的音乐文件发生改变
          */
         fun notifyPlayFileChange() {
-
+            // TODO: 通知当前播放的音乐文件发生改变
         }
 
         /**
@@ -229,6 +252,10 @@ class MusicNativeMethod {
 
     interface PlayStateChangeListener {
         fun playStatusChangeCallback(status: Int): Unit
+    }
+
+    interface VideoResolutionListener {
+        fun renderVideoResolution(width: Int, height: Int)
     }
 
 }

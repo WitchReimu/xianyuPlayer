@@ -46,8 +46,7 @@
 
         <activity
             android:name=".VideoActivity"
-            android:exported="false"
-            android:screenOrientation="sensor" />
+            android:exported="false" />
     </application>
 
 </manifest>
