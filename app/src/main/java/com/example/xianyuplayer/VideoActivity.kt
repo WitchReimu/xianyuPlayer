@@ -3,6 +3,7 @@ package com.example.xianyuplayer
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.WindowInsets
@@ -12,8 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.xianyuplayer.databinding.ActivityVideoBinding
 import com.example.xianyuplayer.vm.VideoViewModel
 
-class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback,
-    MusicNativeMethod.VideoResolutionListener, MusicNativeMethod.PlayStateChangeListener {
+class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private val TAG = "VideoActivity"
     private lateinit var binding: ActivityVideoBinding
     private lateinit var viewModel: VideoViewModel
@@ -28,14 +28,29 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback,
             ViewModelProvider.AndroidViewModelFactory.getInstance(application)
         )[TAG, VideoViewModel::class]
         binding.surfaceVideo.holder.addCallback(this)
-        MusicNativeMethod.getInstance().addVideoResolutionListener(this)
-        MusicNativeMethod.getInstance().addPlayStateChangeListener(this)
+        viewModel.initCallback()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.videoStatusLiveData.observe(this) {
+            Log.i(TAG, "onStart: --> Status ")
+            playStatusChangeCallback(it)
+        }
+
+        viewModel.renderResolutionLiveData.observe(this) {
+            Log.i(TAG, "onStart: --> Resolution ")
+            if (it.width < 0 || it.height < 0)
+                return@observe
+            renderVideoResolution(it.width, it.height)
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        MusicNativeMethod.getInstance().setVideoState(Constant.playStatusOrientation)
+        viewModel.reset()
+        MusicNativeMethod.getInstance().setVideoState(Constant.playStatusPausing)
     }
 
     private fun hideSystemUi() {
@@ -53,7 +68,7 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback,
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        if (viewModel.inited) {
+        if (viewModel.ensureResolution) {
 
         } else {
             MusicNativeMethod.getInstance()
@@ -62,13 +77,10 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback,
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        if (viewModel.inited && viewModel.videoStatus == Constant.playStatusOrientation) {
+        if (viewModel.ensureResolution && viewModel.videoStatus == Constant.playStatusPausing) {
             MusicNativeMethod.getInstance()
-                .screenOrientationChange(binding.surfaceVideo.holder.surface)
+                .screenOrientationChange(holder.surface)
             viewModel.videoStatus = 0
-        } else {
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            MusicNativeMethod.getInstance().playVideo()
         }
     }
 
@@ -76,16 +88,21 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback,
 
     }
 
-    override fun renderVideoResolution(width: Int, height: Int) {
+    private fun renderVideoResolution(width: Int, height: Int) {
         val layoutParams = binding.surfaceVideo.layoutParams
         layoutParams.width = width
         layoutParams.height = height
         binding.surfaceVideo.layoutParams = layoutParams
-        viewModel.inited = true
+        viewModel.ensureResolution = true
     }
 
-    override fun playStatusChangeCallback(status: Int) {
+    private fun playStatusChangeCallback(status: Int) {
         viewModel.videoStatus = status
+
+        if (status == Constant.playStatusOpen) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            MusicNativeMethod.getInstance().playVideo()
+        }
     }
 
 }

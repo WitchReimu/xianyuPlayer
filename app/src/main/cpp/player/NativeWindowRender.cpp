@@ -94,17 +94,18 @@ void NativeWindowRender::setWindowBuffer()
   int videoHeight = videoCodecContext->height;
   int32_t windowWidth = ANativeWindow_getWidth(nativeWindow);
   int32_t windowHeight = ANativeWindow_getHeight(nativeWindow);
+  float windowRatio = (float)windowWidth / (float)windowHeight;
+  float videoRatio = (float)videoWidth / (float)videoHeight;
 
-  //todo: 如何手机为横屏在播放3840 2160视频时渲染的分辨率为3096 1747 超出物理设备所支持的分辨率大小
-  //todo: 测试手机为红米k50 屏幕分辨率为1440*3200
-  if (videoWidth > videoHeight)
-  {
-	dstWidth = windowWidth;
-	dstHeight = videoHeight * windowWidth / videoWidth;
-  } else
+  if (windowRatio > videoRatio)
   {
 	dstHeight = windowHeight;
-	dstWidth = videoWidth / videoHeight * windowHeight;
+	dstWidth = videoRatio * dstHeight;
+
+  } else
+  {
+	dstWidth = windowWidth;
+	dstHeight = videoHeight * dstWidth / videoWidth;
   }
   ANativeWindow_setBuffersGeometry(nativeWindow, dstWidth, dstHeight, WINDOW_FORMAT_RGBA_8888);
   if (callbackObject != nullptr)
@@ -175,6 +176,7 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	  ALOGE("[%s] receive frame error info -> %s", __FUNCTION__, av_err2str(ret));
 	  break;
 	}
+	//todo: sliceY具体是什么
 	ret = sws_scale(instance->swsContext,
 					frame_p->data,
 					frame_p->linesize,
@@ -217,6 +219,19 @@ void NativeWindowRender::init()
   setWindowBuffer();
   allocRenderFrame();
   initSwsContext();
+  JNIEnv *env = getJniEnv(vm, isAttach);
+
+  if (env != nullptr)
+  {
+	jclass callbackClass = env->GetObjectClass(callbackObject);
+	jmethodID callbackMethod = env->GetStaticMethodID(callbackClass,
+													  "notifyPlayStatusChangeCallback",
+													  "(I)V");
+	env->CallStaticVoidMethod(callbackClass, callbackMethod, oboe::StreamState::Open);
+
+	if (isAttach)
+	  vm->DetachCurrentThread();
+  }
 }
 
 void NativeWindowRender::changeNativeWindow(jobject surface, JNIEnv *env)

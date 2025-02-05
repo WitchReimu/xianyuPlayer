@@ -31,7 +31,6 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;
 	int dataOffset = 0;
 	int playerState = 0;
-	jobject activityObject = nullptr;
 	JavaVM *vm = nullptr;
 
 	int renderAudioData(void *audioData, int32_t numFrames);

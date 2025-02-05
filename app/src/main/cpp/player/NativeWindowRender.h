@@ -11,6 +11,7 @@
 #include <iostream>
 #include <thread>
 #include <semaphore>
+#include <oboe/Oboe.h>
 
 extern "C"
 {

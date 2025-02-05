@@ -1,7 +1,5 @@
 package com.example.xianyuplayer
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.Surface
 import com.example.xianyuplayer.database.MusicMetadata
@@ -13,7 +11,6 @@ class MusicNativeMethod {
     private var decodeStreamPtr: Long = 0
     private var playerPtr: Long = 0
     private var nativeWindowPtr: Long = 0
-    private val handler = Handler(Looper.getMainLooper())
 
     /**
      * @param filePath 文件路径应为绝对路径
@@ -111,7 +108,7 @@ class MusicNativeMethod {
         videoResolutionListeners.add(listener)
     }
 
-    fun removeVideoResolutionListener(listener: VideoResolutionListener){
+    fun removeVideoResolutionListener(listener: VideoResolutionListener) {
         videoResolutionListeners.remove(listener)
     }
 
