@@ -3,7 +3,6 @@ package com.example.xianyuplayer
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.WindowInsets
@@ -35,12 +34,10 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
     override fun onStart() {
         super.onStart()
         viewModel.videoStatusLiveData.observe(this) {
-            Log.i(TAG, "onStart: --> Status ")
             playStatusChangeCallback(it)
         }
 
         viewModel.renderResolutionLiveData.observe(this) {
-            Log.i(TAG, "onStart: --> Resolution ")
             if (it.width < 0 || it.height < 0)
                 return@observe
             renderVideoResolution(it.width, it.height)

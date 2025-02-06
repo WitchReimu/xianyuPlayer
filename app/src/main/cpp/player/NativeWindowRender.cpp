@@ -176,7 +176,6 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	  ALOGE("[%s] receive frame error info -> %s", __FUNCTION__, av_err2str(ret));
 	  break;
 	}
-	//todo: sliceY具体是什么
 	ret = sws_scale(instance->swsContext,
 					frame_p->data,
 					frame_p->linesize,

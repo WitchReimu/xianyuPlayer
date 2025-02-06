@@ -103,7 +103,6 @@ class MusicNativeMethod {
         }
     }
 
-    // TODO: 回调需要感知生命周期 ,生命周期与viewmodel相同
     fun addVideoResolutionListener(listener: VideoResolutionListener) {
         videoResolutionListeners.add(listener)
     }
