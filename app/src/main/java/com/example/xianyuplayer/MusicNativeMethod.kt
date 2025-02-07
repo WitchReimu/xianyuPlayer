@@ -8,8 +8,11 @@ private const val TAG = "MusicNativeMethod"
 
 class MusicNativeMethod {
 
+    //音频解码指针
     private var decodeStreamPtr: Long = 0
+    //音频播放器指针
     private var playerPtr: Long = 0
+    //视频播放器与解码指针
     private var nativeWindowPtr: Long = 0
 
     /**
@@ -20,7 +23,13 @@ class MusicNativeMethod {
     private external fun initPlay(streamPtr: Long, playerPtr: Long): Long
     private external fun openDecodeStream(path: String, streamPtr: Long, playerPtr: Long): Long
     private external fun startDecodeStream(streamPtr: Long)
-    private external fun initVideo(absolutePath: String, surface: Surface): Long
+    private external fun initVideo(
+        absolutePath: String,
+        surface: Surface,
+        streamPtr: Long = decodeStreamPtr,
+        ptr: Long = playerPtr
+    ): LongArray
+
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
         absolutePath: String
@@ -31,7 +40,12 @@ class MusicNativeMethod {
     external fun seekPosition(position: Long, streamPtr: Long = decodeStreamPtr): Boolean
     external fun getAudioDuration(streamPtr: Long = decodeStreamPtr): Long
     external fun setPlayCircleType(playType: String, ptr: Long = playerPtr)
-    external fun playVideo(windowPtr: Long = nativeWindowPtr)
+    external fun playVideo(
+        windowPtr: Long = nativeWindowPtr,
+        streamPtr: Long = decodeStreamPtr,
+        ptr: Long = playerPtr
+    )
+
     external fun setVideoState(state: Int, windowPtr: Long = nativeWindowPtr)
     external fun screenOrientationChange(surface: Surface, windowPtr: Long = nativeWindowPtr)
 
@@ -48,7 +62,10 @@ class MusicNativeMethod {
     }
 
     fun initNativeWindow(path: String, surface: Surface) {
-        nativeWindowPtr = initVideo(path, surface)
+        val resultArray = initVideo(path, surface)
+        nativeWindowPtr = resultArray[0]
+        decodeStreamPtr = resultArray[1]
+        playerPtr = resultArray[2]
     }
 
     /**

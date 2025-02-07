@@ -32,8 +32,11 @@ jobjectArray getMetadata(JNIEnv *env, jobject thiz, jstring file_path)
   return dataArray;
 }
 
-jlong
-openDecodeStream(JNIEnv *env, jobject natvieClass, jstring path, jlong streamPtr, jlong playerPtr)
+jlong openDecodeStream(JNIEnv *env,
+					   jobject natvieClass,
+					   jstring path,
+					   jlong streamPtr,
+					   jlong playerPtr)
 {
   const char *filePath = env->GetStringUTFChars(path, nullptr);
   decodeStream *decoder_ptr = nullptr;
@@ -157,7 +160,7 @@ jlong GetAudioDuration(JNIEnv *env, jobject activity, jlong streamPtr)
   return static_cast<jlong>(duration);
 }
 
-void SetPlayCircleType(JNIEnv *env, jobject activity, jstring playType, jlong playerPtr)
+void SetPlayCircleType(JNIEnv *env, jobject nativeClass, jstring playType, jlong playerPtr)
 {
   if (playerPtr == 0)
 	return;
@@ -167,23 +170,77 @@ void SetPlayCircleType(JNIEnv *env, jobject activity, jstring playType, jlong pl
   env->ReleaseStringUTFChars(playType, type);
 }
 
-jlong InitVideo(JNIEnv *env, jobject nativeMethod, jstring absolutePath, jobject surface)
+jlongArray InitVideo(JNIEnv *env,
+					 jobject nativeMethod,
+					 jstring absolutePath,
+					 jobject surface,
+					 jlong streamPtr,
+					 jlong playerPtr)
 {
   const char *path = env->GetStringUTFChars(absolutePath, nullptr);
+  jlongArray resultArray = env->NewLongArray(3);
   NativeWindowRender *render = new NativeWindowRender(nativeMethod, path, surface, env);
   render->init();
+  decodeStream *audioStream = nullptr;
+  oboePlayer *audioPlayer = nullptr;
+
+  if (streamPtr == 0)
+  {
+	audioStream = new decodeStream(path, env, &nativeMethod);
+  } else
+  {
+	audioStream = reinterpret_cast<decodeStream *>(streamPtr);
+	audioStream->changeStream(path);
+  }
+
+  if (playerPtr == 0)
+  {
+	audioPlayer = new oboePlayer();
+	audioPlayer->initStream(audioStream, env);
+  } else
+  {
+	audioPlayer = reinterpret_cast<oboePlayer *>(playerPtr);
+	audioPlayer->closePlay();
+	audioPlayer->openStream();
+  }
+  jlong renderPtr = reinterpret_cast<jlong>(render);
+  jlong audioStreamPtr = reinterpret_cast<jlong>(audioStream);
+  jlong audioPlayerPtr = reinterpret_cast<jlong>(audioPlayer);
+  env->SetLongArrayRegion(resultArray, 0, 1, &renderPtr);
+  env->SetLongArrayRegion(resultArray, 1, 1, &audioStreamPtr);
+  env->SetLongArrayRegion(resultArray, 2, 1, &audioPlayerPtr);
   env->ReleaseStringUTFChars(absolutePath, path);
-  return reinterpret_cast<jlong>(render);
+  return resultArray;
 }
 
-void PlayVideo(JNIEnv *env, jobject nativeMethod, jlong windowPtr)
+void PlayVideo(JNIEnv *env,
+			   jobject nativeMethod,
+			   jlong windowPtr,
+			   jlong audioStreamPtr,
+			   jlong playerPtr)
 {
   if (windowPtr == 0)
   {
-	ALOGW("[%s] NativeWindow uninit", __FUNCTION__);
+	ALOGE("[%s] NativeWindow uninit", __FUNCTION__);
 	return;
   }
 
+  if (audioStreamPtr == 0)
+  {
+	ALOGE("[%s] audio stream uninit", __FUNCTION__);
+	return;
+  }
+
+  if (playerPtr == 0)
+  {
+	ALOGE("[%s] oboe uninit", __FUNCTION__);
+	return;
+  }
+
+  decodeStream *audioStream = reinterpret_cast<decodeStream *>(audioStreamPtr);
+  audioStream->decodeFile();
+  oboePlayer *player = reinterpret_cast<oboePlayer *>(playerPtr);
+  player->startPlay();
   NativeWindowRender *render = reinterpret_cast<NativeWindowRender *>(windowPtr);
   render->play();
 }
@@ -241,8 +298,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"seekPosition",            "(JJ)Z",                                                                  (void *)SeekPosition},
 		{"getAudioDuration",        "(J)J",                                                                   (void *)GetAudioDuration},
 		{"setPlayCircleType",       "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType},
-		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)InitVideo},
-		{"playVideo",               "(J)V",                                                                   (void *)PlayVideo},
+		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;JJ)[J",                         (void *)InitVideo},
+		{"playVideo",               "(JJJ)V",                                                                 (void *)PlayVideo},
 		{"setVideoState",           "(IJ)V",                                                                  (void *)SetVideoState},
 		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange}
 	};
