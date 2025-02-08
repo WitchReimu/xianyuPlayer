@@ -44,6 +44,7 @@ class audioFrameQueue
 	audioFrameQueue(int capacity);
 	bool isFull();
 	bool isEmpty();
+	bool hasNext();
 	void resetDataLength(int resetIndex, int dataLength);
 	void resetAudioFrame(int resetIndex, audioFrame_t frame);
 	void reset();

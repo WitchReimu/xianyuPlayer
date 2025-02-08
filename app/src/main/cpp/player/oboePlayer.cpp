@@ -57,8 +57,7 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	int state = decoderStream->getDecodeState();
 	return state;
   }
-  audioFrameQueue::audioFrame_t
-	  &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
+  audioFrameQueue::audioFrame_t &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
   switch (outputFormat)
   {
@@ -255,6 +254,7 @@ void oboePlayer::setPlayCircleType(const char *type)
   }
 }
 
+//todo:实现音频倍速播放功能
 template<typename T>
 int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int byteCount)
 {
@@ -273,8 +273,8 @@ int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int 
 	//循环获得缓冲队列内的音频帧直到将填充区内的缓冲区填满，或者在填充区内未填满的情况下出现缓冲队列内的音频帧为空的情况。
 	for (int i = 0; i < decoderStream->queue.length; ++i)
 	{
-	  decoderStream->queue.consumeIndex =
-		  (decoderStream->queue.consumeIndex + 1) % decoderStream->queue.length;
+	  decoderStream->queue.consumeIndex = (decoderStream->queue.consumeIndex + 1) %
+										  decoderStream->queue.length;
 	  dataOffset = 0;
 
 	  if (decoderStream->queue.isEmpty())
@@ -282,9 +282,8 @@ int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int 
 		decoderStream->notifyCond();
 		return 1;
 	  }
+	  audioFrameQueue::audioFrame_t &nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 
-	  audioFrameQueue::audioFrame_t
-		  &nextFrame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
 	  if (nextFrame.dataLength - dataOffset > byteCount - leftDataLength)
 	  {
 		size_t bytePerSample = sizeof(audioData[0]);

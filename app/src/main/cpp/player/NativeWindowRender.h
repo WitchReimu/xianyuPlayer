@@ -19,6 +19,7 @@ extern "C"
 #include "libavcodec/avcodec.h"
 #include "libavutil/imgutils.h"
 #include "libswscale/swscale.h"
+#include "libavutil/time.h"
 }
 
 class NativeWindowRender
@@ -29,15 +30,18 @@ class NativeWindowRender
 					   jobject surface,
 					   JNIEnv *env);
 	~NativeWindowRender();
+	float speed = 1;
 	void init();
 	void play();
 	void setDecodeState(int state);
 	void changeNativeWindow(jobject surface, JNIEnv *env);
   private:
+	uint skipFrame = 0;
 	ANativeWindow *nativeWindow = nullptr;
 	AVFormatContext *videoContext = nullptr;
 	const AVCodec *videoDecode = nullptr;
 	AVCodecContext *videoCodecContext = nullptr;
+	AVRational videoRation = {};
 	int dstWidth = 0;
 	int dstHeight = 0;
 	int streamIndex = 0;

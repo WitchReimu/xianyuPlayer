@@ -74,6 +74,7 @@ bool NativeWindowRender::initVideoCodec()
 	}
   }
   AVCodecParameters *codecParameters = videoContext->streams[streamIndex]->codecpar;
+  videoRation = videoContext->streams[streamIndex]->time_base;
   videoDecode = avcodec_find_decoder(codecParameters->codec_id);
   videoCodecContext = avcodec_alloc_context3(videoDecode);
   avcodec_parameters_to_context(videoCodecContext, codecParameters);
@@ -122,9 +123,11 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
   int ret = 0;
   AVPacket *packet_p = av_packet_alloc();
   AVFrame *frame_p = av_frame_alloc();
+  double frameDuration = 0;
 
   while (true)
   {
+
 	while (instance->decodeState != 0)
 	{
 	  av_frame_free(&instance->renderFrame);
@@ -164,6 +167,24 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	}
 	ret = avcodec_receive_frame(instance->videoCodecContext, frame_p);
 
+	if (instance->speed > 1)
+	{
+	  instance->skipFrame = fmod(instance->skipFrame + 1, instance->speed);
+
+	  if (instance->skipFrame == 0)
+	  {
+		av_packet_unref(packet_p);
+		av_frame_unref(frame_p);
+		instance->skipFrame = 0;
+		continue;
+	  }
+	} else if (instance->speed < 1 && instance->speed > 0)
+	{
+	  float slowlyTime = 1 / instance->speed;
+	  frameDuration = packet_p->duration * av_q2d(instance->videoRation);
+	  av_usleep(frameDuration * AV_TIME_BASE * slowlyTime);
+	}
+
 	if (ret == AVERROR(EAGAIN))
 	{
 	  av_packet_unref(packet_p);
@@ -191,7 +212,6 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	  ALOGE("[%s] sws failed info-> %s", __FUNCTION__, av_err2str(ret));
 	  break;
 	}
-
 	ANativeWindow_lock(instance->nativeWindow, &instance->nativeWindowBuffer, nullptr);
 	uint8_t *dstBuffer = static_cast<uint8_t *>(instance->nativeWindowBuffer.bits);
 	int srcLineSize = instance->dstWidth * 4;

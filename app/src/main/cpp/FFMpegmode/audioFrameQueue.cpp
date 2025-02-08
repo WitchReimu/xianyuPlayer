@@ -26,6 +26,17 @@ bool audioFrameQueue::isEmpty()
 	return false;
   }
 }
+
+bool audioFrameQueue::hasNext()
+{
+  if (produceIndex == consumeIndex + 1)
+  {
+	ALOGW("[%s] hasn't next frame", __FUNCTION__);
+	return false;
+  }
+  return true;
+}
+
 void audioFrameQueue::resetAudioFrame(int resetIndex, audioFrame_t frame)
 {
   audioFrame_t &audioFrame = frameQueue[resetIndex];
@@ -68,3 +79,4 @@ void audioFrameQueue::reset()
 	frame.dataLength = 0;
   }
 }
+

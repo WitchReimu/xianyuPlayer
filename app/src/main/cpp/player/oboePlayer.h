@@ -26,6 +26,8 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	~oboePlayer();
 
   private:
+	float speed = 1;
+	uint skipSample = 0;
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;
 	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;
