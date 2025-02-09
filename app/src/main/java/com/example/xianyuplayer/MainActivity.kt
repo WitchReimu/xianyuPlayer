@@ -22,7 +22,7 @@ import com.example.xianyuplayer.vm.GlobalViewModel
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 修改音频倍速功能
+// TODO: 修改倍速功能
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"

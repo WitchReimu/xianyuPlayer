@@ -217,7 +217,7 @@ void decodeStream::doDecode(decodeStream *instance)
   av_frame_free(&pFrame);
   av_packet_free(&pPacket);
   instance->decodeState = Stop;
-  ALOGI("[%s] 解码线程结束", __FUNCTION__);
+  ALOGI("[%s] 音频解码线程结束", __FUNCTION__);
 }
 
 int decodeStream::getDecodeFileSampleRate()

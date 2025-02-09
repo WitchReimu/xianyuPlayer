@@ -127,7 +127,7 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
   double frameDuration = 0;
   double pts = -1;
   const AVPixFmtDescriptor *formatDescriptor = av_pix_fmt_desc_get(instance->renderFormat);
-  int bytePerPixel = av_get_bits_per_pixel(formatDescriptor)/8;
+  int bytePerPixel = av_get_bits_per_pixel(formatDescriptor) / 8;
 
   while (true)
   {
@@ -232,25 +232,35 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	  ALOGE("[%s] sws failed info-> %s", __FUNCTION__, av_err2str(ret));
 	  break;
 	}
-	ANativeWindow_lock(instance->nativeWindow, &instance->nativeWindowBuffer, nullptr);
-	uint8_t *dstBuffer = static_cast<uint8_t *>(instance->nativeWindowBuffer.bits);
-	int srcLineSize = instance->dstWidth * bytePerPixel;
-	int dstLineSize = instance->nativeWindowBuffer.stride * bytePerPixel;
 
-	for (int i = 0; i < instance->dstHeight; ++i)
+	if (instance->nativeWindow != nullptr)
 	{
-	  //todo:在控制台使用top的情况下进行设备旋转，会出现空指针异常
-	  memcpy(dstBuffer + i * dstLineSize,
-			 instance->renderFrame->data[0] + i * srcLineSize,
-			 srcLineSize);
+	  ANativeWindow_lock(instance->nativeWindow, &instance->nativeWindowBuffer, nullptr);
+	  uint8_t *dstBuffer = static_cast<uint8_t *>(instance->nativeWindowBuffer.bits);
+	  int srcLineSize = instance->dstWidth * bytePerPixel;
+	  int dstLineSize = instance->nativeWindowBuffer.stride * bytePerPixel;
+
+	  if (instance->nativeWindowBuffer.stride == instance->nativeWindowBuffer.width)
+	  {
+		memcpy(dstBuffer, instance->renderFrame->data[0], srcLineSize * instance->dstHeight);
+	  } else
+	  {
+
+		for (int i = 0; i < instance->dstHeight; ++i)
+		{
+		  memcpy(dstBuffer + i * dstLineSize,
+				 instance->renderFrame->data[0] + i * srcLineSize,
+				 srcLineSize);
+		}
+	  }
+	  ANativeWindow_unlockAndPost(instance->nativeWindow);
 	}
-	ANativeWindow_unlockAndPost(instance->nativeWindow);
 	av_packet_unref(packet_p);
 	av_frame_unref(frame_p);
   }
   av_packet_free(&packet_p);
   av_frame_free(&frame_p);
-  ALOGI("[%s] decode thread end ", __FUNCTION__);
+  ALOGI("[%s] 视频解码线程结束 ", __FUNCTION__);
 }
 
 void NativeWindowRender::init()
