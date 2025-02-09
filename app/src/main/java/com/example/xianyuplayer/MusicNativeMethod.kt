@@ -3,6 +3,9 @@ package com.example.xianyuplayer
 import android.util.Log
 import android.view.Surface
 import com.example.xianyuplayer.database.MusicMetadata
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private const val TAG = "MusicNativeMethod"
 
@@ -10,8 +13,10 @@ class MusicNativeMethod {
 
     //音频解码指针
     private var decodeStreamPtr: Long = 0
+
     //音频播放器指针
     private var playerPtr: Long = 0
+
     //视频播放器与解码指针
     private var nativeWindowPtr: Long = 0
 
@@ -150,6 +155,7 @@ class MusicNativeMethod {
         private val dtsListeners = mutableListOf<DtsListener>()
         private val playStateChangeListeners = mutableListOf<PlayStateChangeListener>()
         private val videoResolutionListeners = mutableListOf<VideoResolutionListener>()
+        private val mainScope = CoroutineScope(Dispatchers.Main)
 
         fun getInstance(): MusicNativeMethod {
 
@@ -183,8 +189,10 @@ class MusicNativeMethod {
          */
         @JvmStatic
         fun notifyPlayStatusChangeCallback(status: Int) {
-            for (playStateChangeListener in playStateChangeListeners) {
-                playStateChangeListener.playStatusChangeCallback(status)
+            mainScope.launch {
+                for (playStateChangeListener in playStateChangeListeners) {
+                    playStateChangeListener.playStatusChangeCallback(status)
+                }
             }
         }
 

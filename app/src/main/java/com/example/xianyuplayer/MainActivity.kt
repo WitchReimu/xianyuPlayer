@@ -142,7 +142,6 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
 
     override fun playStatusChangeCallback(status: Int): Unit {
         Constant.playStatus = status
-
         when (status) {
             Constant.playStatusStarting, Constant.playStatusStarted -> {
                 binding.imgPlay.setImageDrawable(

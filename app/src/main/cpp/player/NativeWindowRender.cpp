@@ -239,6 +239,7 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 
 	for (int i = 0; i < instance->dstHeight; ++i)
 	{
+	  //todo:在控制台使用top的情况下进行设备旋转，会出现空指针异常
 	  memcpy(dstBuffer + i * dstLineSize,
 			 instance->renderFrame->data[0] + i * srcLineSize,
 			 srcLineSize);
