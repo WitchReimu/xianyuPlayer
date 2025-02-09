@@ -41,6 +41,7 @@ class NativeWindowRender
 	AVFormatContext *videoContext = nullptr;
 	const AVCodec *videoDecode = nullptr;
 	AVCodecContext *videoCodecContext = nullptr;
+	AVPixelFormat renderFormat = AV_PIX_FMT_RGB565LE;
 	AVRational videoRation = {};
 	int dstWidth = 0;
 	int dstHeight = 0;

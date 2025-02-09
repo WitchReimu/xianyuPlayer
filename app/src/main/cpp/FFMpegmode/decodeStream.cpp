@@ -156,7 +156,7 @@ void decodeStream::doDecode(decodeStream *instance)
 	  audioFrameQueue &frameQueue = instance->queue;
 	  audioFrameQueue::audioFrame_t &produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
 	  int bytePerSample = av_get_bytes_per_sample(instance->targetFmt);
-
+	  double pts = pFrame->pts * av_q2d(instance->audioStreamTimeBase);
 	  //判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用;队列内的旧缓冲区进行释放. 大于->对队列缓冲区内的内容进行覆盖。
 	  if (produceFrame.buffer == nullptr || produceFrame.bufferLength < buffer_length)
 	  {
@@ -177,8 +177,10 @@ void decodeStream::doDecode(decodeStream *instance)
 		  instance->decodeCon.wait(lock);
 		  lock.unlock();
 		}
-		struct audioFrameQueue::audioFrame_t frame =
-			{bufferData, covert_length * nb_channels * bytePerSample, buffer_length};
+		struct audioFrameQueue::audioFrame_t frame = {bufferData,
+													  covert_length * nb_channels * bytePerSample,
+													  buffer_length,
+													  pts};
 		//如果缓冲区队列内的buffer长度小于解码缓冲区内buffer的长度需要重新设置缓冲区队列的缓冲帧
 		frameQueue.resetAudioFrame(frameQueue.produceIndex, frame);
 	  } else
@@ -201,6 +203,7 @@ void decodeStream::doDecode(decodeStream *instance)
 		  instance->decodeCon.wait(lock);
 		  lock.unlock();
 		}
+		produceFrame.pts = pts;
 		frameQueue.resetDataLength(frameQueue.produceIndex,
 								   covert_length * nb_channels * bytePerSample);
 	  }
@@ -354,8 +357,8 @@ void decodeStream::openStream()
   {
 	ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
   }
-  audioStreamTimeBase = formatContext->streams[streamIndex]->time_base;
   AVStream *audioStream = formatContext->streams[streamIndex];
+  audioStreamTimeBase = audioStream->time_base;
   audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
   audioDecodeContext = avcodec_alloc_context3(audioDecode);
   avcodec_parameters_to_context(audioDecodeContext, audioStream->codecpar);

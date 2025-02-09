@@ -6,6 +6,7 @@
 #include <aaudio/AAudio.h>
 #define TAG "oboePlayer"
 #define MilliSecondBase 1000000
+double oboePlayer::pts = 0;
 
 oboePlayer::~oboePlayer()
 {
@@ -58,6 +59,7 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	return state;
   }
   audioFrameQueue::audioFrame_t &frame = decoderStream->queue.frameQueue[decoderStream->queue.consumeIndex];
+  pts = frame.pts;
 
   switch (outputFormat)
   {

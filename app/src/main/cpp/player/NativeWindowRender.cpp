@@ -3,6 +3,7 @@
 //
 
 #include "NativeWindowRender.h"
+#include "oboePlayer.h"
 #include "../CommonUtils.h"
 #define TAG "NativeWindowRender"
 
@@ -108,7 +109,7 @@ void NativeWindowRender::setWindowBuffer()
 	dstWidth = windowWidth;
 	dstHeight = videoHeight * dstWidth / videoWidth;
   }
-  ANativeWindow_setBuffersGeometry(nativeWindow, dstWidth, dstHeight, WINDOW_FORMAT_RGBA_8888);
+  ANativeWindow_setBuffersGeometry(nativeWindow, dstWidth, dstHeight, WINDOW_FORMAT_RGB_565);
   if (callbackObject != nullptr)
   {
 	JNIEnv *env = getJniEnv(vm, isAttach);
@@ -124,6 +125,9 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
   AVPacket *packet_p = av_packet_alloc();
   AVFrame *frame_p = av_frame_alloc();
   double frameDuration = 0;
+  double pts = -1;
+  const AVPixFmtDescriptor *formatDescriptor = av_pix_fmt_desc_get(instance->renderFormat);
+  int bytePerPixel = av_get_bits_per_pixel(formatDescriptor)/8;
 
   while (true)
   {
@@ -167,6 +171,30 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	}
 	ret = avcodec_receive_frame(instance->videoCodecContext, frame_p);
 
+	if (ret == AVERROR(EAGAIN))
+	{
+	  av_packet_unref(packet_p);
+	  av_frame_unref(frame_p);
+	  continue;
+	}
+	pts = frame_p->pts * av_q2d(instance->videoRation);
+	double diff = pts - oboePlayer::pts;
+
+	if (diff > 0.1)
+	{
+	  instance->skipFrame = fmod(instance->skipFrame + 1, instance->speed);
+
+	  if (instance->skipFrame == 0)
+	  {
+		av_usleep(diff * AV_TIME_BASE / 2);
+	  }
+	} else if (diff < -0.1)
+	{
+	  av_packet_unref(packet_p);
+	  av_frame_unref(frame_p);
+	  continue;
+	}
+
 	if (instance->speed > 1)
 	{
 	  instance->skipFrame = fmod(instance->skipFrame + 1, instance->speed);
@@ -175,21 +203,13 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	  {
 		av_packet_unref(packet_p);
 		av_frame_unref(frame_p);
-		instance->skipFrame = 0;
 		continue;
 	  }
 	} else if (instance->speed < 1 && instance->speed > 0)
 	{
-	  float slowlyTime = 1 / instance->speed;
-	  frameDuration = packet_p->duration * av_q2d(instance->videoRation);
-	  av_usleep(frameDuration * AV_TIME_BASE * slowlyTime);
-	}
-
-	if (ret == AVERROR(EAGAIN))
-	{
-	  av_packet_unref(packet_p);
-	  av_frame_unref(frame_p);
-	  continue;
+	  float slowlyTimes = 1 / instance->speed;
+	  frameDuration = frame_p->duration * av_q2d(frame_p->time_base);
+	  av_usleep(frameDuration * AV_TIME_BASE * slowlyTimes);
 	}
 
 	if (ret < 0)
@@ -214,8 +234,8 @@ void NativeWindowRender::doDecode(NativeWindowRender *instance)
 	}
 	ANativeWindow_lock(instance->nativeWindow, &instance->nativeWindowBuffer, nullptr);
 	uint8_t *dstBuffer = static_cast<uint8_t *>(instance->nativeWindowBuffer.bits);
-	int srcLineSize = instance->dstWidth * 4;
-	int dstLineSize = instance->nativeWindowBuffer.stride * 4;
+	int srcLineSize = instance->dstWidth * bytePerPixel;
+	int dstLineSize = instance->nativeWindowBuffer.stride * bytePerPixel;
 
 	for (int i = 0; i < instance->dstHeight; ++i)
 	{
@@ -270,12 +290,12 @@ void NativeWindowRender::changeNativeWindow(jobject surface, JNIEnv *env)
 void NativeWindowRender::allocRenderFrame()
 {
   renderFrame = av_frame_alloc();
-  int bufferLength = av_image_get_buffer_size(AV_PIX_FMT_RGBA, dstWidth, dstHeight, 1);
+  int bufferLength = av_image_get_buffer_size(renderFormat, dstWidth, dstHeight, 1);
   uint8_t *renderFrameBuffer = static_cast<uint8_t *>(av_mallocz(bufferLength));
   av_image_fill_arrays(renderFrame->data,
 					   renderFrame->linesize,
 					   renderFrameBuffer,
-					   AV_PIX_FMT_RGBA,
+					   renderFormat,
 					   dstWidth,
 					   dstHeight,
 					   1);
@@ -288,7 +308,7 @@ void NativeWindowRender::initSwsContext()
 							  videoCodecContext->pix_fmt,
 							  dstWidth,
 							  dstHeight,
-							  AV_PIX_FMT_RGBA,
+							  renderFormat,
 							  SWS_FAST_BILINEAR,
 							  nullptr,
 							  nullptr,

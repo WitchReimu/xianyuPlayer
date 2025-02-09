@@ -15,6 +15,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 {
   public:
 	int playCircleType = playListCircle_enum::listCircle;
+	static double pts;
 	void initStream(decodeStream *stream, JNIEnv *env);
 	void openStream();
 	bool startPlay();
@@ -26,7 +27,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	~oboePlayer();
 
   private:
-	float speed = 1;
+	float speed = 2;
 	uint skipSample = 0;
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;

@@ -27,11 +27,17 @@ class audioFrameQueue
 	  uint8_t *buffer;
 	  int dataLength;
 	  int bufferLength;
-	  audioFrame_t(uint8_t *data = nullptr, int dataLength = 0, int bufferLength = 0)
+	  double pts;
+	  audioFrame_t(uint8_t *data = nullptr,
+				   int dataLength = 0,
+				   int bufferLength = 0,
+				   double pts = 0
+	  )
 	  {
 		this->buffer = data;
 		this->dataLength = dataLength;
 		this->bufferLength = bufferLength;
+		this->pts = pts;
 	  }
 	};
 
