@@ -5,6 +5,11 @@
 #include "HwMediacodecPlayer.h"
 #define TAG "HwMediacodecPlayer"
 
+HwMediacodecPlayer::HwMediacodecPlayer(const char *location)
+{
+  strcpy(this->location, location);
+}
+
 void HwMediacodecPlayer::initMediacodec()
 {
   extractor = AMediaExtractor_new();
@@ -39,7 +44,77 @@ void HwMediacodecPlayer::initMediacodec()
 	}
 	AMediaFormat_delete(format);
   }
+}
+
+void HwMediacodecPlayer::openFFmpegcodec()
+{
+  avFormatContext = avformat_alloc_context();
+  const AVCodec *videoCodec = nullptr;
+  int ret = avformat_open_input(&avFormatContext, location, nullptr, nullptr);
+
+  if (ret != 0)
+  {
+	ALOGE("[%s] open input error inputPath %s", __FUNCTION__, location);
+	return;
+  }
+  ret = avformat_find_stream_info(avFormatContext, nullptr);
+
+  if (ret < 0)
+  {
+	ALOGE("[%s] find stream info error ", __FUNCTION__);
+	return;
+  }
+  videoStreamIndex = av_find_best_stream(avFormatContext,
+										 AVMEDIA_TYPE_VIDEO,
+										 -1,
+										 -1,
+										 &videoCodec,
+										 0);
+
+  if (videoStreamIndex > 0)
+  {
+	ALOGE("[%s] find best stream", __FUNCTION__);
+	return;
+  }
+  videoCodecContext = avcodec_alloc_context3(videoCodec);
+
+  if (videoCodecContext == nullptr)
+  {
+	ALOGE("[%s] alloc avcodec error ", __FUNCTION__);
+	return;
+  }
+  AVCodecParameters *videoParameter = avFormatContext->streams[videoStreamIndex]->codecpar;
+  avcodec_parameters_to_context(videoCodecContext, videoParameter);
+  ret = avcodec_open2(videoCodecContext, videoCodec, nullptr);
+
+  if (ret < 0)
+  {
+	ALOGE("[%s] avcodec open failed ", __FUNCTION__);
+	return;
+  }
+  videoBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
+  ret = av_bsf_alloc(videoBitStreamFilter, &videoBsfCtx);
+
+  if (ret < 0)
+  {
+	ALOGE("[%s] av bsf alloc error", __FUNCTION__);
+	return;
+  }
+  ret = avcodec_parameters_copy(videoBsfCtx->par_in, videoParameter);
+
+  if (ret < 0)
+  {
+	ALOGE("[%s] av parameters copy error", __FUNCTION__);
+	return;
+  }
+  av_bsf_init(videoBsfCtx);
+}
+
+void HwMediacodecPlayer::startMediacodec()
+{
   ssize_t inputIndex = AMediaCodec_dequeueInputBuffer(hwVideoDecoder, 2000);
+  AVPacket *videoPacket = av_packet_alloc();
+  uint8_t *inputBuffer = nullptr;
 
   if (inputIndex < 0)
   {
@@ -55,18 +130,36 @@ void HwMediacodecPlayer::initMediacodec()
   } else
   {
 	size_t inputSize;
-	uint8_t *inputBuffer = AMediaCodec_getInputBuffer(hwVideoDecoder, inputIndex, &inputSize);
+	inputBuffer = AMediaCodec_getInputBuffer(hwVideoDecoder, inputIndex, &inputSize);
   }
-  resultStatus = AMediaCodec_queueInputBuffer(hwVideoDecoder, inputIndex, 0, 0, 0, 0);
+  int ret = av_bsf_send_packet(videoBsfCtx, videoPacket);
 
-  if (resultStatus == AMEDIA_OK)
+  if (ret != 0)
   {
-
+	ALOGE("[%s] bsf send packet error ", __FUNCTION__);
+	return;
   }
-}
+  ret = av_bsf_receive_packet(videoBsfCtx, videoPacket);
 
-void HwMediacodecPlayer::openFFmpegcodec(const char *localPath)
-{
-  strcpy(this->location, localPath);
+  if (ret != 0)
+  {
+	ALOGE("[%s] bsf receive packet error ", __FUNCTION__);
+	return;
+  }
+  memcpy(inputBuffer, videoPacket->data, videoPacket->size);
+  media_status_t resultStatus = AMediaCodec_queueInputBuffer(hwVideoDecoder,
+															 inputIndex,
+															 0,
+															 videoPacket->size,
+															 videoPacket->pts,
+															 0);
 
+  if (resultStatus != AMEDIA_OK)
+  {
+	ALOGE("[%s] enqueue the encoded data error ", __FUNCTION__);
+	return;
+  }
+  av_packet_unref(videoPacket);
+  struct AMediaCodecBufferInfo info = {};
+  ssize_t outputIndex = AMediaCodec_dequeueOutputBuffer(hwVideoDecoder, &info, 1000);
 }
