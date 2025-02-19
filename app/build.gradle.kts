@@ -20,6 +20,7 @@ android {
             cmake {
 //                cppFlags += "-std=c++11"
                 arguments("-DANDROID_STL=c++_shared")
+                abiFilters("arm64-v8a")
             }
         }
     }
