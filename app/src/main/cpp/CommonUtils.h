@@ -10,11 +10,18 @@
 #define ALOGE(args...) __android_log_print(ANDROID_LOG_ERROR, TAG, args)
 #define ALOGI(args...) __android_log_print(ANDROID_LOG_INFO, TAG, args)
 #define ALOGW(args...) __android_log_print(ANDROID_LOG_WARN, TAG, args)
+#define ALOGD(args...) __android_log_print(ANDROID_LOG_DEBUG, TAG, args)
 
 enum playListCircle_enum : int
 {
   singleCircle = 0,
   listCircle
+};
+
+enum decodeType : int
+{
+  hwDecodeType = 0,
+  softDecodeType
 };
 
 JNIEnv *getJniEnv(JavaVM *jvm, bool &isAttach);

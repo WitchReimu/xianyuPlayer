@@ -1,5 +1,6 @@
 package com.example.xianyuplayer
 
+import android.content.res.AssetManager
 import android.util.Log
 import android.view.Surface
 import com.example.xianyuplayer.database.MusicMetadata
@@ -19,6 +20,7 @@ class MusicNativeMethod {
 
     //视频播放器与解码指针
     private var nativeWindowPtr: Long = 0
+    private var hwPlayerPtr = 0L
 
     /**
      * @param filePath 文件路径应为绝对路径
@@ -34,6 +36,8 @@ class MusicNativeMethod {
         streamPtr: Long = decodeStreamPtr,
         ptr: Long = playerPtr
     ): LongArray
+
+    private external fun hwVideoStreamInit(locationPath: String, surface: Surface): Long
 
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
@@ -53,6 +57,15 @@ class MusicNativeMethod {
 
     external fun setVideoState(state: Int, windowPtr: Long = nativeWindowPtr)
     external fun screenOrientationChange(surface: Surface, windowPtr: Long = nativeWindowPtr)
+    external fun hwVideoStartPlay(playerPtr: Long = hwPlayerPtr)
+    external fun hwVideoStartPlayTest(
+        surface: Surface,
+        locationPath: String
+    )
+
+    fun initHwVideoStream(locationPath: String, surface: Surface) {
+        hwPlayerPtr = hwVideoStreamInit(locationPath, surface)
+    }
 
     fun openDecodeStream(path: String) {
         decodeStreamPtr = openDecodeStream(path, decodeStreamPtr, playerPtr)

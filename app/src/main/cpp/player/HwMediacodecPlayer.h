@@ -6,6 +6,9 @@
 #define XIANYUPLAYER_APP_SRC_MAIN_CPP_PLAYER_HWMEDIACODECPLAYER_H
 
 #include <media/NdkMediaExtractor.h>
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
+#include <sys/stat.h>
 #include <string>
 #include "../CommonUtils.h"
 
@@ -19,7 +22,13 @@ extern "C"
 class HwMediacodecPlayer
 {
   public:
-	HwMediacodecPlayer(const char *location);
+	HwMediacodecPlayer(JNIEnv *env, const char *location, jobject surface);
+	void initMediacodec();
+	void openFFmpegcodec();
+	void startMediacodec();
+	void testAMediacodecPlay(JNIEnv *env,
+							 jobject surface,
+							 const char *locationPath);
   private:
 	char location[NAME_MAX] = {};
 	ANativeWindow *nativeWindow = nullptr;
@@ -30,9 +39,8 @@ class HwMediacodecPlayer
 	const AVBitStreamFilter *videoBitStreamFilter = nullptr;
 	AVBSFContext *videoBsfCtx = nullptr;
 	int videoStreamIndex = -1;
-	void initMediacodec();
-	void openFFmpegcodec();
-	void startMediacodec();
+	int stop = 0;
+	void getPacket(AVPacket *srcPacket, AVPacket *dstPacket);
 };
 
 #endif //XIANYUPLAYER_APP_SRC_MAIN_CPP_PLAYER_HWMEDIACODECPLAYER_H

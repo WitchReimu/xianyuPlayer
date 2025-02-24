@@ -5,6 +5,7 @@
 #include "oboePlayer.h"
 #include "AudioAlbumCover.h"
 #include "NativeWindowRender.h"
+#include "HwMediacodecPlayer.h"
 #define TAG "native-lib"
 
 extern "C"
@@ -269,6 +270,28 @@ void ScreenOrientationChange(JNIEnv *env, jobject nativeMethod, jobject surface,
   render->changeNativeWindow(surface, env);
 }
 
+jlong HwVideoStreamInit(JNIEnv *env, jobject nativeClass, jstring jlocationPath, jobject surface)
+{
+  const char *location = env->GetStringUTFChars(jlocationPath, nullptr);
+  HwMediacodecPlayer *hwMediacodecPtr = new HwMediacodecPlayer(env, location, surface);
+  env->ReleaseStringUTFChars(jlocationPath, location);
+  return reinterpret_cast<jlong>(hwMediacodecPtr);
+}
+
+void HwVideoStartPlay(JNIEnv *env, jobject nativeClass, jlong hwMediacodecPlayerPtr)
+{
+  if (hwMediacodecPlayerPtr != 0)
+  {
+	HwMediacodecPlayer *mediacodecPlayer = reinterpret_cast<HwMediacodecPlayer *>(hwMediacodecPlayerPtr);
+	mediacodecPlayer->openFFmpegcodec();
+	mediacodecPlayer->initMediacodec();
+	for (int i = 0; i < 10; ++i)
+	{
+	  mediacodecPlayer->startMediacodec();
+	}
+  }
+}
+
 JNIEXPORT
 jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
 	JNIEnv *env,
@@ -301,7 +324,9 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;JJ)[J",                         (void *)InitVideo},
 		{"playVideo",               "(JJJ)V",                                                                 (void *)PlayVideo},
 		{"setVideoState",           "(IJ)V",                                                                  (void *)SetVideoState},
-		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange}
+		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange},
+		{"hwVideoStreamInit",       "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)HwVideoStreamInit},
+		{"hwVideoStartPlay",        "(J)V",                                                                   (void *)HwVideoStartPlay}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,
@@ -317,4 +342,20 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
   return JNI_VERSION_1_6;
 }
 
+}
+static HwMediacodecPlayer *PPlayer = nullptr;
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_xianyuplayer_MusicNativeMethod_hwVideoStartPlayTest(JNIEnv *env,
+																	 jobject assetManager,
+																	 jobject surface,
+																	 jstring location_path)
+{
+  const char *locationPath = env->GetStringUTFChars(location_path, nullptr);
+  if (PPlayer == nullptr)
+  {
+	PPlayer = new HwMediacodecPlayer(env, locationPath, surface);
+  }
+  PPlayer->testAMediacodecPlay(env, surface, locationPath);
+  env->ReleaseStringUTFChars(location_path, locationPath);
 }

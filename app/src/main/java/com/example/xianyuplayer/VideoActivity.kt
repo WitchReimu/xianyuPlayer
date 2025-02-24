@@ -68,16 +68,32 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
         if (viewModel.ensureResolution) {
 
         } else {
-            MusicNativeMethod.getInstance()
-                .initNativeWindow("/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4", holder.surface)
+            if (Constant.videoDecodeType == Constant.softDecode) {
+                MusicNativeMethod.getInstance().initNativeWindow(
+                    "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4",
+                    holder.surface
+                )
+            } else if (Constant.videoDecodeType == Constant.HwDecode) {
+                MusicNativeMethod.getInstance().initHwVideoStream(
+                    "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4",
+                    holder.surface
+                )
+            }
+
         }
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        if (viewModel.ensureResolution && viewModel.videoStatus == Constant.playStatusPausing) {
-            MusicNativeMethod.getInstance()
-                .screenOrientationChange(holder.surface)
-            viewModel.videoStatus = 0
+        if (Constant.videoDecodeType == Constant.softDecode) {
+            if (viewModel.ensureResolution && viewModel.videoStatus == Constant.playStatusPausing) {
+                MusicNativeMethod.getInstance()
+                    .screenOrientationChange(holder.surface)
+                viewModel.videoStatus = 0
+            }
+        } else if (Constant.videoDecodeType == Constant.HwDecode) {
+            Thread {
+                MusicNativeMethod.getInstance().hwVideoStartPlayTest(holder.surface,"/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4")
+            }.start()
         }
     }
 
