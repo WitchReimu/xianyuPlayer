@@ -16,6 +16,7 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
     private val TAG = "VideoActivity"
     private lateinit var binding: ActivityVideoBinding
     private lateinit var viewModel: VideoViewModel
+    private val videoPath = "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,15 +70,9 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
 
         } else {
             if (Constant.videoDecodeType == Constant.softDecode) {
-                MusicNativeMethod.getInstance().initNativeWindow(
-                    "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4",
-                    holder.surface
-                )
+                MusicNativeMethod.getInstance().initNativeWindow(videoPath, holder.surface)
             } else if (Constant.videoDecodeType == Constant.HwDecode) {
-                MusicNativeMethod.getInstance().initHwVideoStream(
-                    "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4",
-                    holder.surface
-                )
+                MusicNativeMethod.getInstance().initHwVideoStream(videoPath, holder.surface)
             }
 
         }
@@ -92,7 +87,7 @@ class VideoActivity : AppCompatActivity(), SurfaceHolder.Callback {
             }
         } else if (Constant.videoDecodeType == Constant.HwDecode) {
             Thread {
-                MusicNativeMethod.getInstance().hwVideoStartPlayTest(holder.surface,"/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4")
+                MusicNativeMethod.getInstance().hwVideoStartPlay()
             }.start()
         }
     }

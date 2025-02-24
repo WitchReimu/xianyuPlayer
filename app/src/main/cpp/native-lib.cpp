@@ -285,10 +285,7 @@ void HwVideoStartPlay(JNIEnv *env, jobject nativeClass, jlong hwMediacodecPlayer
 	HwMediacodecPlayer *mediacodecPlayer = reinterpret_cast<HwMediacodecPlayer *>(hwMediacodecPlayerPtr);
 	mediacodecPlayer->openFFmpegcodec();
 	mediacodecPlayer->initMediacodec();
-	for (int i = 0; i < 10; ++i)
-	{
-	  mediacodecPlayer->startMediacodec();
-	}
+	mediacodecPlayer->startMediacodec();
   }
 }
 
@@ -342,20 +339,4 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
   return JNI_VERSION_1_6;
 }
 
-}
-static HwMediacodecPlayer *PPlayer = nullptr;
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_example_xianyuplayer_MusicNativeMethod_hwVideoStartPlayTest(JNIEnv *env,
-																	 jobject assetManager,
-																	 jobject surface,
-																	 jstring location_path)
-{
-  const char *locationPath = env->GetStringUTFChars(location_path, nullptr);
-  if (PPlayer == nullptr)
-  {
-	PPlayer = new HwMediacodecPlayer(env, locationPath, surface);
-  }
-  PPlayer->testAMediacodecPlay(env, surface, locationPath);
-  env->ReleaseStringUTFChars(location_path, locationPath);
 }

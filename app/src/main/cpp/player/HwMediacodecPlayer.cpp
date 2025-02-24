@@ -18,7 +18,14 @@ HwMediacodecPlayer::HwMediacodecPlayer(JNIEnv *env, const char *location, jobjec
 void HwMediacodecPlayer::initMediacodec()
 {
   extractor = AMediaExtractor_new();
-  media_status_t resultStatus = AMediaExtractor_setDataSource(extractor, location);
+  struct stat fileStat = {};
+  stat(location, &fileStat);
+  FILE *locationFile = fopen(location, "r");
+  int fileFd = fileno(locationFile);
+  media_status_t resultStatus = AMediaExtractor_setDataSourceFd(extractor,
+																fileFd,
+																0,
+																fileStat.st_size);
 
   if (resultStatus != AMEDIA_OK)
   {
@@ -38,12 +45,14 @@ void HwMediacodecPlayer::initMediacodec()
 	{
 	  ALOGE("[%s] no mime type ", __FUNCTION__);
 	  return;
-	} else if (strncmp(mime, "video/", 6))
+	} else if (strncmp(mime, "video/", 6) == 0)
 	{
 	  AMediaExtractor_selectTrack(extractor, i);
 	  hwVideoDecoder = AMediaCodec_createDecoderByType(mime);
 	  AMediaCodec_configure(hwVideoDecoder, format, nativeWindow, nullptr, 0);
 	  AMediaCodec_start(hwVideoDecoder);
+	  AMediaFormat_delete(format);
+	  break;
 	}
 	AMediaFormat_delete(format);
   }
@@ -115,64 +124,34 @@ void HwMediacodecPlayer::openFFmpegcodec()
 
 void HwMediacodecPlayer::startMediacodec()
 {
-  ALOGI("[%s]", __FUNCTION__);
-  ssize_t inputIndex = AMediaCodec_dequeueInputBuffer(hwVideoDecoder, 2000);
   AVPacket *videoPacket = av_packet_alloc();
+  AVPacket *filterPacket = av_packet_alloc();
   uint8_t *inputBuffer = nullptr;
-  int read_ret = av_read_frame(avFormatContext, videoPacket);
 
-  if (read_ret < 0)
+  while (hwVideoDecoder != nullptr)
   {
-	ALOGE("[%s] read frame error", __FUNCTION__);
-	return;
-  }
+	ssize_t inputIndex = AMediaCodec_dequeueInputBuffer(hwVideoDecoder, 2000);
 
-  if (videoPacket->stream_index == videoStreamIndex)
-  {
-
-	if (inputIndex < 0)
-	{
-
-	  if (inputIndex == AMEDIACODEC_INFO_TRY_AGAIN_LATER)
-	  {
-		ALOGW("[%s] get input buffer index TRY_AGAIN_LATER", __FUNCTION__);
-	  } else
-	  {
-		ALOGE("[%s] Failed to get input type", __FUNCTION__);
-		return;
-	  }
-	} else
+	if (inputIndex >= 0)
 	{
 	  size_t inputSize;
 	  inputBuffer = AMediaCodec_getInputBuffer(hwVideoDecoder, inputIndex, &inputSize);
-	}
-	int ret = av_bsf_send_packet(videoBsfCtx, videoPacket);
+	  getPacket(videoPacket, filterPacket);
+	  memcpy(inputBuffer, filterPacket->data, filterPacket->size);
+	  media_status_t resultStatus = AMediaCodec_queueInputBuffer(hwVideoDecoder,
+																 inputIndex,
+																 0,
+																 filterPacket->size,
+																 filterPacket->pts,
+																 0);
 
-	if (ret != 0)
-	{
-	  ALOGE("[%s] bsf send packet error ", __FUNCTION__);
-	  return;
+	  if (resultStatus != AMEDIA_OK)
+	  {
+		ALOGE("[%s] enqueue the encoded data error ", __FUNCTION__);
+		return;
+	  }
 	}
-	ret = av_bsf_receive_packet(videoBsfCtx, videoPacket);
-
-	if (ret != 0)
-	{
-	  ALOGE("[%s] bsf receive packet error ", __FUNCTION__);
-	  return;
-	}
-	memcpy(inputBuffer, videoPacket->data, videoPacket->size);
-	media_status_t resultStatus = AMediaCodec_queueInputBuffer(hwVideoDecoder,
-															   inputIndex,
-															   0,
-															   videoPacket->size,
-															   videoPacket->pts,
-															   0);
-
-	if (resultStatus != AMEDIA_OK)
-	{
-	  ALOGE("[%s] enqueue the encoded data error ", __FUNCTION__);
-	  return;
-	}
+	av_packet_unref(filterPacket);
 	av_packet_unref(videoPacket);
 	struct AMediaCodecBufferInfo info = {};
 	ssize_t outputIndex = AMediaCodec_dequeueOutputBuffer(hwVideoDecoder, &info, 1000);
@@ -184,87 +163,21 @@ void HwMediacodecPlayer::startMediacodec()
 	  outputBuffer = AMediaCodec_getOutputBuffer(hwVideoDecoder, outputIndex, &outputSize);
 	  AMediaCodec_releaseOutputBuffer(hwVideoDecoder, outputIndex, info.size != 0);
 	}
-	av_packet_free(&videoPacket);
-  }
-}
-
-void HwMediacodecPlayer::testAMediacodecPlay(JNIEnv *env, jobject surface, const char *locationPath)
-{
-  AMediaExtractor *PExtractor = AMediaExtractor_new();
-  ANativeWindow *PWindow = ANativeWindow_fromSurface(env, surface);
-  size_t inputBufLength = 0;
-  AMediaCodec *PCodec = nullptr;
-  struct stat fileStat = {};
-  ssize_t inputBufIndex = -1;
-  ssize_t outputBufIndex = -1;
-  stat(locationPath, &fileStat);
-  FILE *PFile = fopen(locationPath, "r");
-  int fileFd = fileno(PFile);
-  AMediaExtractor_setDataSourceFd(PExtractor, fileFd, 0, fileStat.st_size);
-  fclose(PFile);
-  size_t trackCount = AMediaExtractor_getTrackCount(PExtractor);
-
-  for (int i = 0; i < trackCount; ++i)
-  {
-	AMediaFormat *PFormat = AMediaExtractor_getTrackFormat(PExtractor, i);
-	const char *formatStr = AMediaFormat_toString(PFormat);
-	ALOGI("[%s] format %s", __FUNCTION__, formatStr);
-	const char *mime;
-
-	if (!AMediaFormat_getString(PFormat, AMEDIAFORMAT_KEY_MIME, &mime))
-	{
-	  ALOGE("[%s] format get mime failed ", __FUNCTION__);
-	  return;
-	} else if (strncmp(mime, "video/", 6) == 0)
-	{
-	  AMediaExtractor_selectTrack(PExtractor, i);
-	  PCodec = AMediaCodec_createDecoderByType(mime);
-	  AMediaCodec_configure(PCodec, PFormat, PWindow, nullptr, 0);
-	  AMediaCodec_start(PCodec);
-	  AMediaFormat_delete(PFormat);
-	  break;
-	}
-	AMediaFormat_delete(PFormat);
   }
 
-  openFFmpegcodec();
-  AVPacket *videoPacket = av_packet_alloc();
-  AVPacket *filterVideoPacket = av_packet_alloc();
-
-  while (stop == 0)
+  if (extractor != nullptr)
   {
-	inputBufIndex = AMediaCodec_dequeueInputBuffer(PCodec, 2000);
-	if (inputBufIndex >= 0)
-	{
-	  getPacket(videoPacket, filterVideoPacket);
-	  uint8_t *inputBuf = AMediaCodec_getInputBuffer(PCodec, inputBufIndex, &inputBufLength);
-	  memcpy(inputBuf, filterVideoPacket->data, filterVideoPacket->size);
-	  AMediaCodec_queueInputBuffer(PCodec,
-								   inputBufIndex,
-								   0,
-								   filterVideoPacket->size,
-								   filterVideoPacket->pts,
-								   0);
-	}
-	av_packet_unref(filterVideoPacket);
-	AMediaCodecBufferInfo info = {};
-	outputBufIndex = AMediaCodec_dequeueOutputBuffer(PCodec, &info, 1000);
+	AMediaExtractor_delete(extractor);
+  }
 
-	if (outputBufIndex >= 0)
-	{
-	  size_t outputBufferLength = 0;
-	  uint8_t *outputBuf = AMediaCodec_getOutputBuffer(PCodec, outputBufIndex, &outputBufferLength);
-	  AMediaCodec_releaseOutputBuffer(PCodec, outputBufIndex, info.size != 0);
-	}
+  if (hwVideoDecoder != nullptr)
+  {
+	AMediaCodec_delete(hwVideoDecoder);
   }
   av_packet_free(&videoPacket);
-  av_packet_free(&filterVideoPacket);
-
-  if (PCodec != nullptr)
-  {
-	AMediaCodec_delete(PCodec);
-  }
+  av_packet_free(&filterPacket);
 }
+
 void HwMediacodecPlayer::getPacket(AVPacket *srcPacket, AVPacket *dstPacket)
 {
   while (true)

@@ -26,9 +26,6 @@ class HwMediacodecPlayer
 	void initMediacodec();
 	void openFFmpegcodec();
 	void startMediacodec();
-	void testAMediacodecPlay(JNIEnv *env,
-							 jobject surface,
-							 const char *locationPath);
   private:
 	char location[NAME_MAX] = {};
 	ANativeWindow *nativeWindow = nullptr;
