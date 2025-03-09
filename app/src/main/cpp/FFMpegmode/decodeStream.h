@@ -12,7 +12,7 @@
 #include <condition_variable>
 #include <jni.h>
 
-#include "../CommonUtils.h"
+#include "CommonUtils.h"
 #include "audioFrameQueue.h"
 
 extern "C"

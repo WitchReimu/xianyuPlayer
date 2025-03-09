@@ -22,7 +22,10 @@ import com.example.xianyuplayer.vm.GlobalViewModel
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 修改倍速功能
+// TODO: 音频倍速功能
+// TODO: 网络播流
+// TODO: 将音频流与数据流编码为文件
+// TODO: 自己写一个歌词选择器 
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"
@@ -217,8 +220,6 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
-
-    external fun stringFromJNI(): String
 
     companion object {
         init {

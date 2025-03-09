@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.xianyuplayer.Constant
 import com.example.xianyuplayer.FragmentInstanceManager
 import com.example.xianyuplayer.MainActivity
+import com.example.xianyuplayer.MusicNativeMethod
 import com.example.xianyuplayer.PlayerApplication
 import com.example.xianyuplayer.R
 import com.example.xianyuplayer.ScanCustomActivity
@@ -186,7 +187,6 @@ class LocalFileFragment : Fragment(), View.OnClickListener {
                     return@setOnMenuItemClickListener true
                 }
             }
-
         }
     }
 

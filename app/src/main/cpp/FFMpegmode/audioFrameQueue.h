@@ -6,7 +6,7 @@
 #define AUDIOFRAMEQUEUE_H
 
 #include <vector>
-#include "../CommonUtils.h"
+#include "CommonUtils.h"
 #include <oboe/Oboe.h>
 
 extern "C"

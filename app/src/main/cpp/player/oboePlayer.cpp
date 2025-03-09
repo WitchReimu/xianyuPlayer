@@ -68,6 +68,7 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	  byteCount = samplesCount * sizeof(int16_t);
 	  fillData(int16Data, frame, byteCount);
 	  break;
+	case oboe::AudioFormat::I24:
 	case oboe::AudioFormat::I32:
 	  int32Data = static_cast<int32_t *>(audioData);
 	  byteCount = samplesCount * sizeof(int32_t);
@@ -76,7 +77,8 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	case oboe::AudioFormat::Float:
 	  floatData = static_cast<float *>(audioData);
 	  byteCount = samplesCount * sizeof(float);
-	  fillData(floatData, frame, byteCount);
+//	  fillData(floatData, frame, byteCount);
+	  sonicFillData(floatData, frame, samplesCount);
 	  break;
   }
 
@@ -212,17 +214,25 @@ bool oboePlayer::closePlay()
 	delete oboeAudioStream;
 	oboeAudioStream = nullptr;
   }
+  sonicDestroyStream(sonicStreamInstance);
   return result == oboe::Result::OK;
 }
 
 void oboePlayer::openStream()
 {
   oboe::AudioStreamBuilder audioBuilder;
+  readBuffer = static_cast<float *>(calloc(1, 1024));
+  readBufferLength = 1024;
+  int sampleRate = decoderStream->getDecodeFileSampleRate();
+  int channelCount = decoderStream->getDecodeFileChannelCount();
+  sonicStreamInstance = sonicCreateStream(sampleRate, channelCount);
+  sonicSetSpeed(sonicStreamInstance, sonicSpeed);
+  sonicSetRate(sonicStreamInstance, sonicRate);
   audioBuilder.setDirection(oboe::Direction::Output);
   audioBuilder.setAudioApi(oboe::AudioApi::AAudio);
   audioBuilder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
-  audioBuilder.setSampleRate(decoderStream->getDecodeFileSampleRate());
-  audioBuilder.setChannelCount(decoderStream->getDecodeFileChannelCount());
+  audioBuilder.setSampleRate(sampleRate);
+  audioBuilder.setChannelCount(channelCount);
 
   switch (decoderStream->getDecodeFileFormat())
   {
@@ -256,7 +266,60 @@ void oboePlayer::setPlayCircleType(const char *type)
   }
 }
 
-//todo:实现音频倍速播放功能
+void oboePlayer::sonicFillData(float *audioData,
+							   audioFrameQueue::audioFrame_t &frame,
+							   int frameSamplesCount)
+{
+
+  int available = sonicSamplesAvailable(sonicStreamInstance) * oboeAudioStream->getChannelCount();
+
+  if (available < frameSamplesCount)
+  {
+	float PDouble[frame.dataLength / sizeof(float)];
+	memcpy(PDouble, frame.buffer, frame.dataLength);
+	sonicWriteFloatToStream(sonicStreamInstance,
+							PDouble,
+							frame.dataLength /
+							(sizeof(float) * oboeAudioStream->getChannelCount()));
+
+	decoderStream->queue.consumeIndex = (decoderStream->queue.consumeIndex + 1) %
+										decoderStream->queue.length;
+	decoderStream->notifyCond();
+  }
+  available = sonicSamplesAvailable(sonicStreamInstance);
+
+  if (available > 0)
+  {
+	int samplesCountLength = frameSamplesCount * sizeof(float);
+
+	if (readBufferLength < samplesCountLength)
+	{
+	  readBufferLength = samplesCountLength;
+	  realloc(readBuffer, readBufferLength);
+	}
+	memset(readBuffer, 0, readBufferLength);
+	int readCount = sonicReadFloatFromStream(sonicStreamInstance,
+											 readBuffer,
+											 frameSamplesCount /
+											 oboeAudioStream->getChannelCount());
+	memcpy(audioData, readBuffer, samplesCountLength);
+  }
+}
+
+void oboePlayer::setSonicSpeed(float speed)
+{
+  if (speed <= 0)
+	return;
+  sonicSpeed = speed;
+}
+
+void oboePlayer::setSonicRate(float rate)
+{
+  if (rate < 0)
+	return;
+  sonicRate = rate;
+}
+
 template<typename T>
 int oboePlayer::fillData(T audioData, audioFrameQueue::audioFrame_t &frame, int byteCount)
 {

@@ -10,7 +10,7 @@
 #include <android/native_window_jni.h>
 #include <sys/stat.h>
 #include <string>
-#include "../CommonUtils.h"
+#include "CommonUtils.h"
 
 extern "C"
 {

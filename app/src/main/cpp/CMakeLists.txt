@@ -17,6 +17,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED ${root_source_file})
 
 find_package(oboe REQUIRED CONFIG)
 
+add_subdirectory(my_utils)
 add_subdirectory(FFMpegmode)
 add_subdirectory(player)
 

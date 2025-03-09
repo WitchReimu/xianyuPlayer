@@ -12,7 +12,7 @@ extern "C"
 
 #include <iostream>
 #include <jni.h>
-#include "../CommonUtils.h"
+#include "CommonUtils.h"
 
 class AudioAlbumCover
 {

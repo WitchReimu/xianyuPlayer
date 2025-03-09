@@ -4,7 +4,7 @@
 
 #include "NativeWindowRender.h"
 #include "oboePlayer.h"
-#include "../CommonUtils.h"
+#include "CommonUtils.h"
 #define TAG "NativeWindowRender"
 
 NativeWindowRender::NativeWindowRender(jobject nativeObject,

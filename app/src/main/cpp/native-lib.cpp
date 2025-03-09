@@ -289,13 +289,13 @@ void HwVideoStartPlay(JNIEnv *env, jobject nativeClass, jlong hwMediacodecPlayer
   }
 }
 
-JNIEXPORT
-jstring JNICALL Java_com_example_xianyuplayer_MainActivity_stringFromJNI(
-	JNIEnv *env,
-	jobject /* this */)
+void SetAudioSpeed(JNIEnv *env, jobject nativeClass, jfloat speed, jlong audioPtr)
 {
-  std::string hello = "Hello from C++";
-  return env->NewStringUTF(hello.c_str());
+  if (audioPtr == 0)
+	return;
+
+  oboePlayer *audioPlayer = reinterpret_cast<oboePlayer *>(audioPtr);
+  audioPlayer->setSonicSpeed(speed);
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -323,7 +323,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"setVideoState",           "(IJ)V",                                                                  (void *)SetVideoState},
 		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange},
 		{"hwVideoStreamInit",       "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)HwVideoStreamInit},
-		{"hwVideoStartPlay",        "(J)V",                                                                   (void *)HwVideoStartPlay}
+		{"hwVideoStartPlay",        "(J)V",                                                                   (void *)HwVideoStartPlay},
+		{"setAudioSpeed",           "(FJ)V",                                                                  (void *)SetAudioSpeed}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,
