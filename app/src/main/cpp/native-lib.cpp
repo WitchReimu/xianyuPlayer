@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include "VideoEncodeStream.h"
 #include "fileMetaDataInfo.h"
 #include "decodeStream.h"
 #include "oboePlayer.h"
@@ -340,4 +341,19 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
   return JNI_VERSION_1_6;
 }
 
+}
+VideoEncodeStream *videoEncode;
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_xianyuplayer_MusicNativeMethod_testEncode(JNIEnv *env, jobject thiz)
+{
+  videoEncode = new VideoEncodeStream();
+  videoEncode->transformTest();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_xianyuplayer_MusicNativeMethod_testEncodeStop(JNIEnv *env, jobject thiz)
+{
+  delete videoEncode;
 }

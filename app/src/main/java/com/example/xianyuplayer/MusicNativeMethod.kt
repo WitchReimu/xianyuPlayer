@@ -59,6 +59,8 @@ class MusicNativeMethod {
     external fun screenOrientationChange(surface: Surface, windowPtr: Long = nativeWindowPtr)
     external fun hwVideoStartPlay(playerPtr: Long = hwPlayerPtr)
     external fun setAudioSpeed(speed: Float,audioPtr: Long = playerPtr)
+    external fun testEncode();
+    external fun testEncodeStop();
 
     fun initHwVideoStream(locationPath: String, surface: Surface) {
         hwPlayerPtr = hwVideoStreamInit(locationPath, surface)

@@ -22,10 +22,9 @@ import com.example.xianyuplayer.vm.GlobalViewModel
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 音频倍速功能
 // TODO: 网络播流
-// TODO: 将音频流与数据流编码为文件
-// TODO: 自己写一个歌词选择器 
+// TODO: 自己写一个歌词选择器
+// TODO: 使用libyuv实现yuv转Rgb过程
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"
@@ -52,6 +51,17 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
         globalViewModel.playListLiveData.observe(this) {
             globalViewModel.playList.clear()
             globalViewModel.playList.addAll(it)
+        }
+
+        // 将音频流与数据流编码为文件 示例按钮
+        binding.btnEncodeTest.setOnClickListener {
+            Thread {
+                MusicNativeMethod.getInstance().testEncode()
+            }.start()
+        }
+
+        binding.btnEncodeStop.setOnClickListener {
+            MusicNativeMethod.getInstance().testEncodeStop()
         }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
