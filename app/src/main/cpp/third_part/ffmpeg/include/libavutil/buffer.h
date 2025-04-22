@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -47,7 +47,7 @@
  * reference -- av_buffer_alloc() to just allocate a new buffer, and
  * av_buffer_create() to wrap an existing array in an AVBuffer. From an existing
  * reference, additional references may be created with av_buffer_ref().
- * Use av_buffer_unref() to free a reference (this will automatically reset the
+ * Use av_buffer_unref() to free a reference (this will automatically free the
  * data once all the references are freed).
  *
  * The convention throughout this API and the rest of FFmpeg is such that the
@@ -123,7 +123,7 @@ AVBufferRef *av_buffer_allocz(size_t size);
  * @param data   data array
  * @param size   size of data in bytes
  * @param free   a callback for freeing this buffer's data
- * @param opaque parameter to be got for processing or passed to reset
+ * @param opaque parameter to be got for processing or passed to free
  * @param flags  a combination of AV_BUFFER_FLAG_*
  *
  * @return an AVBufferRef referring to data on success, NULL on failure.
@@ -133,7 +133,7 @@ AVBufferRef *av_buffer_create(uint8_t *data, size_t size,
                               void *opaque, int flags);
 
 /**
- * Default reset callback, which calls av_free() on the buffer data.
+ * Default free callback, which calls av_free() on the buffer data.
  * This function is meant to be passed to av_buffer_create(), not called
  * directly.
  */
@@ -148,7 +148,7 @@ void av_buffer_default_free(void *opaque, uint8_t *data);
 AVBufferRef *av_buffer_ref(const AVBufferRef *buf);
 
 /**
- * Free a given reference and automatically reset the buffer if there are no more
+ * Free a given reference and automatically free the buffer if there are no more
  * references to it.
  *
  * @param buf the reference to be freed. The pointer is set to NULL on return.
@@ -223,7 +223,7 @@ int av_buffer_replace(AVBufferRef **dst, const AVBufferRef *src);
  * @ingroup lavu_data
  *
  * @{
- * AVBufferPool is an API for a lock-reset thread-safe pool of AVBuffers.
+ * AVBufferPool is an API for a lock-free thread-safe pool of AVBuffers.
  *
  * Frequently allocating and freeing large buffers may be slow. AVBufferPool is
  * meant to solve this in cases when the caller needs a set of buffers of the

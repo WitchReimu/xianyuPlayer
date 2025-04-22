@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -61,6 +61,11 @@ typedef struct AVCUDADeviceContext {
  * Use primary device context instead of creating a new one.
  */
 #define AV_CUDA_USE_PRIMARY_CONTEXT (1 << 0)
+
+/**
+ * Use current device context instead of creating a new one.
+ */
+#define AV_CUDA_USE_CURRENT_CONTEXT (1 << 1)
 
 /**
  * @}

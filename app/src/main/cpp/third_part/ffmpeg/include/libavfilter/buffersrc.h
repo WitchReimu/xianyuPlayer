@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -110,19 +110,16 @@ typedef struct AVBufferSrcParameters {
      */
     int sample_rate;
 
-#if FF_API_OLD_CHANNEL_LAYOUT
-    /**
-     * Audio only, the audio channel layout
-     * @deprecated use ch_layout
-     */
-    attribute_deprecated
-    uint64_t channel_layout;
-#endif
-
     /**
      * Audio only, the audio channel layout
      */
     AVChannelLayout ch_layout;
+
+    /**
+     * Video only, the YUV colorspace and range.
+     */
+    enum AVColorSpace color_space;
+    enum AVColorRange color_range;
 } AVBufferSrcParameters;
 
 /**

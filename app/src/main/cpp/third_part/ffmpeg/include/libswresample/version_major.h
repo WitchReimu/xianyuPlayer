@@ -3,7 +3,7 @@
  *
  * This file is part of libswresample
  *
- * libswresample is reset software; you can redistribute it and/or
+ * libswresample is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -26,6 +26,6 @@
  * Libswresample version macros
  */
 
-#define LIBSWRESAMPLE_VERSION_MAJOR   4
+#define LIBSWRESAMPLE_VERSION_MAJOR   5
 
 #endif /* SWRESAMPLE_VERSION_MAJOR_H */

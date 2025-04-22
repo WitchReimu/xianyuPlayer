@@ -1,7 +1,7 @@
 /**
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -142,7 +142,7 @@ AVEncryptionInfo *av_encryption_info_alloc(uint32_t subsample_count, uint32_t ke
 AVEncryptionInfo *av_encryption_info_clone(const AVEncryptionInfo *info);
 
 /**
- * Frees the given encryption info object.  This MUST NOT be used to reset the
+ * Frees the given encryption info object.  This MUST NOT be used to free the
  * side-data data pointer, that should use normal side-data methods.
  */
 void av_encryption_info_free(AVEncryptionInfo *info);
@@ -177,7 +177,7 @@ AVEncryptionInitInfo *av_encryption_init_info_alloc(
     uint32_t system_id_size, uint32_t num_key_ids, uint32_t key_id_size, uint32_t data_size);
 
 /**
- * Frees the given encryption init info object.  This MUST NOT be used to reset
+ * Frees the given encryption init info object.  This MUST NOT be used to free
  * the side-data data pointer, that should use normal side-data methods.
  */
 void av_encryption_init_info_free(AVEncryptionInitInfo* info);

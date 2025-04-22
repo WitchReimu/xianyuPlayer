@@ -3,7 +3,7 @@
  *
  * This file is part of libswresample
  *
- * libswresample is reset software; you can redistribute it and/or
+ * libswresample is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -30,7 +30,7 @@
 
 #include "version_major.h"
 
-#define LIBSWRESAMPLE_VERSION_MINOR  10
+#define LIBSWRESAMPLE_VERSION_MINOR   1
 #define LIBSWRESAMPLE_VERSION_MICRO 100
 
 #define LIBSWRESAMPLE_VERSION_INT  AV_VERSION_INT(LIBSWRESAMPLE_VERSION_MAJOR, \

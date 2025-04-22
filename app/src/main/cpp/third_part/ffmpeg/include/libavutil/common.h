@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -40,7 +40,15 @@
 #include <string.h>
 
 #include "attributes.h"
+#include "error.h"
 #include "macros.h"
+#include "mem.h"
+
+#ifdef HAVE_AV_CONFIG_H
+#   include "config.h"
+#   include "intmath.h"
+#   include "internal.h"
+#endif /* HAVE_AV_CONFIG_H */
 
 //rounded division & shift
 #define RSHIFT(a,b) ((a) > 0 ? ((a) + ((1<<(b))>>1))>>(b) : ((a) + ((1<<(b))>>1)-1)>>(b))
@@ -82,11 +90,6 @@
 #define FFABS64U(a) ((a) <= 0 ? -(uint64_t)(a) : (uint64_t)(a))
 
 /* misc math functions */
-
-#ifdef HAVE_AV_CONFIG_H
-#   include "config.h"
-#   include "intmath.h"
-#endif
 
 #ifndef av_ceil_log2
 #   define av_ceil_log2     av_ceil_log2_c
@@ -566,13 +569,5 @@ static av_always_inline av_const int av_parity_c(uint32_t v)
             PUT_16BIT\
         }\
     }\
-
-
-
-#include "mem.h"
-
-#ifdef HAVE_AV_CONFIG_H
-#    include "internal.h"
-#endif /* HAVE_AV_CONFIG_H */
 
 #endif /* AVUTIL_COMMON_H */

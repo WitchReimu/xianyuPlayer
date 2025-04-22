@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -136,8 +136,8 @@ typedef struct AVVideoBlockParams {
     int32_t delta_qp;
 } AVVideoBlockParams;
 
-/*
- * Get the block at the specified {@code idx}. Must be between 0 and nb_blocks.
+/**
+ * Get the block at the specified {@code idx}. Must be between 0 and nb_blocks - 1.
  */
 static av_always_inline AVVideoBlockParams*
 av_video_enc_params_block(AVVideoEncParams *par, unsigned int idx)

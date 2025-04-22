@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -23,6 +23,52 @@
 
 #include "frame.h"
 #include "rational.h"
+
+/**
+ * HDR Vivid three spline params.
+ */
+typedef struct AVHDRVivid3SplineParams {
+    /**
+     * The mode of three Spline. the value shall be in the range
+     * of 0 to 3, inclusive.
+     */
+    int th_mode;
+
+    /**
+     * three_Spline_TH_enable_MB is in the range of 0.0 to 1.0, inclusive
+     * and in multiples of 1.0/255.
+     *
+     */
+    AVRational th_enable_mb;
+
+    /**
+     * 3Spline_TH_enable of three Spline.
+     * The value shall be in the range of 0.0 to 1.0, inclusive.
+     * and in multiples of 1.0/4095.
+     */
+    AVRational th_enable;
+
+    /**
+     * 3Spline_TH_Delta1 of three Spline.
+     * The value shall be in the range of 0.0 to 0.25, inclusive,
+     * and in multiples of 0.25/1023.
+     */
+    AVRational th_delta1;
+
+    /**
+     * 3Spline_TH_Delta2 of three Spline.
+     * The value shall be in the range of 0.0 to 0.25, inclusive,
+     * and in multiples of 0.25/1023.
+     */
+    AVRational th_delta2;
+
+    /**
+     * 3Spline_enable_Strength of three Spline.
+     * The value shall be in the range of 0.0 to 1.0, inclusive,
+     * and in multiples of 1.0/255.
+     */
+    AVRational enable_strength;
+} AVHDRVivid3SplineParams;
 
 /**
  * Color tone mapping parameters at a processing window in a dynamic metadata for
@@ -122,46 +168,61 @@ typedef struct AVHDRVividColorToneMappingParams {
      */
     int three_Spline_num;
 
+#if FF_API_HDR_VIVID_THREE_SPLINE
     /**
      * The mode of three Spline. the value shall be in the range
      * of 0 to 3, inclusive.
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     int three_Spline_TH_mode;
 
     /**
      * three_Spline_TH_enable_MB is in the range of 0.0 to 1.0, inclusive
      * and in multiples of 1.0/255.
-     *
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     AVRational three_Spline_TH_enable_MB;
 
     /**
      * 3Spline_TH_enable of three Spline.
      * The value shall be in the range of 0.0 to 1.0, inclusive.
      * and in multiples of 1.0/4095.
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     AVRational three_Spline_TH_enable;
 
     /**
      * 3Spline_TH_Delta1 of three Spline.
      * The value shall be in the range of 0.0 to 0.25, inclusive,
      * and in multiples of 0.25/1023.
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     AVRational three_Spline_TH_Delta1;
 
     /**
      * 3Spline_TH_Delta2 of three Spline.
      * The value shall be in the range of 0.0 to 0.25, inclusive,
      * and in multiples of 0.25/1023.
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     AVRational three_Spline_TH_Delta2;
 
     /**
      * 3Spline_enable_Strength of three Spline.
      * The value shall be in the range of 0.0 to 1.0, inclusive,
      * and in multiples of 1.0/255.
+     * @deprecated Use three_spline instead
      */
+    attribute_deprecated
     AVRational three_Spline_enable_Strength;
+#endif
+
+    AVHDRVivid3SplineParams three_spline[2];
 } AVHDRVividColorToneMappingParams;
 
 

@@ -5,7 +5,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -31,7 +31,11 @@
  * @author Jordi Ortiz
  */
 
-#include "avcodec.h"
+#include <stddef.h>
+#include <stdint.h>
+
+#include "libavutil/pixfmt.h"
+#include "libavutil/rational.h"
 
 /**
  * The spec limits the number of wavelet decompositions to 4 for both
@@ -117,7 +121,7 @@ typedef struct AVDiracSeqHeader {
  * Parse a Dirac sequence header.
  *
  * @param dsh this function will allocate and fill an AVDiracSeqHeader struct
- *            and write it into this pointer. The caller must reset it with
+ *            and write it into this pointer. The caller must free it with
  *            av_free().
  * @param buf the data buffer
  * @param buf_size the size of the data buffer in bytes

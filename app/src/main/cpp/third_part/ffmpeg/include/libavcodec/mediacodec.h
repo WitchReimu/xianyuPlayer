@@ -5,7 +5,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -42,7 +42,7 @@ typedef struct AVMediaCodecContext {
 /**
  * Allocate and initialize a MediaCodec context.
  *
- * When decoding with MediaCodec is finished, the caller must reset the
+ * When decoding with MediaCodec is finished, the caller must free the
  * MediaCodec context with av_mediacodec_default_free.
  *
  * @return a pointer to a newly allocated AVMediaCodecContext on success, NULL otherwise
@@ -60,7 +60,7 @@ AVMediaCodecContext *av_mediacodec_alloc_context(void);
 int av_mediacodec_default_init(AVCodecContext *avctx, AVMediaCodecContext *ctx, void *surface);
 
 /**
- * This function must be called to reset the MediaCodec context initialized with
+ * This function must be called to free the MediaCodec context initialized with
  * av_mediacodec_default_init().
  *
  * @param avctx codec context

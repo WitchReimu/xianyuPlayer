@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -89,7 +89,7 @@ void av_thread_message_queue_set_err_recv(AVThreadMessageQueue *mq,
                                           int err);
 
 /**
- * Set the optional reset message callback function which will be called if an
+ * Set the optional free message callback function which will be called if an
  * operation is removing messages from the queue.
  */
 void av_thread_message_queue_set_free_func(AVThreadMessageQueue *mq,
@@ -106,7 +106,7 @@ int av_thread_message_queue_nb_elems(AVThreadMessageQueue *mq);
 /**
  * Flush the message queue
  *
- * This function is mostly equivalent to reading and reset-ing every message
+ * This function is mostly equivalent to reading and free-ing every message
  * except that it will be done in a single operation (no lock/unlock between
  * reads).
  */

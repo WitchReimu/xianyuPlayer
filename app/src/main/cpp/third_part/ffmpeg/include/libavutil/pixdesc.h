@@ -4,7 +4,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -156,6 +156,11 @@ typedef struct AVPixFmtDescriptor {
  * single, or half) should be determined by the pixel size (64, 32, or 16 bits).
  */
 #define AV_PIX_FMT_FLAG_FLOAT        (1 << 9)
+
+/**
+ * The pixel format contains XYZ-like data (as opposed to YUV/RGB/grayscale).
+ */
+#define AV_PIX_FMT_FLAG_XYZ          (1 << 10)
 
 /**
  * Return the number of bits per pixel used by the pixel format

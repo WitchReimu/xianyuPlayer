@@ -4,7 +4,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -39,7 +39,7 @@ struct AVCAST5;
 
 /**
   * Allocate an AVCAST5 context
-  * To reset the struct: av_free(ptr)
+  * To free the struct: av_free(ptr)
   */
 struct AVCAST5 *av_cast5_alloc(void);
 /**

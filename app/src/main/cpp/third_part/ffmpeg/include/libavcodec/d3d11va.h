@@ -6,7 +6,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -44,9 +44,6 @@
  *
  * @{
  */
-
-#define FF_DXVA2_WORKAROUND_SCALING_LIST_ZIGZAG 1 ///< Work around for Direct3D11 and old UVD/UVD+ ATI video cards
-#define FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO    2 ///< Work around for Direct3D11 and old Intel GPUs with ClearVideo interface
 
 /**
  * This structure is used to provides the necessary configurations and data

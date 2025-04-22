@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -78,8 +78,8 @@
  * @{
  */
 
-#define LIBAVUTIL_VERSION_MAJOR  58
-#define LIBAVUTIL_VERSION_MINOR   2
+#define LIBAVUTIL_VERSION_MAJOR  59
+#define LIBAVUTIL_VERSION_MINOR   8
 #define LIBAVUTIL_VERSION_MICRO 100
 
 #define LIBAVUTIL_VERSION_INT   AV_VERSION_INT(LIBAVUTIL_VERSION_MAJOR, \
@@ -105,14 +105,13 @@
  * @{
  */
 
-#define FF_API_FIFO_PEEK2               (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_FIFO_OLD_API             (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_XVMC                     (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_OLD_CHANNEL_LAYOUT       (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_AV_FOPEN_UTF8            (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_PKT_DURATION             (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_REORDERED_OPAQUE         (LIBAVUTIL_VERSION_MAJOR < 59)
-#define FF_API_FRAME_PICTURE_NUMBER     (LIBAVUTIL_VERSION_MAJOR < 59)
+#define FF_API_HDR_VIVID_THREE_SPLINE   (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_FRAME_PKT                (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_INTERLACED_FRAME         (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_FRAME_KEY                (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_PALETTE_HAS_CHANGED      (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_VULKAN_CONTIGUOUS_MEMORY (LIBAVUTIL_VERSION_MAJOR < 60)
+#define FF_API_H274_FILM_GRAIN_VCS      (LIBAVUTIL_VERSION_MAJOR < 60)
 
 /**
  * @}

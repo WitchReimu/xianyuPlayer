@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -105,7 +105,7 @@ int av_expr_count_vars(AVExpr *e, unsigned *counter, int size);
  * @param e the AVExpr to track user provided functions in
  * @param counter a zero-initialized array where the count of each function will be stored
  *                if you passed 5 functions with 2 arguments to av_expr_parse()
- *                then for arg=2 this will use upto 5 entries.
+ *                then for arg=2 this will use up to 5 entries.
  * @param size size of array
  * @param arg number of arguments the counted functions have
  * @return 0 on success, a negative value indicates that no expression or array was passed

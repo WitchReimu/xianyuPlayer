@@ -4,7 +4,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -167,6 +167,10 @@ static av_always_inline AVRational av_inv_q(AVRational q)
  *
  * In case of infinity, the returned value is expressed as `{1, 0}` or
  * `{-1, 0}` depending on the sign.
+ *
+ * In general rational numbers with |num| <= 1<<26 && |den| <= 1<<26
+ * can be recovered exactly from their double representation.
+ * (no exceptions were found within 1B random ones)
  *
  * @param d   `double` to convert
  * @param max Maximum allowed numerator and denominator

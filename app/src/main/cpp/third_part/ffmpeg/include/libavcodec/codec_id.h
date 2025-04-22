@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -253,9 +253,6 @@ enum AVCodecID {
     AV_CODEC_ID_AVRP,
     AV_CODEC_ID_012V,
     AV_CODEC_ID_AVUI,
-#if FF_API_AYUV_CODECID
-    AV_CODEC_ID_AYUV,
-#endif
     AV_CODEC_ID_TARGA_Y216,
     AV_CODEC_ID_V308,
     AV_CODEC_ID_V408,
@@ -320,6 +317,11 @@ enum AVCodecID {
     AV_CODEC_ID_WBMP,
     AV_CODEC_ID_MEDIA100,
     AV_CODEC_ID_VQC,
+    AV_CODEC_ID_PDV,
+    AV_CODEC_ID_EVC,
+    AV_CODEC_ID_RTV1,
+    AV_CODEC_ID_VMIX,
+    AV_CODEC_ID_LEAD,
 
     /* various PCM "codecs" */
     AV_CODEC_ID_FIRST_AUDIO = 0x10000,     ///< A dummy id pointing at the start of audio codecs
@@ -538,6 +540,9 @@ enum AVCodecID {
     AV_CODEC_ID_FTR,
     AV_CODEC_ID_WAVARC,
     AV_CODEC_ID_RKA,
+    AV_CODEC_ID_AC4,
+    AV_CODEC_ID_OSQ,
+    AV_CODEC_ID_QOA,
 
     /* subtitle codecs */
     AV_CODEC_ID_FIRST_SUBTITLE = 0x17000,          ///< A dummy ID pointing at the start of subtitle codecs.
@@ -582,6 +587,7 @@ enum AVCodecID {
     AV_CODEC_ID_DVD_NAV,
     AV_CODEC_ID_TIMED_ID3,
     AV_CODEC_ID_BIN_DATA,
+    AV_CODEC_ID_SMPTE_2038,
 
 
     AV_CODEC_ID_PROBE = 0x19000, ///< codec_id is not known (like AV_CODEC_ID_NONE) but lavf should attempt to identify it

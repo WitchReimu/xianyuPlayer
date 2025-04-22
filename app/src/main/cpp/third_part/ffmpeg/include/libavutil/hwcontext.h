@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -37,9 +37,8 @@ enum AVHWDeviceType {
     AV_HWDEVICE_TYPE_OPENCL,
     AV_HWDEVICE_TYPE_MEDIACODEC,
     AV_HWDEVICE_TYPE_VULKAN,
+    AV_HWDEVICE_TYPE_D3D12VA,
 };
-
-typedef struct AVHWDeviceInternal AVHWDeviceInternal;
 
 /**
  * This struct aggregates all the (hardware/vendor-specific) "high-level" state,
@@ -63,12 +62,6 @@ typedef struct AVHWDeviceContext {
      * A class for logging. Set by av_hwdevice_ctx_alloc().
      */
     const AVClass *av_class;
-
-    /**
-     * Private data used internally by libavutil. Must not be accessed in any
-     * way by the caller.
-     */
-    AVHWDeviceInternal *internal;
 
     /**
      * This field identifies the underlying API used for hardware access.
@@ -104,12 +97,10 @@ typedef struct AVHWDeviceContext {
     void (*free)(struct AVHWDeviceContext *ctx);
 
     /**
-     * Arbitrary user data, to be used e.g. by the reset() callback.
+     * Arbitrary user data, to be used e.g. by the free() callback.
      */
     void *user_opaque;
 } AVHWDeviceContext;
-
-typedef struct AVHWFramesInternal AVHWFramesInternal;
 
 /**
  * This struct describes a set or pool of "hardware" frames (i.e. those with
@@ -126,12 +117,6 @@ typedef struct AVHWFramesContext {
      * A class for logging.
      */
     const AVClass *av_class;
-
-    /**
-     * Private data used internally by libavutil. Must not be accessed in any
-     * way by the caller.
-     */
-    AVHWFramesInternal *internal;
 
     /**
      * A reference to the parent AVHWDeviceContext. This reference is owned and
@@ -152,9 +137,12 @@ typedef struct AVHWFramesContext {
      * The format-specific data, allocated and freed automatically along with
      * this context.
      *
-     * Should be cast by the user to the format-specific context defined in the
-     * corresponding header (hwframe_*.h) and filled as described in the
-     * documentation before calling av_hwframe_ctx_init().
+     * The user shall ignore this field if the corresponding format-specific
+     * header (hwcontext_*.h) does not define a context to be used as
+     * AVHWFramesContext.hwctx.
+     *
+     * Otherwise, it should be cast by the user to said context and filled
+     * as described in the documentation before calling av_hwframe_ctx_init().
      *
      * After any frames using this context are created, the contents of this
      * struct should not be modified by the caller.
@@ -170,7 +158,7 @@ typedef struct AVHWFramesContext {
     void (*free)(struct AVHWFramesContext *ctx);
 
     /**
-     * Arbitrary user data, to be used e.g. by the reset() callback.
+     * Arbitrary user data, to be used e.g. by the free() callback.
      */
     void *user_opaque;
 
@@ -180,7 +168,7 @@ typedef struct AVHWFramesContext {
      * The buffers returned by calling av_buffer_pool_get() on this pool must
      * have the properties described in the documentation in the corresponding hw
      * type's header (hwcontext_*.h). The pool will be freed strictly before
-     * this struct's reset() callback is invoked.
+     * this struct's free() callback is invoked.
      *
      * This field may be NULL, then libavutil will attempt to allocate a pool
      * internally. Note that certain device types enforce pools allocated at
@@ -284,7 +272,7 @@ int av_hwdevice_ctx_init(AVBufferRef *ref);
  * av_hwdevice_ctx_alloc()/av_hwdevice_ctx_init().
  *
  * The returned context is already initialized and ready for use, the caller
- * should not call av_hwdevice_ctx_init() on it. The user_opaque/reset fields of
+ * should not call av_hwdevice_ctx_init() on it. The user_opaque/free fields of
  * the created AVHWDeviceContext are set by this function and should not be
  * touched by the caller.
  *
@@ -481,8 +469,8 @@ typedef struct AVHWFramesConstraints {
 
 /**
  * Allocate a HW-specific configuration structure for a given HW device.
- * After use, the user must reset all members as required by the specific
- * hardware structure being used, then reset the structure itself with
+ * After use, the user must free all members as required by the specific
+ * hardware structure being used, then free the structure itself with
  * av_free().
  *
  * @param device_ctx a reference to the associated AVHWDeviceContext.

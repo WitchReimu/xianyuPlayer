@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -52,29 +52,12 @@ int av_file_map(const char *filename, uint8_t **bufptr, size_t *size,
                 int log_offset, void *log_ctx);
 
 /**
- * Unmap or reset the buffer bufptr created by av_file_map().
+ * Unmap or free the buffer bufptr created by av_file_map().
  *
  * @param bufptr the buffer previously created with av_file_map()
  * @param size size in bytes of bufptr, must be the same as returned
  * by av_file_map()
  */
 void av_file_unmap(uint8_t *bufptr, size_t size);
-
-#if FF_API_AV_FOPEN_UTF8
-/**
- * Wrapper to work around the lack of mkstemp() on mingw.
- * Also, tries to create file in /tmp first, if possible.
- * *prefix can be a character constant; *filename will be allocated internally.
- * @return file descriptor of opened file (or negative value corresponding to an
- * AVERROR code on error)
- * and opened file name in **filename.
- * @note On very old libcs it is necessary to set a secure umask before
- *       calling this, av_tempfile() can't call umask itself as it is used in
- *       libraries and could interfere with the calling application.
- * @deprecated as fd numbers cannot be passed saftely between libs on some platforms
- */
-attribute_deprecated
-int av_tempfile(const char *prefix, char **filename, int log_offset, void *log_ctx);
-#endif
 
 #endif /* AVUTIL_FILE_H */

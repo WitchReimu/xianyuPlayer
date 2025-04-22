@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -39,9 +39,12 @@
  * depending on application usage, so it is preferable to let CoreVideo manage
  * the pool using the default implementation.
  *
- * Currently AVHWDeviceContext.hwctx and AVHWFramesContext.hwctx are always
- * NULL.
+ * Currently AVHWDeviceContext.hwctx are always NULL.
  */
+
+typedef struct AVVTFramesContext {
+    enum AVColorRange color_range;
+} AVVTFramesContext;
 
 /**
  * Convert a VideoToolbox (actually CoreVideo) format to AVPixelFormat.

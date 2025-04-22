@@ -5,7 +5,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -42,5 +42,26 @@ int av_jni_set_java_vm(void *vm, void *log_ctx);
  * @return a pointer to the Java virtual machine
  */
 void *av_jni_get_java_vm(void *log_ctx);
+
+/*
+ * Set the Android application context which will be used to retrieve the Android
+ * content resolver to handle content uris.
+ *
+ * This function is only available on Android.
+ *
+ * @param app_ctx global JNI reference to the Android application context
+ * @return 0 on success, < 0 otherwise
+ */
+int av_jni_set_android_app_ctx(void *app_ctx, void *log_ctx);
+
+/*
+ * Get the Android application context that has been set with
+ * av_jni_set_android_app_ctx.
+ *
+ * This function is only available on Android.
+ *
+ * @return a pointer the the Android application context
+ */
+void *av_jni_get_android_app_ctx(void);
 
 #endif /* AVCODEC_JNI_H */

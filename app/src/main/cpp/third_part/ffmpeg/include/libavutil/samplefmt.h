@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -246,7 +246,7 @@ int av_samples_alloc_array_and_samples(uint8_t ***audio_data, int *linesize, int
  * @param nb_channels number of audio channels
  * @param sample_fmt audio sample format
  */
-int av_samples_copy(uint8_t **dst, uint8_t * const *src, int dst_offset,
+int av_samples_copy(uint8_t * const *dst, uint8_t * const *src, int dst_offset,
                     int src_offset, int nb_samples, int nb_channels,
                     enum AVSampleFormat sample_fmt);
 
@@ -259,7 +259,7 @@ int av_samples_copy(uint8_t **dst, uint8_t * const *src, int dst_offset,
  * @param nb_channels number of audio channels
  * @param sample_fmt  audio sample format
  */
-int av_samples_set_silence(uint8_t **audio_data, int offset, int nb_samples,
+int av_samples_set_silence(uint8_t * const *audio_data, int offset, int nb_samples,
                            int nb_channels, enum AVSampleFormat sample_fmt);
 
 /**

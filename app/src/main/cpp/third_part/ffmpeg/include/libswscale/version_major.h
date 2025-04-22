@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -24,7 +24,7 @@
  * swscale version macros
  */
 
-#define LIBSWSCALE_VERSION_MAJOR   7
+#define LIBSWSCALE_VERSION_MAJOR   8
 
 /**
  * FF_API_* defines may be placed below to indicate public API that will be

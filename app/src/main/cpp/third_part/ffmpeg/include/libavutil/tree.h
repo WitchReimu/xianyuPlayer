@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -77,7 +77,7 @@ void *av_tree_find(const struct AVTreeNode *root, void *key,
  *              the root node can change during insertions, this is required
  *              to keep the tree balanced.
  * @param key  pointer to the element key to insert in the tree
- * @param next Used to allocate and reset AVTreeNodes. For insertion the user
+ * @param next Used to allocate and free AVTreeNodes. For insertion the user
  *             must set it to an allocated and zeroed object of at least
  *             av_tree_node_size bytes size. av_tree_insert() will set it to
  *             NULL if it has been consumed.

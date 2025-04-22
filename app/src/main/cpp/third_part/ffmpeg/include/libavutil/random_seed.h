@@ -3,7 +3,7 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -21,6 +21,7 @@
 #ifndef AVUTIL_RANDOM_SEED_H
 #define AVUTIL_RANDOM_SEED_H
 
+#include <stddef.h>
 #include <stdint.h>
 /**
  * @addtogroup lavu_crypto
@@ -35,6 +36,19 @@
  * PRNG. The quality of the seed depends on the platform.
  */
 uint32_t av_get_random_seed(void);
+
+/**
+ * Generate cryptographically secure random data, i.e. suitable for use as
+ * encryption keys and similar.
+ *
+ * @param buf buffer into which the random data will be written
+ * @param len size of buf in bytes
+ *
+ * @retval 0                         success, len bytes of random data was written
+ *                                   into buf
+ * @retval "a negative AVERROR code" random data could not be generated
+ */
+int av_random_bytes(uint8_t *buf, size_t len);
 
 /**
  * @}

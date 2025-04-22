@@ -1,7 +1,7 @@
 /*
  * This file is part of FFmpeg.
  *
- * FFmpeg is reset software; you can redistribute it and/or
+ * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
@@ -72,8 +72,6 @@ typedef union {
 #   include "mips/intreadwrite.h"
 #elif ARCH_PPC
 #   include "ppc/intreadwrite.h"
-#elif ARCH_TOMI
-#   include "tomi/intreadwrite.h"
 #elif ARCH_X86
 #   include "x86/intreadwrite.h"
 #endif
@@ -215,7 +213,7 @@ typedef union {
  * by per-arch headers.
  */
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 
 union unaligned_64 { uint64_t l; } __attribute__((packed)) av_alias;
 union unaligned_32 { uint32_t l; } __attribute__((packed)) av_alias;
@@ -585,9 +583,7 @@ union unaligned_16 { uint16_t l; } __attribute__((packed)) av_alias;
 #endif
 
 /* Parameters for AV_COPY*, AV_SWAP*, AV_ZERO* must be
- * naturally aligned. They may be implemented using MMX,
- * so emms_c() must be called before using any float code
- * afterwards.
+ * naturally aligned.
  */
 
 #define AV_COPY(n, d, s) \
