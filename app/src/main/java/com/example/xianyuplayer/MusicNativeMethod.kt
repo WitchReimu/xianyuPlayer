@@ -1,12 +1,14 @@
 package com.example.xianyuplayer
 
 import android.content.res.AssetManager
+import android.media.Image.Plane
 import android.util.Log
 import android.view.Surface
 import com.example.xianyuplayer.database.MusicMetadata
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.nio.ByteBuffer
 
 private const val TAG = "MusicNativeMethod"
 
@@ -20,7 +22,10 @@ class MusicNativeMethod {
 
     //视频播放器与解码指针
     private var nativeWindowPtr: Long = 0
+
+    //硬解码播放器指针
     private var hwPlayerPtr = 0L
+    private var rtspLiveStreamPtr = 0L
 
     /**
      * @param filePath 文件路径应为绝对路径
@@ -39,6 +44,7 @@ class MusicNativeMethod {
 
     private external fun hwVideoStreamInit(locationPath: String, surface: Surface): Long
 
+    private external fun _initRtspPushLiveStream(rtspUrl: String): Long
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
         absolutePath: String
@@ -58,9 +64,41 @@ class MusicNativeMethod {
     external fun setVideoState(state: Int, windowPtr: Long = nativeWindowPtr)
     external fun screenOrientationChange(surface: Surface, windowPtr: Long = nativeWindowPtr)
     external fun hwVideoStartPlay(playerPtr: Long = hwPlayerPtr)
-    external fun setAudioSpeed(speed: Float,audioPtr: Long = playerPtr)
-    external fun testEncode();
-    external fun testEncodeStop();
+    external fun setAudioSpeed(speed: Float, audioPtr: Long = playerPtr)
+    external fun testEncode()
+    external fun testEncodeStop()
+    external fun queueInputBuffer(
+        plane: Array<Plane>,
+        imageFormat: Int,
+        rtspStreamPtr: Long = rtspLiveStreamPtr
+    )
+
+    external fun pushRtspFrame(
+        planes: Array<LiveStreamActivity.InputBufferPlane>,
+        arraySize: Int,
+        rowStride: Int,
+        width: Int,
+        height: Int,
+        rtspStreamPtr: Long = rtspLiveStreamPtr
+    )
+
+    external fun setRtspExtraData(
+        byteArray: ByteBuffer,
+        arrayLength: Int,
+        rtspStreamPtr: Long = rtspLiveStreamPtr
+    )
+
+    external fun pushRtspData(
+        byteArray: ByteBuffer,
+        bufferRemaining: Int,
+        ptsUs: Long,
+        isKeyFrame:Boolean,
+        rtspStreamPtr: Long = rtspLiveStreamPtr
+    )
+
+    fun initRtspPushLiveStream(rtspUrl: String) {
+        rtspLiveStreamPtr = _initRtspPushLiveStream(rtspUrl)
+    }
 
     fun initHwVideoStream(locationPath: String, surface: Surface) {
         hwPlayerPtr = hwVideoStreamInit(locationPath, surface)

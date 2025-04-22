@@ -7,6 +7,7 @@
 #include "AudioAlbumCover.h"
 #include "NativeWindowRender.h"
 #include "HwMediacodecPlayer.h"
+#include "PushRtspLiveStream.h"
 #define TAG "native-lib"
 
 extern "C"
@@ -299,6 +300,109 @@ void SetAudioSpeed(JNIEnv *env, jobject nativeClass, jfloat speed, jlong audioPt
   audioPlayer->setSonicSpeed(speed);
 }
 
+long initRtspPushLiveStream(JNIEnv *env, jobject nativeClass, jstring rtspUrl)
+{
+  const char *str_rtspUrl = env->GetStringUTFChars(rtspUrl, nullptr);
+  PushRtspLiveStream *rtspStream = new PushRtspLiveStream(str_rtspUrl);
+  env->ReleaseStringUTFChars(rtspUrl, str_rtspUrl);
+  return reinterpret_cast<long>(rtspStream);
+}
+
+void QueueInputBuffer(JNIEnv *env,
+					  jobject nativeClass,
+					  jobjectArray plane,
+					  jint image_format,
+					  jlong rtsp_stream_ptr)
+{
+
+}
+
+void PushRtspFrame(JNIEnv *env,
+				   jobject nativeClass,
+				   jobjectArray planes,
+				   jint arraySize,
+				   jint rowStride,
+				   jint width,
+				   jint height,
+				   jlong rtsp_stream_ptr)
+{
+  if (rtsp_stream_ptr == 0)
+  {
+	ALOGW("[%s] rtsp_stream_ptr uninit", __FUNCTION__);
+	return;
+  }
+  PushRtspLiveStream *rtspLiveStream = reinterpret_cast<PushRtspLiveStream *>(rtsp_stream_ptr);
+  unsigned char *planesArray[arraySize];
+  unsigned int planeArraySize[arraySize];
+
+  for (int i = 0; i < arraySize; ++i)
+  {
+	jobject bufferPlane = env->GetObjectArrayElement(planes, i);
+	jfieldID bufferId = env->GetFieldID(env->GetObjectClass(bufferPlane),
+										"buffer",
+										"Ljava/nio/ByteBuffer;");
+	jobject jByteBuffer = env->GetObjectField(bufferPlane, bufferId);
+	void *bufferAddress = env->GetDirectBufferAddress(jByteBuffer);
+	jlong bufferCapacity = env->GetDirectBufferCapacity(jByteBuffer);
+	if (bufferAddress == nullptr)
+	{
+	  ALOGE("[%s] isn't bytebuffer or bytebuffer is unavailable", __FUNCTION__);
+	  return;
+	}
+	planesArray[i] = static_cast<unsigned char *>(bufferAddress);
+	planeArraySize[i] = bufferCapacity;
+  }
+  rtspLiveStream->queueInputBuffer();
+/*  rtspLiveStream->startPushRtspStream(planesArray,
+									  planeArraySize,
+									  arraySize,
+									  rowStride,
+									  width,
+									  height);*/
+}
+
+void SetRtspExtraData(JNIEnv *env,
+					  jobject nativeClass,
+					  jobject byteBuffer,
+					  jint arrayLength,
+					  jlong rtspStreamPtr)
+{
+  uint8_t *data = static_cast<uint8_t *>(env->GetDirectBufferAddress(byteBuffer));
+
+  if (data == nullptr)
+  {
+	ALOGE("[%s] get direct buffer error ", __FUNCTION__);
+	return;
+  }
+
+  if (rtspStreamPtr == 0)
+  {
+	ALOGE("[%s] rtsp stream uninit", __FUNCTION__);
+	return;
+  }
+  PushRtspLiveStream *rtspStream = reinterpret_cast<PushRtspLiveStream *>(rtspStreamPtr);
+  rtspStream->setExtraData(data, arrayLength);
+}
+
+void PushRtspData(JNIEnv *env,
+				  jobject nativeClass,
+				  jobject byteArray,
+				  jint bufferRemaining,
+				  jlong ptsUs,
+				  jboolean keyFrame,
+				  jlong rtspStreamPtr)
+{
+
+  if (rtspStreamPtr == 0)
+  {
+	ALOGE("[%s] rtsp stream uninit", __FUNCTION__);
+	return;
+  }
+  PushRtspLiveStream *rtspLiveStream = reinterpret_cast<PushRtspLiveStream *>(rtspStreamPtr);
+  uint8_t *data = static_cast<uint8_t *>(env->GetDirectBufferAddress(byteArray));
+  rtspLiveStream->writeIntervalFrame(data, bufferRemaining, ptsUs, keyFrame);
+}
+
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
   JNIEnv *env = nullptr;
@@ -308,24 +412,29 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
   {
 	jclass musicNative = env->FindClass("com/example/xianyuplayer/MusicNativeMethod");
 	JNINativeMethod musicNativeMethod[] = {
-		{"getMetadata",             "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;", (void *)getMetadata},
-		{"startPlay",               "(J)Z",                                                                   (void *)startPlay},
-		{"initPlay",                "(JJ)J",                                                                  (void *)initPlay},
-		{"openDecodeStream",        "(Ljava/lang/String;JJ)J",                                                (void *)openDecodeStream},
-		{"startDecodeStream",       "(J)V",                                                                   (void *)startDecodeStream},
-		{"getAudioAlbum",           "(JLjava/lang/String;)[B",                                                (void *)GetAudioAlbum},
-		{"getPlayStatus",           "(J)I",                                                                   (void *)GetPlayStatus},
-		{"pausePlay",               "(J)Z",                                                                   (void *)PausePlay},
-		{"seekPosition",            "(JJ)Z",                                                                  (void *)SeekPosition},
-		{"getAudioDuration",        "(J)J",                                                                   (void *)GetAudioDuration},
-		{"setPlayCircleType",       "(Ljava/lang/String;J)V",                                                 (void *)SetPlayCircleType},
-		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;JJ)[J",                         (void *)InitVideo},
-		{"playVideo",               "(JJJ)V",                                                                 (void *)PlayVideo},
-		{"setVideoState",           "(IJ)V",                                                                  (void *)SetVideoState},
-		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                             (void *)ScreenOrientationChange},
-		{"hwVideoStreamInit",       "(Ljava/lang/String;Landroid/view/Surface;)J",                            (void *)HwVideoStreamInit},
-		{"hwVideoStartPlay",        "(J)V",                                                                   (void *)HwVideoStartPlay},
-		{"setAudioSpeed",           "(FJ)V",                                                                  (void *)SetAudioSpeed}
+		{"getMetadata",             "(Ljava/lang/String;)[Lcom/example/xianyuplayer/database/MusicMetadata;",  (void *)getMetadata},
+		{"startPlay",               "(J)Z",                                                                    (void *)startPlay},
+		{"initPlay",                "(JJ)J",                                                                   (void *)initPlay},
+		{"openDecodeStream",        "(Ljava/lang/String;JJ)J",                                                 (void *)openDecodeStream},
+		{"startDecodeStream",       "(J)V",                                                                    (void *)startDecodeStream},
+		{"getAudioAlbum",           "(JLjava/lang/String;)[B",                                                 (void *)GetAudioAlbum},
+		{"getPlayStatus",           "(J)I",                                                                    (void *)GetPlayStatus},
+		{"pausePlay",               "(J)Z",                                                                    (void *)PausePlay},
+		{"seekPosition",            "(JJ)Z",                                                                   (void *)SeekPosition},
+		{"getAudioDuration",        "(J)J",                                                                    (void *)GetAudioDuration},
+		{"setPlayCircleType",       "(Ljava/lang/String;J)V",                                                  (void *)SetPlayCircleType},
+		{"initVideo",               "(Ljava/lang/String;Landroid/view/Surface;JJ)[J",                          (void *)InitVideo},
+		{"playVideo",               "(JJJ)V",                                                                  (void *)PlayVideo},
+		{"setVideoState",           "(IJ)V",                                                                   (void *)SetVideoState},
+		{"screenOrientationChange", "(Landroid/view/Surface;J)V",                                              (void *)ScreenOrientationChange},
+		{"hwVideoStreamInit",       "(Ljava/lang/String;Landroid/view/Surface;)J",                             (void *)HwVideoStreamInit},
+		{"hwVideoStartPlay",        "(J)V",                                                                    (void *)HwVideoStartPlay},
+		{"setAudioSpeed",           "(FJ)V",                                                                   (void *)SetAudioSpeed},
+		{"_initRtspPushLiveStream", "(Ljava/lang/String;)J",                                                   (void *)initRtspPushLiveStream},
+		{"queueInputBuffer",        "([Landroid/media/Image$Plane;IJ)V",                                       (void *)QueueInputBuffer},
+		{"pushRtspFrame",           "([Lcom/example/xianyuplayer/LiveStreamActivity$InputBufferPlane;IIIIJ)V", (void *)PushRtspFrame},
+		{"setRtspExtraData",        "(Ljava/nio/ByteBuffer;IJ)V",                                              (void *)SetRtspExtraData},
+		{"pushRtspData",            "(Ljava/nio/ByteBuffer;IJZJ)V",                                            (void *)PushRtspData}
 	};
 	jint ret = env->RegisterNatives(musicNative,
 									musicNativeMethod,

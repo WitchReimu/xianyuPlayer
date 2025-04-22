@@ -29,7 +29,6 @@ decodeStream::~decodeStream()
 	}
   }
   swr_free(&swrContext);
-  avcodec_close(audioDecodeContext);
   avcodec_free_context(&audioDecodeContext);
   avformat_close_input(&formatContext);
   avformat_free_context(formatContext);
@@ -327,7 +326,6 @@ void decodeStream::changeStream(const char *path)
   }
   decodeThread = nullptr;
   avformat_close_input(&formatContext);
-  avcodec_close(audioDecodeContext);
   avcodec_free_context(&audioDecodeContext);
   queue.reset();
   audioDecode = nullptr;

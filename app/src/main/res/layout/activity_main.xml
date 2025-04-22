@@ -14,19 +14,19 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_encode_test"
+        android:id="@+id/btn_examples"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="encodeTest"
+        android:text="进入示例activity"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_encode_stop"
+        android:id="@+id/btn_liveStream"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="stopEncode"
-        app:layout_constraintStart_toEndOf="@+id/btn_encode_test"
+        android:text="进入livestream"
+        app:layout_constraintStart_toEndOf="@+id/btn_examples"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout

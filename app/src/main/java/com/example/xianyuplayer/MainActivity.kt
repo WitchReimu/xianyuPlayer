@@ -28,7 +28,14 @@ import com.example.xianyuplayer.vm.MainViewModelFactory
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
 
     private val TAG = "MainActivity"
-    private val permissionList by lazy { arrayListOf(Manifest.permission.INTERNET) }
+    private val permissionList by lazy {
+        arrayListOf(
+            Manifest.permission.INTERNET,
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CAMERA
+        )
+    }
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
     lateinit var globalViewModel: GlobalViewModel
@@ -53,15 +60,12 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
             globalViewModel.playList.addAll(it)
         }
 
-        // 将音频流与数据流编码为文件 示例按钮
-        binding.btnEncodeTest.setOnClickListener {
-            Thread {
-                MusicNativeMethod.getInstance().testEncode()
-            }.start()
+        binding.btnExamples.setOnClickListener {
+            startActivity(Intent(this@MainActivity, ExamplesActivity::class.java))
         }
 
-        binding.btnEncodeStop.setOnClickListener {
-            MusicNativeMethod.getInstance().testEncodeStop()
+        binding.btnLiveStream.setOnClickListener {
+            startActivity(Intent(this@MainActivity, LiveStreamActivity::class.java))
         }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
@@ -206,7 +210,7 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
         if (Build.VERSION.SDK_INT <= 29) {
             permissionList.add(Manifest.permission.READ_EXTERNAL_STORAGE)
             permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        } else if (Build.VERSION.SDK_INT <= 32) {
+        } else {
             permissionList.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
 

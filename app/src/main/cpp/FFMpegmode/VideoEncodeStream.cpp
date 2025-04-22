@@ -13,6 +13,7 @@ void log_error(const char *message, int error_code)
   ALOGE("%s: %s\n", message, av_err2str(error_code));
 }
 // 将音频流与数据流编码为文件 示例
+// 先暂无法将音频帧编码为flac格式 原因暂时不知道
 void VideoEncodeStream::transformTest()
 {
   const char *input_filename = "/sdcard/Download/Tifa_Morning_Cowgirl_4K.mp4";
