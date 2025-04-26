@@ -33,7 +33,7 @@ class oboePlayer : public oboe::AudioStreamDataCallback, oboe::AudioStreamErrorC
 	decodeStream *decoderStream = nullptr;
 	oboe::AudioStream *oboeAudioStream = nullptr;
 	oboe::AudioFormat outputFormat = oboe::AudioFormat::Invalid;
-	sonicStream sonicStreamInstance = {};
+//	sonicStream sonicStreamInstance = {};
 	float *readBuffer = nullptr;
 	int readBufferLength = 0;
 	float sonicSpeed = 1.0f;

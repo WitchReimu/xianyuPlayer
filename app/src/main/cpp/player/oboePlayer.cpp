@@ -77,8 +77,8 @@ int oboePlayer::renderAudioData(void *audioData, int32_t numFrames)
 	case oboe::AudioFormat::Float:
 	  floatData = static_cast<float *>(audioData);
 	  byteCount = samplesCount * sizeof(float);
-//	  fillData(floatData, frame, byteCount);
-	  sonicFillData(floatData, frame, samplesCount);
+	  fillData(floatData, frame, byteCount);
+//	  sonicFillData(floatData, frame, samplesCount);
 	  break;
   }
 
@@ -214,7 +214,7 @@ bool oboePlayer::closePlay()
 	delete oboeAudioStream;
 	oboeAudioStream = nullptr;
   }
-  sonicDestroyStream(sonicStreamInstance);
+//  sonicDestroyStream(sonicStreamInstance);
   return result == oboe::Result::OK;
 }
 
@@ -225,9 +225,9 @@ void oboePlayer::openStream()
   readBufferLength = 1024;
   int sampleRate = decoderStream->getDecodeFileSampleRate();
   int channelCount = decoderStream->getDecodeFileChannelCount();
-  sonicStreamInstance = sonicCreateStream(sampleRate, channelCount);
+  /*sonicStreamInstance = sonicCreateStream(sampleRate, channelCount);
   sonicSetSpeed(sonicStreamInstance, sonicSpeed);
-  sonicSetRate(sonicStreamInstance, sonicRate);
+  sonicSetRate(sonicStreamInstance, sonicRate);*/
   audioBuilder.setDirection(oboe::Direction::Output);
   audioBuilder.setAudioApi(oboe::AudioApi::AAudio);
   audioBuilder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
@@ -263,46 +263,6 @@ void oboePlayer::setPlayCircleType(const char *type)
   } else if (strcmp(type, "列表循环") == 0)
   {
 	playCircleType = listCircle;
-  }
-}
-
-void oboePlayer::sonicFillData(float *audioData,
-							   audioFrameQueue::audioFrame_t &frame,
-							   int frameSamplesCount)
-{
-
-  int available = sonicSamplesAvailable(sonicStreamInstance) * oboeAudioStream->getChannelCount();
-
-  if (available < frameSamplesCount)
-  {
-	float PDouble[frame.dataLength / sizeof(float)];
-	memcpy(PDouble, frame.buffer, frame.dataLength);
-	sonicWriteFloatToStream(sonicStreamInstance,
-							PDouble,
-							frame.dataLength /
-							(sizeof(float) * oboeAudioStream->getChannelCount()));
-
-	decoderStream->queue.consumeIndex = (decoderStream->queue.consumeIndex + 1) %
-										decoderStream->queue.length;
-	decoderStream->notifyCond();
-  }
-  available = sonicSamplesAvailable(sonicStreamInstance);
-
-  if (available > 0)
-  {
-	int samplesCountLength = frameSamplesCount * sizeof(float);
-
-	if (readBufferLength < samplesCountLength)
-	{
-	  readBufferLength = samplesCountLength;
-	  realloc(readBuffer, readBufferLength);
-	}
-	memset(readBuffer, 0, readBufferLength);
-	int readCount = sonicReadFloatFromStream(sonicStreamInstance,
-											 readBuffer,
-											 frameSamplesCount /
-											 oboeAudioStream->getChannelCount());
-	memcpy(audioData, readBuffer, samplesCountLength);
   }
 }
 
