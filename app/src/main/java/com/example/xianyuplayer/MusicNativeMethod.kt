@@ -92,7 +92,7 @@ class MusicNativeMethod {
         byteArray: ByteBuffer,
         bufferRemaining: Int,
         ptsUs: Long,
-        isKeyFrame:Boolean,
+        isKeyFrame: Boolean,
         rtspStreamPtr: Long = rtspLiveStreamPtr
     )
 
@@ -199,6 +199,20 @@ class MusicNativeMethod {
         }
     }
 
+    /**
+     * 
+     */
+    fun notifyStreamNumber(videoStreamNumber: Int, audioStreamNumber: Int) {
+
+    }
+
+    /**
+     * 通知当前播放的音乐文件发生改变
+     */
+    fun notifyPlayFileChange() {
+        // TODO: 通知当前播放的音乐文件发生改变
+    }
+
     companion object {
         private var instance: MusicNativeMethod? = null
         private var mainActivityInstance: MainActivity? = null
@@ -239,18 +253,12 @@ class MusicNativeMethod {
          */
         @JvmStatic
         fun notifyPlayStatusChangeCallback(status: Int) {
+            Log.i(TAG, "notifyPlayStatusChangeCallback: --> status $status")
             mainScope.launch {
                 for (playStateChangeListener in playStateChangeListeners) {
                     playStateChangeListener.playStatusChangeCallback(status)
                 }
             }
-        }
-
-        /**
-         * 通知当前播放的音乐文件发生改变
-         */
-        fun notifyPlayFileChange() {
-            // TODO: 通知当前播放的音乐文件发生改变
         }
 
         /**

@@ -68,10 +68,14 @@ class decodeStream
 	std::mutex decodeMutex;
 	struct SwrContext *swrContext = nullptr;
 	AVSampleFormat targetFmt = AV_SAMPLE_FMT_S16;
+	JavaVM *vm = nullptr;
+	int videoStreamNumber = 0;
+	int audioStreamNumber = 0;
 	static void doDecode(decodeStream *instance);
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
-	JavaVM *vm = nullptr;
+	void setStatus(int status);
+
 };
 
 #endif //DECODESTREAM_H

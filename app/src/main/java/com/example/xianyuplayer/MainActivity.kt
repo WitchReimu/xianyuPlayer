@@ -22,7 +22,7 @@ import com.example.xianyuplayer.vm.GlobalViewModel
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 网络播流
+// TODO: 重构
 // TODO: 自己写一个歌词选择器
 // TODO: 使用libyuv实现yuv转Rgb过程
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {

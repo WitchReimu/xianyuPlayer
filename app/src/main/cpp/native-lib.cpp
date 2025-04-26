@@ -67,8 +67,7 @@ void startDecodeStream(JNIEnv *env, jobject activity, jlong streamPtr)
   }
 }
 
-jlong
-initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
+jlong initPlay(JNIEnv *env, jobject activity, jlong streamPtr, jlong playerPtr)
 {
   oboePlayer *player_ptr = nullptr;
 

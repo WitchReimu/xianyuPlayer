@@ -33,7 +33,7 @@ import java.nio.ByteBuffer
 private const val TAG = "LiveStreamActivity"
 private const val rtspPushTestUrl = "rtsp://192.168.1.10:8554/test_video"
 
-// TODO: 只考虑消费端速度大于或等于生产端的情况
+//只考虑消费端速度大于或等于生产端的情况
 class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
     ImageReader.OnImageAvailableListener, View.OnClickListener {
 

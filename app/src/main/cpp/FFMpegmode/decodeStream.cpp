@@ -37,7 +37,7 @@ decodeStream::~decodeStream()
 //初始化解码流与数据缓冲区
 void decodeStream::initStream()
 {
-  decodeState = Initing;
+  setStatus(Initing);
   formatContext = avformat_alloc_context();
   openStream();
 }
@@ -46,7 +46,7 @@ void decodeStream::decodeFile()
 {
   if (decodeThread == nullptr)
   {
-	decodeState = Running;
+	setStatus(Running);
 	decodeThread = new std::thread(doDecode, this);
   }
 }
@@ -215,7 +215,7 @@ void decodeStream::doDecode(decodeStream *instance)
 
   av_frame_free(&pFrame);
   av_packet_free(&pPacket);
-  instance->decodeState = Stop;
+  instance->setStatus(Stop);
   ALOGI("[%s] 音频解码线程结束", __FUNCTION__);
 }
 
@@ -317,7 +317,7 @@ int decodeStream::getDecodeState()
 void decodeStream::changeStream(const char *path)
 {
   strcpy(this->path, path);
-  decodeState = Stop;
+  setStatus(Stop);
 
   if (decodeThread != nullptr)
   {
@@ -330,7 +330,7 @@ void decodeStream::changeStream(const char *path)
   queue.reset();
   audioDecode = nullptr;
   streamIndex = -1;
-  decodeState = Idle;
+  setStatus(Idle);
   openStream();
 }
 
@@ -351,6 +351,28 @@ void decodeStream::openStream()
   }
   streamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 
+  for (int i = 0; i < formatContext->nb_streams; ++i)
+  {
+	AVStream *stream = formatContext->streams[i];
+
+	if (stream->codecpar->codec_id == AV_CODEC_ID_NONE)
+	{
+	  ALOGI("[%s] codec is null", __FUNCTION__);
+	  break;
+	} else if (stream->disposition == AV_DISPOSITION_ATTACHED_PIC)
+	{
+	  ALOGI("[%s] is cover disposition", __FUNCTION__);
+	  break;
+	} else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+	{
+	  streamIndex = i;
+	  audioStreamNumber += 1;
+	} else if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+	{
+	  videoStreamNumber += 1;
+	}
+  }
+
   if (streamIndex < 0)
   {
 	ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
@@ -367,7 +389,19 @@ void decodeStream::openStream()
 	ALOGE("[%s] audio decode open error %d", __FUNCTION__, ret);
 	return;
   }
-  decodeState = Prepared;
+  setStatus(Prepared);
+  bool isAttach = false;
+  JNIEnv *env = getJniEnv(vm, isAttach);
+
+  if (env != nullptr)
+  {
+	jclass nativeClass = env->GetObjectClass(nativeBridge);
+	jmethodID callMethod = env->GetMethodID(nativeClass, "notifyStreamNumber", "(II)V");
+	env->CallVoidMethod(nativeBridge, callMethod, videoStreamNumber, audioStreamNumber);
+
+	if (isAttach)
+	  vm->DetachCurrentThread();
+  }
 }
 
 bool decodeStream::seekToPosition(long position)
@@ -431,3 +465,31 @@ void decodeStream::requestRestartAudioFile()
 	}
   }
 }
+
+void decodeStream::setStatus(int status)
+{
+  decodeState = status;
+  bool isAttach = false;
+  JNIEnv *env = getJniEnv(vm, isAttach);
+
+  if (env == nullptr)
+  {
+	ALOGW("[%s] get JniEnv by JVM failed ", __FUNCTION__);
+	return;
+  }
+
+  if (nativeBridge == nullptr)
+  {
+	ALOGE("[%s] nativeClass is null ", __FUNCTION__);
+	return;
+  }
+  jclass nativeClass = env->GetObjectClass(nativeBridge);
+  jmethodID statusChangeCallback = env->GetStaticMethodID(nativeClass,
+														  "notifyPlayStatusChangeCallback",
+														  "(I)V");
+  env->CallStaticVoidMethod(nativeClass, statusChangeCallback, decodeState);
+
+  if (isAttach)
+	vm->DetachCurrentThread();
+}
+

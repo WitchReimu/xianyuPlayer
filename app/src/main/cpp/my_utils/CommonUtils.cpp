@@ -3,6 +3,12 @@
 //
 #include "CommonUtils.h"
 
+/**
+ *
+ * @param jvm 传入有效的jvm
+ * @param isAttach 传入一个布尔变量，将env是否绑定的状态赋值给该变量。
+ * @return  返回一个绑定了当前线程的JNIEnv对象，如果获取失败返回空指针
+ */
 JNIEnv *getJniEnv(JavaVM *jvm, bool &isAttach)
 {
   const char *TAG = "CommonUtils getJniEnv";
