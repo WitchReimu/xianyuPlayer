@@ -37,7 +37,7 @@ decodeStream::~decodeStream()
 //初始化解码流与数据缓冲区
 void decodeStream::initStream()
 {
-  setStatus(Initing);
+  setDecodeStatus(Initing);
   formatContext = avformat_alloc_context();
   openStream();
 }
@@ -52,7 +52,7 @@ void decodeStream::decodeFile()
 
   if (decodeThread == nullptr)
   {
-	setStatus(Running);
+	setDecodeStatus(Running);
 	decodeThread = new std::thread(doDecode, this);
   }
 }
@@ -76,19 +76,36 @@ void decodeStream::doDecode(decodeStream *instance)
   while (instance->decodeState == Running || instance->decodeState == Prepared)
   {
 
-	while (instance->packetMemoryManager.isEmpty())
+	//缓冲不足 唤醒缓冲线程
+	while (instance->packetMemoryManager.getPacketSize() <=
+		   instance->packetMemoryManager.packetCacheStartFlag &&
+		   instance->readPacketState == Pause)
 	{
+	  instance->readPacketCon.notify_one();
+	}
+
+	if (instance->packetMemoryManager.isEmpty())
+	{
+	  if (instance->readPacketState != Running)
+	  {
+		ALOGW("[%s] 没有更多的包数据了 且缓冲线程不处于工作状态 退出循环", __FUNCTION__);
+		break;
+	  }
 	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
 	  ALOGW("[%s] packet 内没有数据", __FUNCTION__);
-	  instance->setStatus(Pause);
-	  instance->decodeCon.wait(lock);
-	  instance->setStatus(Running);
+	  instance->setDecodeStatus(Pause);
+	  instance->testDecodeCon.wait(lock);
+	  instance->setDecodeStatus(Running);
 	  lock.unlock();
 	}
+
 	AVPacket *pPacket = instance->packetMemoryManager.getPacketData();
 
 	if (pPacket == nullptr)
+	{
+	  ALOGW("[%s] get packet data is null", __FUNCTION__);
 	  continue;
+	}
 	int ret = avcodec_send_packet(instance->audioDecodeContext, pPacket);
 	if (ret != 0)
 	{
@@ -98,7 +115,6 @@ void decodeStream::doDecode(decodeStream *instance)
 			av_err2str(ret));
 	  continue;
 	}
-
 	ret = avcodec_receive_frame(instance->audioDecodeContext, pFrame);
 
 	if (ret == AVERROR(EAGAIN))
@@ -121,7 +137,7 @@ void decodeStream::doDecode(decodeStream *instance)
 	  gettimeofday(&curTimeStamp, nullptr);
 	  long msec = curTimeStamp.tv_sec * 1000 + curTimeStamp.tv_usec / 1000;
 	  long intervalTimeS = msec - instance->lastTimeStamp;
-	  if (intervalTimeS > 100)
+	  if (intervalTimeS > 200)
 	  {
 		instance->lastTimeStamp = msec;
 		double dts = pFrame->pkt_dts * av_q2d(instance->audioStreamTimeBase);
@@ -197,14 +213,15 @@ void decodeStream::doDecode(decodeStream *instance)
 								 covert_length * nb_channels * bytePerSample);
 	}
 	av_packet_unref(pPacket);
+	av_packet_free(&pPacket);
   }
 
   if (isAttach)
 	instance->vm->DetachCurrentThread();
 
   av_frame_free(&pFrame);
-  instance->setStatus(Stop);
   ALOGI("[%s] 音频解码线程结束", __FUNCTION__);
+  instance->setDecodeStatus(Stop);
 }
 
 int decodeStream::getDecodeFileSampleRate()
@@ -305,7 +322,7 @@ int decodeStream::getDecodeState()
 void decodeStream::changeStream(const char *path)
 {
   strcpy(this->path, path);
-  setStatus(Stop);
+  setDecodeStatus(Stop);
 
   if (decodeThread != nullptr)
   {
@@ -318,7 +335,7 @@ void decodeStream::changeStream(const char *path)
   queue.reset();
   audioDecode = nullptr;
   audioStreamIndex = -1;
-  setStatus(Idle);
+  setDecodeStatus(Idle);
   openStream();
 }
 
@@ -393,7 +410,7 @@ void decodeStream::openStream()
 	ALOGE("[%s] audio decode open error %d", __FUNCTION__, ret);
 	return;
   }
-  setStatus(Prepared);
+  setDecodeStatus(Prepared);
   bool isAttach = false;
   JNIEnv *env = getJniEnv(vm, isAttach);
 
@@ -470,7 +487,7 @@ void decodeStream::requestRestartAudioFile()
   }
 }
 
-void decodeStream::setStatus(int status)
+void decodeStream::setDecodeStatus(int status)
 {
   decodeState = status;
   bool isAttach = false;
@@ -560,6 +577,7 @@ void decodeStream::doReadPacket(decodeStream *instance)
   }
   av_packet_unref(pPacket);
   av_packet_free(&pPacket);
+  instance->readPacketState = Stop;
   ALOGI("[%s] 线程结束", __FUNCTION__);
 }
 

@@ -24,8 +24,9 @@ bool AvPacketMemoryManager::copyPacket(AVPacket *srcPacket)
 {
   AVPacket *dstPacket = av_packet_clone(srcPacket);
 
-  if (dstPacket == nullptr)
+  if (dstPacket == nullptr){
 	return false;
+  }
   packetSize += dstPacket->size;
 
   packetDataArray.push(dstPacket);
@@ -38,7 +39,13 @@ AVPacket *AvPacketMemoryManager::getPacketData()
   {
 	return nullptr;
   }
+  //todo: 有时为空，原因不知 待修复
   AVPacket *packet = packetDataArray.front();
+  if (packet == nullptr)
+  {
+	ALOGE("[%s] memory packet is null", __FUNCTION__);
+  }
+
   packetDataArray.pop();
   packetSize -= packet->size;
   return packet;

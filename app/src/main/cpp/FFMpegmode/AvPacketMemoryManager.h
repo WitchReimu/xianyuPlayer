@@ -24,6 +24,7 @@ class AvPacketMemoryManager
 	bool isFull();
 	bool isEmpty();
 	int getPacketSize();
+	const int packetCacheStartFlag = PACKET_SIZE_MAX_10MB / 4;
 	AvPacketMemoryManager();
 	~AvPacketMemoryManager();
   private:
