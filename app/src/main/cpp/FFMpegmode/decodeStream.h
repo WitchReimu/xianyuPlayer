@@ -14,6 +14,7 @@
 
 #include "CommonUtils.h"
 #include "audioFrameQueue.h"
+#include "AvPacketMemoryManager.h"
 
 extern "C"
 {
@@ -35,6 +36,7 @@ class decodeStream
 	  Stop = 4
 	};
 	int decodeState = Idle;
+	int readPacketState = Idle;
 	audioFrameQueue queue = audioFrameQueue(10);
 
 	decodeStream(const char *path, JNIEnv *env, jobject *nativeBridgeClass);
@@ -54,24 +56,33 @@ class decodeStream
 	void requestRestartAudioFile();
 
   private:
+	int streamIndexInvalid = -1;
 	char path[NAME_MAX] = {};
 	AVFormatContext *formatContext = nullptr;
-	int streamIndex = -1;
+	int audioStreamIndex = streamIndexInvalid;
+	int videoStreamIndex = streamIndexInvalid;
 	const AVCodec *audioDecode = nullptr;
+	const AVCodec *videoDecode = nullptr;
 	std::thread *decodeThread = nullptr;
+	std::thread *readPacketThread = nullptr;
 	long lastTimeStamp = 0;
 	long seekPosition = -1;
 	struct AVRational audioStreamTimeBase{};
 	jobject nativeBridge = nullptr;
 	AVCodecContext *audioDecodeContext = nullptr;
+	AVCodecContext *videoDecodeContext = nullptr;
 	std::condition_variable decodeCon;
+	std::condition_variable readPacketCon;
 	std::mutex decodeMutex;
+	std::mutex readPacketMutex;
 	struct SwrContext *swrContext = nullptr;
 	AVSampleFormat targetFmt = AV_SAMPLE_FMT_S16;
 	JavaVM *vm = nullptr;
 	int videoStreamNumber = 0;
 	int audioStreamNumber = 0;
+	AvPacketMemoryManager packetMemoryManager;
 	static void doDecode(decodeStream *instance);
+	static void doReadPacket(decodeStream *instance);
 	int covertData(uint8_t *bufferData, AVFrame *frame_ptr, int bufferLength);
 	bool initSwrContext();
 	void setStatus(int status);

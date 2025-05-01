@@ -44,6 +44,12 @@ void decodeStream::initStream()
 
 void decodeStream::decodeFile()
 {
+  if (readPacketThread == nullptr)
+  {
+	readPacketState = Running;
+	readPacketThread = new std::thread(doReadPacket, this);
+  }
+
   if (decodeThread == nullptr)
   {
 	setStatus(Running);
@@ -54,7 +60,6 @@ void decodeStream::decodeFile()
 //开始解码
 void decodeStream::doDecode(decodeStream *instance)
 {
-  AVPacket *pPacket = av_packet_alloc();
   AVFrame *pFrame = av_frame_alloc();
   struct timeval curTimeStamp{};
   bool isAttach = false;
@@ -71,150 +76,133 @@ void decodeStream::doDecode(decodeStream *instance)
   while (instance->decodeState == Running || instance->decodeState == Prepared)
   {
 
-	if (instance->seekPosition >= 0 && instance->seekPosition < instance->getAudioDuration())
+	while (instance->packetMemoryManager.isEmpty())
 	{
 	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
-	  int ret = avformat_seek_file(instance->formatContext,
-								   -1,
-								   INT64_MIN,
-								   instance->seekPosition,
-								   INT64_MAX,
-								   0);
-	  if (ret >= 0)
-	  {
-		avcodec_flush_buffers(instance->audioDecodeContext);
-	  }
-	  instance->seekPosition = -1;
+	  ALOGW("[%s] packet 内没有数据", __FUNCTION__);
+	  instance->setStatus(Pause);
+	  instance->decodeCon.wait(lock);
+	  instance->setStatus(Running);
+	  lock.unlock();
 	}
-	int ret = av_read_frame(instance->formatContext, pPacket);
+	AVPacket *pPacket = instance->packetMemoryManager.getPacketData();
 
-	if (ret == AVERROR_EOF)
+	if (pPacket == nullptr)
+	  continue;
+	int ret = avcodec_send_packet(instance->audioDecodeContext, pPacket);
+	if (ret != 0)
 	{
-	  ALOGW("[%s] 解码完成", __FUNCTION__);
-	  break;
+	  ALOGW("[%s] send packet failed , failed code %d failed information %s",
+			__FUNCTION__,
+			ret,
+			av_err2str(ret));
+	  continue;
+	}
+
+	ret = avcodec_receive_frame(instance->audioDecodeContext, pFrame);
+
+	if (ret == AVERROR(EAGAIN))
+	{
+	  av_frame_unref(pFrame);
+	  av_packet_unref(pPacket);
+	  av_packet_free(&pPacket);
+	  ALOGW("[%s] receive frame failed ,failed information %s",
+			__FUNCTION__,
+			av_err2str(ret));
+	  continue;
 	} else if (ret < 0)
 	{
-	  ALOGE("[%s] 解码异常结束. 错误原因 %s", __FUNCTION__, av_err2str(ret));
+	  ALOGE("[%s] 接受音频帧失败, 错误原因 %s", __FUNCTION__, av_err2str(ret));
 	  break;
 	}
 
-	if (pPacket->stream_index == instance->streamIndex && pPacket->size > 0)
+	if (pFrame->pkt_dts != AV_NOPTS_VALUE)
 	{
-	  ret = avcodec_send_packet(instance->audioDecodeContext, pPacket);
-
-	  if (ret != 0)
+	  gettimeofday(&curTimeStamp, nullptr);
+	  long msec = curTimeStamp.tv_sec * 1000 + curTimeStamp.tv_usec / 1000;
+	  long intervalTimeS = msec - instance->lastTimeStamp;
+	  if (intervalTimeS > 100)
 	  {
-		ALOGW("[%s] send packet failed , failed code %d failed information %s",
-			  __FUNCTION__,
-			  ret,
-			  av_err2str(ret));
-		continue;
+		instance->lastTimeStamp = msec;
+		double dts = pFrame->pkt_dts * av_q2d(instance->audioStreamTimeBase);
+
+		if (methodId != nullptr)
+		  env->CallStaticVoidMethod(bridgeClass, methodId, dts);
 	  }
-	  ret = avcodec_receive_frame(instance->audioDecodeContext, pFrame);
-
-	  if (ret == AVERROR(EAGAIN))
-	  {
-		av_frame_unref(pFrame);
-		av_packet_unref(pPacket);
-		ALOGW("[%s] receive frame failed ,failed information %s",
-			  __FUNCTION__,
-			  av_err2str(ret));
-		continue;
-	  } else if (ret < 0)
-	  {
-		ALOGE("[%s] 接受音频帧失败, 错误原因 %s", __FUNCTION__, av_err2str(ret));
-		break;
-	  }
-
-	  if (pFrame->pkt_dts != AV_NOPTS_VALUE)
-	  {
-		gettimeofday(&curTimeStamp, nullptr);
-		long msec = curTimeStamp.tv_sec * 1000 + curTimeStamp.tv_usec / 1000;
-		long intervalTimeS = msec - instance->lastTimeStamp;
-		if (intervalTimeS > 100)
-		{
-		  instance->lastTimeStamp = msec;
-		  double dts = pFrame->pkt_dts * av_q2d(instance->audioStreamTimeBase);
-
-		  if (methodId != nullptr)
-			env->CallStaticVoidMethod(bridgeClass, methodId, dts);
-		}
-	  }
-
-	  if (!instance->initSwrContext())
-	  {
-		ALOGE("[%s] init swr context error", __FUNCTION__);
-		break;
-	  }
-	  int nb_channels = pFrame->ch_layout.nb_channels;
-	  int buffer_length = av_samples_get_buffer_size(nullptr,
-													 nb_channels,
-													 pFrame->nb_samples,
-													 instance->targetFmt,
-													 1);
-	  audioFrameQueue &frameQueue = instance->queue;
-	  audioFrameQueue::audioFrame_t &produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
-	  int bytePerSample = av_get_bytes_per_sample(instance->targetFmt);
-	  double pts = pFrame->pts * av_q2d(instance->audioStreamTimeBase);
-	  //判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用;队列内的旧缓冲区进行释放. 大于->对队列缓冲区内的内容进行覆盖。
-	  if (produceFrame.buffer == nullptr || produceFrame.bufferLength < buffer_length)
-	  {
-		uint8_t *bufferData = static_cast<uint8_t *>(av_malloc(buffer_length));
-		int covert_length = instance->covertData(bufferData, pFrame, buffer_length);
-
-		if (covert_length < 0)
-		{
-		  ALOGE("[%s] audio convert error , information --> %s",
-				__FUNCTION__,
-				av_err2str(covert_length));
-		  break;
-		}
-
-		while (frameQueue.isFull() && instance->decodeState == Running)
-		{
-		  std::unique_lock<std::mutex> lock(instance->decodeMutex);
-		  instance->decodeCon.wait(lock);
-		  lock.unlock();
-		}
-		struct audioFrameQueue::audioFrame_t frame = {bufferData,
-													  covert_length * nb_channels * bytePerSample,
-													  buffer_length,
-													  pts};
-		//如果缓冲区队列内的buffer长度小于解码缓冲区内buffer的长度需要重新设置缓冲区队列的缓冲帧
-		frameQueue.resetAudioFrame(frameQueue.produceIndex, frame);
-	  } else
-	  {
-		memset(produceFrame.buffer, 0, produceFrame.bufferLength);
-		int covert_length =
-			instance->covertData(produceFrame.buffer, pFrame, buffer_length);
-
-		if (covert_length < 0)
-		{
-		  ALOGE("[%s] audio convert error , information --> %s",
-				__FUNCTION__,
-				av_err2str(covert_length));
-		  break;
-		}
-
-		while (frameQueue.isFull() && instance->decodeState == Running)
-		{
-		  std::unique_lock<std::mutex> lock(instance->decodeMutex);
-		  instance->decodeCon.wait(lock);
-		  lock.unlock();
-		}
-		produceFrame.pts = pts;
-		frameQueue.resetDataLength(frameQueue.produceIndex,
-								   covert_length * nb_channels * bytePerSample);
-	  }
-	  av_packet_unref(pPacket);
 	}
+
+	if (!instance->initSwrContext())
+	{
+	  ALOGE("[%s] init swr context error", __FUNCTION__);
+	  break;
+	}
+	int nb_channels = pFrame->ch_layout.nb_channels;
+	int buffer_length = av_samples_get_buffer_size(nullptr,
+												   nb_channels,
+												   pFrame->nb_samples,
+												   instance->targetFmt,
+												   1);
+	audioFrameQueue &frameQueue = instance->queue;
+	audioFrameQueue::audioFrame_t &produceFrame = frameQueue.frameQueue[frameQueue.produceIndex];
+	int bytePerSample = av_get_bytes_per_sample(instance->targetFmt);
+	double pts = pFrame->pts * av_q2d(instance->audioStreamTimeBase);
+	//判断当前队列缓冲区长度是否大于音频帧的缓冲长度,小于->创建一个新的缓冲区 对新的缓冲区填充音频数据，将新的缓冲区加入队列中，将在下次使用;队列内的旧缓冲区进行释放. 大于->对队列缓冲区内的内容进行覆盖。
+	if (produceFrame.buffer == nullptr || produceFrame.bufferLength < buffer_length)
+	{
+	  uint8_t *bufferData = static_cast<uint8_t *>(av_malloc(buffer_length));
+	  int covert_length = instance->covertData(bufferData, pFrame, buffer_length);
+
+	  if (covert_length < 0)
+	  {
+		ALOGE("[%s] audio convert error , information --> %s",
+			  __FUNCTION__,
+			  av_err2str(covert_length));
+		break;
+	  }
+
+	  while (frameQueue.isFull() && instance->decodeState == Running)
+	  {
+		std::unique_lock<std::mutex> lock(instance->decodeMutex);
+		instance->decodeCon.wait(lock);
+		lock.unlock();
+	  }
+	  struct audioFrameQueue::audioFrame_t frame = {bufferData,
+													covert_length * nb_channels * bytePerSample,
+													buffer_length,
+													pts};
+	  //如果缓冲区队列内的buffer长度小于解码缓冲区内buffer的长度需要重新设置缓冲区队列的缓冲帧
+	  frameQueue.resetAudioFrame(frameQueue.produceIndex, frame);
+	} else
+	{
+	  memset(produceFrame.buffer, 0, produceFrame.bufferLength);
+	  int covert_length =
+		  instance->covertData(produceFrame.buffer, pFrame, buffer_length);
+
+	  if (covert_length < 0)
+	  {
+		ALOGE("[%s] audio convert error , information --> %s",
+			  __FUNCTION__,
+			  av_err2str(covert_length));
+		break;
+	  }
+
+	  while (frameQueue.isFull() && instance->decodeState == Running)
+	  {
+		std::unique_lock<std::mutex> lock(instance->decodeMutex);
+		instance->decodeCon.wait(lock);
+		lock.unlock();
+	  }
+	  produceFrame.pts = pts;
+	  frameQueue.resetDataLength(frameQueue.produceIndex,
+								 covert_length * nb_channels * bytePerSample);
+	}
+	av_packet_unref(pPacket);
   }
 
   if (isAttach)
 	instance->vm->DetachCurrentThread();
 
   av_frame_free(&pFrame);
-  av_packet_free(&pPacket);
   instance->setStatus(Stop);
   ALOGI("[%s] 音频解码线程结束", __FUNCTION__);
 }
@@ -329,7 +317,7 @@ void decodeStream::changeStream(const char *path)
   avcodec_free_context(&audioDecodeContext);
   queue.reset();
   audioDecode = nullptr;
-  streamIndex = -1;
+  audioStreamIndex = -1;
   setStatus(Idle);
   openStream();
 }
@@ -349,7 +337,6 @@ void decodeStream::openStream()
   {
 	ALOGE("[%s] find stream info error %d", __FUNCTION__, ret);
   }
-  streamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 
   for (int i = 0; i < formatContext->nb_streams; ++i)
   {
@@ -365,24 +352,41 @@ void decodeStream::openStream()
 	  break;
 	} else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 	{
-	  streamIndex = i;
+	  if (audioStreamIndex == streamIndexInvalid)
+		audioStreamIndex = i;
 	  audioStreamNumber += 1;
 	} else if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 	{
+	  if (videoStreamIndex == streamIndexInvalid)
+		videoStreamIndex = i;
 	  videoStreamNumber += 1;
 	}
   }
 
-  if (streamIndex < 0)
+  if (audioStreamIndex < 0 && videoStreamIndex < 0)
   {
-	ALOGE("[%s] find target type failed %d", __FUNCTION__, streamIndex);
+	ALOGE("[%s] find target type failed %d", __FUNCTION__, audioStreamIndex);
+	return;
   }
-  AVStream *audioStream = formatContext->streams[streamIndex];
-  audioStreamTimeBase = audioStream->time_base;
-  audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
-  audioDecodeContext = avcodec_alloc_context3(audioDecode);
-  avcodec_parameters_to_context(audioDecodeContext, audioStream->codecpar);
-  ret = avcodec_open2(audioDecodeContext, audioDecode, NULL);
+
+  if (audioStreamIndex >= 0)
+  {
+	AVStream *audioStream = formatContext->streams[audioStreamIndex];
+	audioStreamTimeBase = audioStream->time_base;
+	audioDecode = avcodec_find_decoder(audioStream->codecpar->codec_id);
+	audioDecodeContext = avcodec_alloc_context3(audioDecode);
+	avcodec_parameters_to_context(audioDecodeContext, audioStream->codecpar);
+	ret = avcodec_open2(audioDecodeContext, audioDecode, NULL);
+  }
+
+  if (videoStreamIndex >= 0)
+  {
+	AVStream *videoStream = formatContext->streams[videoStreamIndex];
+	videoDecode = avcodec_find_decoder(videoStream->codecpar->codec_id);
+	videoDecodeContext = avcodec_alloc_context3(videoDecode);
+	avcodec_parameters_to_context(videoDecodeContext, videoStream->codecpar);
+	avcodec_open2(videoDecodeContext, videoDecode, nullptr);
+  }
 
   if (ret < 0)
   {
@@ -491,5 +495,71 @@ void decodeStream::setStatus(int status)
 
   if (isAttach)
 	vm->DetachCurrentThread();
+}
+
+void decodeStream::doReadPacket(decodeStream *instance)
+{
+  AVPacket *pPacket = av_packet_alloc();
+
+  while (instance->readPacketState == Running)
+  {
+	if (instance->seekPosition >= 0 && instance->seekPosition < instance->getAudioDuration())
+	{
+	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
+	  int ret = avformat_seek_file(instance->formatContext,
+								   -1,
+								   INT64_MIN,
+								   instance->seekPosition,
+								   INT64_MAX,
+								   0);
+	  if (ret >= 0)
+	  {
+		avcodec_flush_buffers(instance->audioDecodeContext);
+	  }
+	  instance->seekPosition = -1;
+	}
+
+	while (instance->packetMemoryManager.isFull())
+	{
+	  std::unique_lock<std::mutex> lock(instance->readPacketMutex);
+	  instance->readPacketState = Pause;
+	  instance->readPacketCon.wait(lock);
+	  instance->readPacketState = Running;
+	  lock.unlock();
+	}
+	int ret = av_read_frame(instance->formatContext, pPacket);
+
+	if (ret == AVERROR_EOF)
+	{
+	  ALOGW("[%s] 读取文件数据至尾部 退出循环", __FUNCTION__);
+	  instance->decodeCon.notify_one();
+	  break;
+	} else if (ret < 0)
+	{
+	  ALOGE("[%s] 读取文件包数据异常结束. 错误原因 %s", __FUNCTION__, av_err2str(ret));
+	  break;
+	}
+
+	if (pPacket->stream_index == instance->audioStreamIndex ||
+		pPacket->stream_index == instance->videoStreamIndex)
+	{
+
+	  if (pPacket->size < 0)
+	  {
+		ALOGW("[%s] 获得的AVPacket数据小于0 ", __FUNCTION__);
+		continue;
+	  }
+	  instance->packetMemoryManager.copyPacket(pPacket);
+	  //缓冲达到最大值的1/3时就可以继续播放
+	  if (instance->decodeState == Pause &&
+		  instance->packetMemoryManager.getPacketSize() >= PACKET_SIZE_MAX_10MB / 3)
+		instance->decodeCon.notify_one();
+
+	  av_packet_unref(pPacket);
+	}
+  }
+  av_packet_unref(pPacket);
+  av_packet_free(&pPacket);
+  ALOGI("[%s] 线程结束", __FUNCTION__);
 }
 
