@@ -81,6 +81,7 @@ void decodeStream::doDecode(decodeStream *instance)
 		   instance->packetMemoryManager.packetCacheStartFlag &&
 		   instance->readPacketState == Pause)
 	{
+	  ALOGI("[%s] notify readPacketThread", __FUNCTION__);
 	  instance->readPacketCon.notify_one();
 	}
 
@@ -94,19 +95,20 @@ void decodeStream::doDecode(decodeStream *instance)
 	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
 	  ALOGW("[%s] packet 内没有数据", __FUNCTION__);
 	  instance->setDecodeStatus(Pause);
-	  instance->testDecodeCon.wait(lock);
-	  instance->setDecodeStatus(Running);
+	  instance->getPacketCon.wait(lock);
+	  if (instance->decodeState == Pause)
+		instance->setDecodeStatus(Running);
 	  lock.unlock();
 	}
+	AVPacket *packetBuffer = instance->packetMemoryManager.getPacketData();
 
-	AVPacket *pPacket = instance->packetMemoryManager.getPacketData();
-
-	if (pPacket == nullptr)
+	if (packetBuffer == nullptr)
 	{
 	  ALOGW("[%s] get packet data is null", __FUNCTION__);
 	  continue;
 	}
-	int ret = avcodec_send_packet(instance->audioDecodeContext, pPacket);
+	int ret = avcodec_send_packet(instance->audioDecodeContext, packetBuffer);
+
 	if (ret != 0)
 	{
 	  ALOGW("[%s] send packet failed , failed code %d failed information %s",
@@ -120,8 +122,8 @@ void decodeStream::doDecode(decodeStream *instance)
 	if (ret == AVERROR(EAGAIN))
 	{
 	  av_frame_unref(pFrame);
-	  av_packet_unref(pPacket);
-	  av_packet_free(&pPacket);
+	  av_packet_unref(packetBuffer);
+	  av_packet_free(&packetBuffer);
 	  ALOGW("[%s] receive frame failed ,failed information %s",
 			__FUNCTION__,
 			av_err2str(ret));
@@ -212,8 +214,8 @@ void decodeStream::doDecode(decodeStream *instance)
 	  frameQueue.resetDataLength(frameQueue.produceIndex,
 								 covert_length * nb_channels * bytePerSample);
 	}
-	av_packet_unref(pPacket);
-	av_packet_free(&pPacket);
+	av_packet_unref(packetBuffer);
+	av_packet_free(&packetBuffer);
   }
 
   if (isAttach)
@@ -323,19 +325,30 @@ void decodeStream::changeStream(const char *path)
 {
   strcpy(this->path, path);
   setDecodeStatus(Stop);
+  readPacketState = Stop;
 
   if (decodeThread != nullptr)
   {
 	decodeCon.notify_one();
 	decodeThread->join();
   }
+
+  if (readPacketThread != nullptr)
+  {
+	readPacketCon.notify_one();
+	readPacketThread->join();
+	packetMemoryManager.releaseAllPacketBuffer();
+  }
+  readPacketThread = nullptr;
   decodeThread = nullptr;
   avformat_close_input(&formatContext);
   avcodec_free_context(&audioDecodeContext);
   queue.reset();
   audioDecode = nullptr;
   audioStreamIndex = -1;
+  videoStreamIndex = -1;
   setDecodeStatus(Idle);
+  readPacketState = Idle;
   openStream();
 }
 
@@ -516,10 +529,11 @@ void decodeStream::setDecodeStatus(int status)
 
 void decodeStream::doReadPacket(decodeStream *instance)
 {
-  AVPacket *pPacket = av_packet_alloc();
+  AVPacket *packet_p = av_packet_alloc();
 
   while (instance->readPacketState == Running)
   {
+
 	if (instance->seekPosition >= 0 && instance->seekPosition < instance->getAudioDuration())
 	{
 	  std::unique_lock<std::mutex> lock(instance->decodeMutex);
@@ -541,11 +555,12 @@ void decodeStream::doReadPacket(decodeStream *instance)
 	  std::unique_lock<std::mutex> lock(instance->readPacketMutex);
 	  instance->readPacketState = Pause;
 	  instance->readPacketCon.wait(lock);
-	  instance->readPacketState = Running;
+
+	  if (instance->readPacketState == Pause)
+		instance->readPacketState = Running;
 	  lock.unlock();
 	}
-	int ret = av_read_frame(instance->formatContext, pPacket);
-
+	int ret = av_read_frame(instance->formatContext, packet_p);
 	if (ret == AVERROR_EOF)
 	{
 	  ALOGW("[%s] 读取文件数据至尾部 退出循环", __FUNCTION__);
@@ -557,27 +572,26 @@ void decodeStream::doReadPacket(decodeStream *instance)
 	  break;
 	}
 
-	if (pPacket->stream_index == instance->audioStreamIndex ||
-		pPacket->stream_index == instance->videoStreamIndex)
+	if (packet_p->stream_index == instance->audioStreamIndex ||
+		packet_p->stream_index == instance->videoStreamIndex)
 	{
 
-	  if (pPacket->size < 0)
+	  if (packet_p->size < 0)
 	  {
 		ALOGW("[%s] 获得的AVPacket数据小于0 ", __FUNCTION__);
 		continue;
 	  }
-	  instance->packetMemoryManager.copyPacket(pPacket);
-	  //缓冲达到最大值的1/3时就可以继续播放
+	  instance->packetMemoryManager.copyPacket(packet_p);
+	  //缓冲达到最大值的1/3时通知decode线程继续解码数据包，可以继续播放。
 	  if (instance->decodeState == Pause &&
 		  instance->packetMemoryManager.getPacketSize() >= PACKET_SIZE_MAX_10MB / 3)
 		instance->decodeCon.notify_one();
 
-	  av_packet_unref(pPacket);
+	  av_packet_unref(packet_p);
 	}
   }
-  av_packet_unref(pPacket);
-  av_packet_free(&pPacket);
+  av_packet_unref(packet_p);
+  av_packet_free(&packet_p);
   instance->readPacketState = Stop;
   ALOGI("[%s] 线程结束", __FUNCTION__);
 }
-

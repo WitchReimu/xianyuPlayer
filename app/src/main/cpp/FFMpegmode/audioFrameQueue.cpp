@@ -19,7 +19,7 @@ bool audioFrameQueue::isEmpty()
 {
   if (produceIndex == consumeIndex)
   {
-	ALOGW("[%s] 队列缓冲为空 ", __FUNCTION__);
+//	ALOGW("[%s] 队列缓冲为空 ", __FUNCTION__);
 	return true;
   } else
   {
@@ -77,6 +77,7 @@ void audioFrameQueue::reset()
 	frame.buffer = nullptr;
 	frame.bufferLength = 0;
 	frame.dataLength = 0;
+	consumeIndex = (consumeIndex + 1) % length;
   }
 }
 

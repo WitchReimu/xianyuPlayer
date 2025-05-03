@@ -299,10 +299,14 @@ void SetAudioSpeed(JNIEnv *env, jobject nativeClass, jfloat speed, jlong audioPt
   audioPlayer->setSonicSpeed(speed);
 }
 
-long initRtspPushLiveStream(JNIEnv *env, jobject nativeClass, jstring rtspUrl)
+long initRtspPushLiveStream(JNIEnv *env,
+							jobject nativeClass,
+							jstring rtspUrl,
+							jint width,
+							jint height)
 {
   const char *str_rtspUrl = env->GetStringUTFChars(rtspUrl, nullptr);
-  PushRtspLiveStream *rtspStream = new PushRtspLiveStream(str_rtspUrl);
+  PushRtspLiveStream *rtspStream = new PushRtspLiveStream(str_rtspUrl, width, height);
   env->ReleaseStringUTFChars(rtspUrl, str_rtspUrl);
   return reinterpret_cast<long>(rtspStream);
 }
@@ -314,50 +318,6 @@ void QueueInputBuffer(JNIEnv *env,
 					  jlong rtsp_stream_ptr)
 {
 
-}
-
-void PushRtspFrame(JNIEnv *env,
-				   jobject nativeClass,
-				   jobjectArray planes,
-				   jint arraySize,
-				   jint rowStride,
-				   jint width,
-				   jint height,
-				   jlong rtsp_stream_ptr)
-{
-  if (rtsp_stream_ptr == 0)
-  {
-	ALOGW("[%s] rtsp_stream_ptr uninit", __FUNCTION__);
-	return;
-  }
-  PushRtspLiveStream *rtspLiveStream = reinterpret_cast<PushRtspLiveStream *>(rtsp_stream_ptr);
-  unsigned char *planesArray[arraySize];
-  unsigned int planeArraySize[arraySize];
-
-  for (int i = 0; i < arraySize; ++i)
-  {
-	jobject bufferPlane = env->GetObjectArrayElement(planes, i);
-	jfieldID bufferId = env->GetFieldID(env->GetObjectClass(bufferPlane),
-										"buffer",
-										"Ljava/nio/ByteBuffer;");
-	jobject jByteBuffer = env->GetObjectField(bufferPlane, bufferId);
-	void *bufferAddress = env->GetDirectBufferAddress(jByteBuffer);
-	jlong bufferCapacity = env->GetDirectBufferCapacity(jByteBuffer);
-	if (bufferAddress == nullptr)
-	{
-	  ALOGE("[%s] isn't bytebuffer or bytebuffer is unavailable", __FUNCTION__);
-	  return;
-	}
-	planesArray[i] = static_cast<unsigned char *>(bufferAddress);
-	planeArraySize[i] = bufferCapacity;
-  }
-  rtspLiveStream->queueInputBuffer();
-/*  rtspLiveStream->startPushRtspStream(planesArray,
-									  planeArraySize,
-									  arraySize,
-									  rowStride,
-									  width,
-									  height);*/
 }
 
 void SetRtspExtraData(JNIEnv *env,
@@ -429,9 +389,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 		{"hwVideoStreamInit",       "(Ljava/lang/String;Landroid/view/Surface;)J",                             (void *)HwVideoStreamInit},
 		{"hwVideoStartPlay",        "(J)V",                                                                    (void *)HwVideoStartPlay},
 		{"setAudioSpeed",           "(FJ)V",                                                                   (void *)SetAudioSpeed},
-		{"_initRtspPushLiveStream", "(Ljava/lang/String;)J",                                                   (void *)initRtspPushLiveStream},
+		{"_initRtspPushLiveStream", "(Ljava/lang/String;II)J",                                                 (void *)initRtspPushLiveStream},
 		{"queueInputBuffer",        "([Landroid/media/Image$Plane;IJ)V",                                       (void *)QueueInputBuffer},
-		{"pushRtspFrame",           "([Lcom/example/xianyuplayer/LiveStreamActivity$InputBufferPlane;IIIIJ)V", (void *)PushRtspFrame},
 		{"setRtspExtraData",        "(Ljava/nio/ByteBuffer;IJ)V",                                              (void *)SetRtspExtraData},
 		{"pushRtspData",            "(Ljava/nio/ByteBuffer;IJZJ)V",                                            (void *)PushRtspData}
 	};

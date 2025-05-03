@@ -31,7 +31,7 @@ import java.nio.ByteBuffer
 
 
 private const val TAG = "LiveStreamActivity"
-private const val rtspPushTestUrl = "rtsp://192.168.1.10:8554/test_video"
+private const val rtspPushTestUrl = "rtsp://192.168.1.9:8554/test_video"
 
 //只考虑消费端速度大于或等于生产端的情况
 class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
@@ -42,21 +42,12 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
     private lateinit var binding: ActivityLiveStreamBinding
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private lateinit var imageReader: ImageReader
-    private var inputBufferIndex = 0
-    private var outputBufferIndex = 0
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var mediaProjectionState = 0
-    private var pushState = false
     private val screenCaptureRequestCode = 1
-    private val imageReaderMaxImage = 3
-    private val bufferCapacity = imageReaderMaxImage * 2 + 1
-    private val bufferList = ArrayList<Array<InputBufferPlane>>(bufferCapacity)
     private val enablePreview = false
     private val liveStreamIntent by lazy { Intent(this, LiveStreamForegroundService::class.java) }
-    private val ioCoroutineScope = CoroutineScope(Dispatchers.IO + CoroutineName(TAG))
-    private val bufferHandle = PacketBufferHandle()
-    private var pushJob: Job? = null
     private var videoHwEncode: MediaCodec? = null
     private var videoEncodeInputSurface: Surface? = null
 
@@ -68,25 +59,6 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
         binding.surfaceLiveStream.holder.addCallback(this)
         mediaProjectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        MusicNativeMethod.getInstance().initRtspPushLiveStream(rtspPushTestUrl)
-        pushJob = ioCoroutineScope.launch(Dispatchers.IO, CoroutineStart.LAZY) {
-
-            while (pushState) {
-                val bufferArray = bufferList[outputBufferIndex]
-                val inputBufferPlane = bufferArray[0]
-                MusicNativeMethod.getInstance().pushRtspFrame(
-                    bufferArray,
-                    bufferArray.size,
-                    inputBufferPlane.rowStride,
-                    inputBufferPlane.width,
-                    inputBufferPlane.height
-                )
-                outputBufferIndex = (outputBufferIndex + 1) % bufferCapacity
-            }
-
-        }
-
-        binding.btnPushRtspDisplay.setOnClickListener(this)
     }
 
     override fun onStart() {
@@ -95,12 +67,13 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
         if (mediaProjectionState <= 0) {
             val createScreenCaptureIntent = mediaProjectionManager.createScreenCaptureIntent()
             startActivityForResult(createScreenCaptureIntent, screenCaptureRequestCode)
-
             val displayMetrics = resources.displayMetrics
+            val widthPx = displayMetrics.widthPixels
+            val heightPx = displayMetrics.heightPixels
             val videoMediaFormat = MediaFormat.createVideoFormat(
                 MediaFormat.MIMETYPE_VIDEO_AVC,
-                displayMetrics.widthPixels,
-                displayMetrics.heightPixels
+                widthPx,
+                heightPx
             )
             videoMediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, MB * 1)
             videoMediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30)
@@ -117,6 +90,9 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
                 MediaCodec.CONFIGURE_FLAG_ENCODE
             )
             videoEncodeInputSurface = videoHwEncode!!.createInputSurface()
+
+            MusicNativeMethod.getInstance()
+                .initRtspPushLiveStream(rtspPushTestUrl, widthPx, heightPx)
         }
     }
 
@@ -170,10 +146,6 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
                                         false
                                     )
                                 }
-
-                                /*val byteArray = ByteArray(outputBuffer.remaining())
-                                val packetBuffer = PacketBuffer(byteArray)
-                                bufferHandle.addPacketBuffer(packetBuffer)*/
                             }
                         }
                         codec.releaseOutputBuffer(index, false)
@@ -198,15 +170,12 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
 
     override fun onDestroy() {
         super.onDestroy()
-        pushState = false
         videoHwEncode?.stop()
         videoHwEncode?.release()
         virtualDisplay?.release()
         mediaProjection?.stop()
         imageReader.close()
         stopService(liveStreamIntent)
-        pushJob?.cancel()
-        pushJob = null
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -244,41 +213,6 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
         image?.let { internalImage ->
             val plane = internalImage.planes[0]
 
-            if (bufferList.size == bufferCapacity) {
-                /*val inputBufferPlanes = bufferList[inputBufferIndex]
-
-                for (i in 0 until internalImage.planes.size) {
-                    val circlePlane = internalImage.planes[i]
-                    val inputBufferPlane = inputBufferPlanes[i]
-
-                    if (inputBufferPlane.buffer.capacity() < circlePlane.buffer.capacity()) {
-                        inputBufferPlane.buffer.clear()
-                        insertPlan(
-                            circlePlane,
-                            inputBufferPlanes,
-                            i,
-                            internalImage.width,
-                            internalImage.height
-                        )
-                    } else {
-                        inputBufferPlane.buffer.clear()
-                        inputBufferPlane.buffer.put(circlePlane.buffer)
-                    }
-                }
-                inputBufferIndex = (inputBufferIndex + 1) % bufferCapacity*/
-            } else {
-                val size = internalImage.planes.size
-                val newPlanes = ArrayList<InputBufferPlane>(size)
-
-                for (i in 0 until size) {
-                    val circlePlane = internalImage.planes[i]
-                    insertPlan(circlePlane, newPlanes, i, internalImage.width, internalImage.height)
-                }
-                bufferList.add(inputBufferIndex, newPlanes.toTypedArray())
-                inputBufferIndex = (inputBufferIndex + 1) % bufferCapacity
-            }
-
-
             if (enablePreview) {
                 val bitmap = Bitmap.createBitmap(
                     plane.rowStride / plane.pixelStride,
@@ -301,70 +235,6 @@ class LiveStreamActivity : AppCompatActivity(), SurfaceHolder.Callback,
         if (v == null)
             return
 
-        when (v.id) {
-            binding.btnPushRtspDisplay.id -> {
-                if (!pushState) {
-                    pushJob?.also {
-                        pushState = true
-                        it.start()
-                    }
-                }
-            }
-        }
-    }
-
-    private fun insertPlan(
-        srcPlane: Plane,
-        planeArray: ArrayList<InputBufferPlane>,
-        position: Int,
-        width: Int,
-        height: Int
-    ) {
-        val positionPlane =
-            InputBufferPlane(
-                srcPlane.buffer,
-                srcPlane.pixelStride,
-                srcPlane.rowStride,
-                width,
-                height
-            )
-        planeArray.add(position, positionPlane)
-    }
-
-    private fun insertPlan(
-        srcPlane: Plane,
-        planeArray: Array<InputBufferPlane>,
-        position: Int,
-        width: Int,
-        height: Int
-    ) {
-        val positionPlane =
-            InputBufferPlane(
-                srcPlane.buffer,
-                srcPlane.pixelStride,
-                srcPlane.rowStride,
-                width,
-                height
-            )
-        planeArray[position] = positionPlane
-    }
-
-    class InputBufferPlane {
-        var buffer: ByteBuffer
-        var pixelStride: Int = 0
-        var rowStride: Int = 0
-        var height = 0
-        var width = 0
-
-        constructor(buffer: ByteBuffer, pixelStride: Int, rowStride: Int, width: Int, height: Int) {
-            this.buffer = ByteBuffer.allocateDirect(buffer.remaining())
-            this.pixelStride = pixelStride
-            this.rowStride = rowStride
-            this.buffer.put(buffer.duplicate())
-            this.buffer.flip()
-            this.width = width
-            this.height = height
-        }
 
     }
 

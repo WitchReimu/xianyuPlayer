@@ -19,7 +19,7 @@ extern "C"
 class PushRtspLiveStream
 {
   public:
-	PushRtspLiveStream(const char *outputUrl);
+	PushRtspLiveStream(const char *outputUrl, int width, int height);
 	~PushRtspLiveStream();
 	void queueInputBuffer();
 	void startPushRtspStream(unsigned char *planes[],

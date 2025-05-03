@@ -7,7 +7,7 @@
 #define MB 8388608
 
 using std::string;
-PushRtspLiveStream::PushRtspLiveStream(const char *outputUrl)
+PushRtspLiveStream::PushRtspLiveStream(const char *outputUrl, int width, int height)
 {
   strcpy(outputFileName, outputUrl);
   avFormat = avformat_alloc_context();
@@ -22,8 +22,8 @@ PushRtspLiveStream::PushRtspLiveStream(const char *outputUrl)
   videoOutputStream = avformat_new_stream(avFormat, nullptr);
   videoOutputStream->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
   videoOutputStream->codecpar->codec_id = AV_CODEC_ID_H264;
-  videoOutputStream->codecpar->width = 1920;
-  videoOutputStream->codecpar->height = 1080;
+  videoOutputStream->codecpar->width = width;
+  videoOutputStream->codecpar->height = height;
 
 
   /*videoEncode = avcodec_find_encoder(AV_CODEC_ID_H264);

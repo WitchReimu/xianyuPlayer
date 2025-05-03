@@ -72,7 +72,7 @@ class decodeStream
 	AVCodecContext *audioDecodeContext = nullptr;
 	AVCodecContext *videoDecodeContext = nullptr;
 	std::condition_variable decodeCon;
-	std::condition_variable testDecodeCon;
+	std::condition_variable getPacketCon;
 	std::condition_variable readPacketCon;
 	std::mutex decodeMutex;
 	std::mutex readPacketMutex;

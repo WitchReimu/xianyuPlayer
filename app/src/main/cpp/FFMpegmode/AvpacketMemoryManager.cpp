@@ -9,22 +9,18 @@ AvPacketMemoryManager::AvPacketMemoryManager()
 {
 
 }
+
 AvPacketMemoryManager::~AvPacketMemoryManager()
 {
-  for (int i = 0; i < packetDataArray.size(); ++i)
-  {
-	AVPacket *packet = packetDataArray.back();
-	packetDataArray.pop();
-	av_packet_unref(packet);
-	av_packet_free(&packet);
-  }
+  releaseAllPacketBuffer();
 }
 
 bool AvPacketMemoryManager::copyPacket(AVPacket *srcPacket)
 {
   AVPacket *dstPacket = av_packet_clone(srcPacket);
 
-  if (dstPacket == nullptr){
+  if (dstPacket == nullptr)
+  {
 	return false;
   }
   packetSize += dstPacket->size;
@@ -67,4 +63,16 @@ bool AvPacketMemoryManager::isEmpty()
 int AvPacketMemoryManager::getPacketSize()
 {
   return packetSize;
+}
+
+void AvPacketMemoryManager::releaseAllPacketBuffer()
+{
+  while (!packetDataArray.empty())
+  {
+	AVPacket *packet = packetDataArray.front();
+	packetDataArray.pop();
+	av_packet_unref(packet);
+	av_packet_free(&packet);
+  }
+  packetSize = 0;
 }

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.xianyuplayer.database.LocalFile
@@ -22,7 +23,6 @@ import com.example.xianyuplayer.vm.GlobalViewModel
 import com.example.xianyuplayer.vm.MainViewModel
 import com.example.xianyuplayer.vm.MainViewModelFactory
 
-// TODO: 重构
 // TODO: 自己写一个歌词选择器
 // TODO: 使用libyuv实现yuv转Rgb过程
 class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListener {
@@ -66,6 +66,10 @@ class MainActivity : AppCompatActivity(), MusicNativeMethod.PlayStateChangeListe
 
         binding.btnLiveStream.setOnClickListener {
             startActivity(Intent(this@MainActivity, LiveStreamActivity::class.java))
+        }
+
+        binding.btnLeftDrawer.setOnClickListener {
+            binding.root.openDrawer(GravityCompat.START)
         }
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->

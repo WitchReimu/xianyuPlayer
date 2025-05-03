@@ -44,7 +44,7 @@ class MusicNativeMethod {
 
     private external fun hwVideoStreamInit(locationPath: String, surface: Surface): Long
 
-    private external fun _initRtspPushLiveStream(rtspUrl: String): Long
+    private external fun _initRtspPushLiveStream(rtspUrl: String, widthPx: Int, heightPx: Int): Long
     external fun getAudioAlbum(
         streamPtr: Long = decodeStreamPtr,
         absolutePath: String
@@ -73,15 +73,6 @@ class MusicNativeMethod {
         rtspStreamPtr: Long = rtspLiveStreamPtr
     )
 
-    external fun pushRtspFrame(
-        planes: Array<LiveStreamActivity.InputBufferPlane>,
-        arraySize: Int,
-        rowStride: Int,
-        width: Int,
-        height: Int,
-        rtspStreamPtr: Long = rtspLiveStreamPtr
-    )
-
     external fun setRtspExtraData(
         byteArray: ByteBuffer,
         arrayLength: Int,
@@ -96,8 +87,8 @@ class MusicNativeMethod {
         rtspStreamPtr: Long = rtspLiveStreamPtr
     )
 
-    fun initRtspPushLiveStream(rtspUrl: String) {
-        rtspLiveStreamPtr = _initRtspPushLiveStream(rtspUrl)
+    fun initRtspPushLiveStream(rtspUrl: String, widthPx: Int, heightPx: Int) {
+        rtspLiveStreamPtr = _initRtspPushLiveStream(rtspUrl, widthPx, heightPx)
     }
 
     fun initHwVideoStream(locationPath: String, surface: Surface) {
@@ -200,7 +191,7 @@ class MusicNativeMethod {
     }
 
     /**
-     * 
+     *
      */
     fun notifyStreamNumber(videoStreamNumber: Int, audioStreamNumber: Int) {
 
